@@ -63,8 +63,10 @@ export const householdSchema: z.ZodType<HouseholdFormValues> = z
   .object({
     codeMenage: z
       .string()
-      .length(CODE_MENAGE_LENGTH, `Le code ménage doit comporter exactement ${CODE_MENAGE_LENGTH} caractères`)
-      .regex(/^[A-Z0-9]+$/, 'Majuscules et chiffres uniquement'),
+      .refine(
+        (v) => v === '' || (v.length === CODE_MENAGE_LENGTH && /^[A-Z0-9]+$/.test(v)),
+        `Laisser vide (génération automatique) ou saisir exactement ${CODE_MENAGE_LENGTH} caractères (majuscules/chiffres)`,
+      ),
     nombreMembres: z
       .string()
       .min(1, 'Nombre de membres obligatoire')

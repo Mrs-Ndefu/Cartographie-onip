@@ -81,6 +81,34 @@
   background: #f2f2f2;
 }
 
+.resync-btn {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  border: 1px solid #999;
+  background: white;
+  color: #444;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.resync-btn:hover:not(:disabled) {
+  background: #f2f2f2;
+  color: #1177c8;
+  border-color: #1177c8;
+}
+
+.resync-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .avatar-btn {
   width: 2.1rem;
   height: 2.1rem;

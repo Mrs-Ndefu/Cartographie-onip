@@ -27,6 +27,11 @@
     </nav>
   </header>
 
+  <section class="agents-messages">
+    <div th:if="${success}" class="alert alert-success py-2" th:text="${success}">-</div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}">-</div>
+  </section>
+
   <section class="stats">
     <div class="stat-card">
       <span class="stat-value" th:text="${total}">0</span>
@@ -86,6 +91,7 @@
           <th>Statut</th>
           <th>Agent</th>
           <th>Mis à jour</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -96,9 +102,16 @@
           <td><span th:text="${h.status.value}" th:class="'status-badge status-' + ${h.status.value}">-</span></td>
           <td th:text="${h.agentUsername ?: '—'}">-</td>
           <td th:text="${h.updatedAt}">-</td>
+          <td>
+            <form th:action="@{/dashboard/households/{id}/delete(id=${h.id})}" method="post"
+                  onsubmit="return confirm('Supprimer ce ménage (' + this.dataset.code + ') ? Cette action est irréversible.');"
+                  th:data-code="${h.codeMenage}">
+              <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+            </form>
+          </td>
         </tr>
         <tr th:if="${households.isEmpty()}">
-          <td colspan="6">Aucun ménage synchronisé pour l'instant.</td>
+          <td colspan="7">Aucun ménage synchronisé pour l'instant.</td>
         </tr>
       </tbody>
     </table>

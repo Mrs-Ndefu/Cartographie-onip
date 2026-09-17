@@ -112,4 +112,12 @@ public class HouseholdService {
                 .orElseThrow(() -> new IllegalArgumentException("Ménage introuvable : " + id));
         return HouseholdDto.from(household);
     }
+
+    @Transactional
+    public void delete(UUID id) {
+        if (!householdRepository.existsById(id)) {
+            throw new IllegalArgumentException("Ménage introuvable : " + id);
+        }
+        householdRepository.deleteById(id);
+    }
 }

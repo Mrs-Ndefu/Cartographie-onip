@@ -14,6 +14,7 @@ import type { HouseholdFormValues } from '../../utils/validation'
 import { MAX_MEMBRES, createEmptyAddress } from '../../types/household'
 import type { Household, GeoLocation } from '../../types/household'
 import { useHouseholds } from '../../hooks/useHouseholds'
+import { generateCodeMenage } from '../../utils/idGenerator'
 import './HouseholdForm.css'
 
 interface HouseholdFormProps {
@@ -21,6 +22,7 @@ interface HouseholdFormProps {
   household?: Household | null
   onSaved?: (household: Household) => void
   onCancel?: () => void
+  onDeleted?: (household: Household) => void
 }
 
 function toHousehold(
@@ -60,13 +62,14 @@ function toFormValues(household: Household): HouseholdFormValues {
   }
 }
 
-export function HouseholdForm({ location = null, household = null, onSaved, onCancel }: HouseholdFormProps) {
-  const { addHousehold, updateHousehold } = useHouseholds()
+export function HouseholdForm({ location = null, household = null, onSaved, onCancel, onDeleted }: HouseholdFormProps) {
+  const { addHousehold, updateHousehold, deleteHousehold } = useHouseholds()
 
   const {
     control,
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<HouseholdFormValues>({
     resolver: zodResolver(householdSchema),
@@ -81,9 +84,20 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
       await updateHousehold(household.id, changes)
       onSaved?.({ ...household, ...changes })
     } else {
-      const saved = await addHousehold(toHousehold(values, location))
+      // Code ménage non saisi par l'agent : généré automatiquement au moment de l'enregistrement.
+      const finalValues = values.codeMenage ? values : { ...values, codeMenage: generateCodeMenage() }
+      const saved = await addHousehold(toHousehold(finalValues, location))
       onSaved?.(saved)
     }
+  }
+
+  async function handleDelete() {
+    if (!household) return
+    if (!window.confirm(`Supprimer le ménage ${household.codeMenage || '(sans code)'} ? Cette action est irréversible.`)) {
+      return
+    }
+    await deleteHousehold(household.id)
+    onDeleted?.(household)
   }
 
   return (
@@ -103,7 +117,19 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
               />
             )}
           />
+          {!household && (
+            <button
+              type="button"
+              className="generate-code-btn"
+              onClick={() => setValue('codeMenage', generateCodeMenage(), { shouldValidate: true })}
+            >
+              Générer un code
+            </button>
+          )}
           {errors.codeMenage && <span className="field-error">{errors.codeMenage.message}</span>}
+          {!household && (
+            <span className="hint">Laisser vide : un code sera généré automatiquement à l'enregistrement.</span>
+          )}
         </div>
         <div className="header-field">
           <label className="field-label">Nombre de Membres*</label>
@@ -164,14 +190,23 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
       <FormFooter control={control} />
 
       <div className="form-actions">
-        {onCancel && (
-          <button type="button" className="cancel-btn" onClick={onCancel}>
-            Annuler
+        {household ? (
+          <button type="button" className="delete-btn" onClick={handleDelete}>
+            Supprimer le ménage
           </button>
+        ) : (
+          <span />
         )}
-        <button type="submit" className="submit-btn" disabled={isSubmitting}>
-          {household ? 'Mettre à jour le ménage' : 'Enregistrer le ménage'}
-        </button>
+        <div className="form-actions-right">
+          {onCancel && (
+            <button type="button" className="cancel-btn" onClick={onCancel}>
+              Annuler
+            </button>
+          )}
+          <button type="submit" className="submit-btn" disabled={isSubmitting}>
+            {household ? 'Mettre à jour le ménage' : 'Enregistrer le ménage'}
+          </button>
+        </div>
       </div>
     </form>
   )

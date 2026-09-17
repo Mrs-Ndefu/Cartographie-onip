@@ -9,6 +9,7 @@ import { useHouseholds } from './hooks/useHouseholds'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useAuth } from './hooks/useAuth'
 import { useSync } from './hooks/useSync'
+import { deleteHouseholdOnServer } from './utils/syncClient'
 import type { Household, GeoLocation } from './types/household'
 import './App.css'
 
@@ -24,7 +25,7 @@ const SYNC_STATUS_LABELS: Record<string, string> = {
 function App() {
   const { session, isAuthenticated, login, logout, updateAgent, requireReauth, loginError, loginLoading } = useAuth()
   const { households } = useHouseholds()
-  const { status: syncStatus } = useSync(session, requireReauth)
+  const { status: syncStatus, forceSyncAll } = useSync(session, requireReauth)
   const [view, setView] = useState<View>('map')
   const [editingHousehold, setEditingHousehold] = useState<Household | null>(null)
   const [pickedLocation, setPickedLocation] = useState<GeoLocation | null>(null)
@@ -66,6 +67,21 @@ function App() {
     setPickedLocation(null)
   }
 
+  async function handleDeleted(household: Household) {
+    setToast(`Ménage ${household.codeMenage || '(sans code)'} supprimé.`)
+    setView('map')
+    setEditingHousehold(null)
+    setPickedLocation(null)
+
+    if (household.syncedAt && session && navigator.onLine) {
+      try {
+        await deleteHouseholdOnServer(household.id, session.token)
+      } catch {
+        // best effort : le ménage reste supprimé localement même si le serveur est injoignable
+      }
+    }
+  }
+
   if (!isAuthenticated) {
     return <LoginScreen onLogin={login} loading={loginLoading} error={loginError} />
   }
@@ -84,6 +100,15 @@ function App() {
                 </button>
               )}
               <span className={`sync-badge sync-${syncStatus}`}>{SYNC_STATUS_LABELS[syncStatus]}</span>
+              <button
+                type="button"
+                className="resync-btn"
+                onClick={() => void forceSyncAll()}
+                disabled={syncStatus === 'syncing'}
+                title="Renvoyer tous les ménages locaux au serveur"
+              >
+                ⟳
+              </button>
               <span className="agent-name">{session?.agent.fullName}</span>
               <button
                 type="button"
@@ -129,6 +154,7 @@ function App() {
           household={editingHousehold}
           onSaved={handleSaved}
           onCancel={handleCancelForm}
+          onDeleted={handleDeleted}
         />
       )}
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}

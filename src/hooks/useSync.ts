@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useHouseholds } from './useHouseholds'
 import { syncHouseholds } from '../utils/syncClient'
 import { ApiError } from '../utils/apiClient'
+import db from '../utils/db'
 import type { AuthSession } from '../types/agent'
 
 export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline'
@@ -30,7 +31,7 @@ export function useSync(session: AuthSession | null, onAuthExpired: () => void) 
       const now = new Date().toISOString()
       await Promise.all(result.accepted.map((id) => markSynced(id, now)))
       setLastSyncedAt(now)
-      setStatus('idle')
+      setStatus(result.rejected.length > 0 ? 'error' : 'idle')
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         onAuthExpired()
@@ -40,6 +41,34 @@ export function useSync(session: AuthSession | null, onAuthExpired: () => void) 
       syncingRef.current = false
     }
   }, [session, households, markSynced, onAuthExpired])
+
+  // Renvoie tous les ménages locaux au serveur, indépendamment de leur syncedAt.
+  // Utile si le serveur a perdu des données déjà marquées "synchronisées" côté client
+  // (ex. base ré-initialisée) : sans ça, l'app ne les renverrait jamais, faute de le savoir.
+  const forceSyncAll = useCallback(async () => {
+    if (!session || syncingRef.current || !navigator.onLine) return
+    syncingRef.current = true
+    setStatus('syncing')
+    try {
+      const all = await db.households.toArray()
+      if (all.length === 0) {
+        setStatus('idle')
+        return
+      }
+      const result = await syncHouseholds(all, session.token)
+      const now = new Date().toISOString()
+      await Promise.all(result.accepted.map((id) => markSynced(id, now)))
+      setLastSyncedAt(now)
+      setStatus(result.rejected.length > 0 ? 'error' : 'idle')
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        onAuthExpired()
+      }
+      setStatus('error')
+    } finally {
+      syncingRef.current = false
+    }
+  }, [session, markSynced, onAuthExpired])
 
   useEffect(() => {
     function handleOnline() {
@@ -64,5 +93,5 @@ export function useSync(session: AuthSession | null, onAuthExpired: () => void) 
     return () => clearInterval(interval)
   }, [runSync])
 
-  return { status, lastSyncedAt, syncNow: runSync }
+  return { status, lastSyncedAt, syncNow: runSync, forceSyncAll }
 }
