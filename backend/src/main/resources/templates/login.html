@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connexion — Carto-Onip-RDC</title>
+  <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body class="login-body">
+  <form class="login-card" th:action="@{/login}" method="post">
+    <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="login-logo">
+    <h1>Carto-Onip-RDC</h1>
+    <p class="subtitle">Tableau de bord — connexion administrateur</p>
+    <p th:if="${param.error}" class="error">Identifiants invalides.</p>
+    <p th:if="${param.logout}" class="info">Vous avez été déconnecté.</p>
+    <label>Nom d'utilisateur
+      <input type="text" name="username" required autofocus>
+    </label>
+    <label>Mot de passe
+      <span class="password-field">
+        <input type="password" name="password" required>
+        <button type="button" class="toggle-password" aria-label="Afficher le mot de passe">👁</button>
+      </span>
+    </label>
+    <button type="submit">Se connecter</button>
+  </form>
+  <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

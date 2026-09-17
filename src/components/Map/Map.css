@@ -1,0 +1,74 @@
+.map-view {
+  height: 100%;
+  width: 100%;
+}
+
+.marker-pin {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.marker-pin.pending {
+  background: #1177c8;
+}
+
+.household-popup {
+  font-size: 0.85rem;
+}
+
+.household-popup-code {
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.household-popup p {
+  margin: 0.15rem 0;
+}
+
+.household-popup button {
+  margin-top: 0.4rem;
+  background: #1177c8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+}
+
+.location-picker {
+  border: 2px solid #1a1a1a;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.location-picker-title {
+  font-weight: 600;
+  margin: 0;
+}
+
+.location-picker-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.location-picker-coords {
+  color: #444;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.location-picker-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}

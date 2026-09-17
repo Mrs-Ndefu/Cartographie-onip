@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    # Pas de MODE=PostgreSQL : incompatible avec le type BLOB (photo de profil des agents)
+    url: jdbc:h2:mem:facm01test
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+
+app:
+  jwt:
+    secret: test-secret-key-at-least-32-characters-long
+    expiration-minutes: 60
+  bootstrap-admin:
+    username: admin
+    password: admin123

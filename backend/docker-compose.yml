@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: carto-onip-rdc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: carto_onip_rdc
+      POSTGRES_USER: facm01
+      POSTGRES_PASSWORD: facm01
+    ports:
+      - "5432:5432"
+    volumes:
+      - carto-onip-rdc-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  carto-onip-rdc-postgres-data:
