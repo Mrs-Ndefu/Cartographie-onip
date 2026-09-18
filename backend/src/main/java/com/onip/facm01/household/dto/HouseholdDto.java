@@ -69,6 +69,6 @@ public record HouseholdDto(
 
     private static PersonDto toPersonDto(HouseholdMember member) {
         return new PersonDto(member.getNom(), member.getPostnom(), member.getPrenom(),
-                member.getDateNaissance(), member.getSexe());
+                member.getDateNaissance(), member.getSexe(), member.getRelation());
     }
 }

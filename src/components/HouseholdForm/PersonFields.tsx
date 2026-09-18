@@ -3,7 +3,7 @@ import type { Control, FieldPath } from 'react-hook-form'
 import { CharacterGridInput } from './CharacterGridInput'
 import { DateInput } from './DateInput'
 import { SexeToggle } from './SexeToggle'
-import { NAME_FIELD_LENGTH } from '../../types/household'
+import { NAME_FIELD_LENGTH, RELATION_OPTIONS } from '../../types/household'
 import type { HouseholdFormValues } from '../../utils/validation'
 
 type PersonPath = 'chef' | `membres.${number}`
@@ -13,6 +13,7 @@ interface PersonFieldsProps {
   namePrefix: PersonPath
   title: string
   requiredNom?: boolean
+  showRelation?: boolean
   onRemove?: () => void
 }
 
@@ -21,6 +22,7 @@ export function PersonFields({
   namePrefix,
   title,
   requiredNom = true,
+  showRelation = false,
   onRemove,
 }: PersonFieldsProps) {
   const path = (field: string) => `${namePrefix}.${field}` as FieldPath<HouseholdFormValues>
@@ -113,6 +115,26 @@ export function PersonFields({
           )}
         />
       </div>
+
+      {showRelation && (
+        <div className="field-row">
+          <label className="field-label">Lien de parenté avec le chef</label>
+          <Controller
+            control={control}
+            name={path('relation')}
+            render={({ field }) => (
+              <select className="text-input" {...field} value={(field.value as string) ?? ''}>
+                <option value="">—</option>
+                {RELATION_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+        </div>
+      )}
     </fieldset>
   )
 }

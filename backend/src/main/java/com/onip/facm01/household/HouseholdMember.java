@@ -41,11 +41,14 @@ public class HouseholdMember {
     @Enumerated(EnumType.STRING)
     private Sexe sexe;
 
+    /** Lien de parenté avec le chef de ménage (vide pour le chef lui-même). */
+    private String relation;
+
     protected HouseholdMember() {
     }
 
     public HouseholdMember(UUID id, Household household, boolean chef, int position,
-                            String nom, String postnom, String prenom, String dateNaissance, Sexe sexe) {
+                            String nom, String postnom, String prenom, String dateNaissance, Sexe sexe, String relation) {
         this.id = id;
         this.household = household;
         this.chef = chef;
@@ -55,6 +58,7 @@ public class HouseholdMember {
         this.prenom = prenom;
         this.dateNaissance = dateNaissance;
         this.sexe = sexe;
+        this.relation = relation;
     }
 
     public UUID getId() {
@@ -95,5 +99,9 @@ public class HouseholdMember {
 
     public Sexe getSexe() {
         return sexe;
+    }
+
+    public String getRelation() {
+        return relation;
     }
 }

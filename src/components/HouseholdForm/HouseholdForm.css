@@ -159,25 +159,21 @@
 }
 
 .address-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .address-grid .field-row {
   margin-bottom: 0;
 }
 
-.address-grid .text-input {
-  width: 100%;
+.address-grid .field-label {
+  min-width: 9rem;
 }
 
 @media (max-width: 800px) {
   .members-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .address-grid {
     grid-template-columns: 1fr;
   }
 }

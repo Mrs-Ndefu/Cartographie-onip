@@ -1,10 +1,18 @@
 import { Controller } from 'react-hook-form'
 import type { Control } from 'react-hook-form'
+import { CharacterGridInput } from './CharacterGridInput'
 import type { HouseholdFormValues } from '../../utils/validation'
 
 interface AddressFieldsProps {
   control: Control<HouseholdFormValues>
 }
+
+const VILLE_LENGTH = 15
+const COMMUNE_LENGTH = 15
+const QUARTIER_LENGTH = 15
+const RUE_LENGTH = 19
+const NUMERO_LENGTH = 5
+const IMMEUBLE_LENGTH = 15
 
 export function AddressFields({ control }: AddressFieldsProps) {
   return (
@@ -16,7 +24,15 @@ export function AddressFields({ control }: AddressFieldsProps) {
           <Controller
             control={control}
             name="address.ville"
-            render={({ field }) => <input className="text-input" {...field} />}
+            render={({ field }) => (
+              <CharacterGridInput
+                length={VILLE_LENGTH}
+                value={field.value}
+                onChange={field.onChange}
+                pattern={/[A-Z0-9]/}
+                ariaLabel="Ville"
+              />
+            )}
           />
         </div>
 
@@ -25,7 +41,15 @@ export function AddressFields({ control }: AddressFieldsProps) {
           <Controller
             control={control}
             name="address.commune"
-            render={({ field }) => <input className="text-input" {...field} />}
+            render={({ field }) => (
+              <CharacterGridInput
+                length={COMMUNE_LENGTH}
+                value={field.value}
+                onChange={field.onChange}
+                pattern={/[A-Z0-9]/}
+                ariaLabel="Commune"
+              />
+            )}
           />
         </div>
 
@@ -34,7 +58,15 @@ export function AddressFields({ control }: AddressFieldsProps) {
           <Controller
             control={control}
             name="address.quartier"
-            render={({ field }) => <input className="text-input" {...field} />}
+            render={({ field }) => (
+              <CharacterGridInput
+                length={QUARTIER_LENGTH}
+                value={field.value}
+                onChange={field.onChange}
+                pattern={/[A-Z0-9]/}
+                ariaLabel="Quartier"
+              />
+            )}
           />
         </div>
 
@@ -43,7 +75,15 @@ export function AddressFields({ control }: AddressFieldsProps) {
           <Controller
             control={control}
             name="address.rue"
-            render={({ field }) => <input className="text-input" {...field} />}
+            render={({ field }) => (
+              <CharacterGridInput
+                length={RUE_LENGTH}
+                value={field.value}
+                onChange={field.onChange}
+                pattern={/[A-Z0-9]/}
+                ariaLabel="Rue / Avenue"
+              />
+            )}
           />
         </div>
 
@@ -52,7 +92,15 @@ export function AddressFields({ control }: AddressFieldsProps) {
           <Controller
             control={control}
             name="address.numero"
-            render={({ field }) => <input className="text-input small" {...field} />}
+            render={({ field }) => (
+              <CharacterGridInput
+                length={NUMERO_LENGTH}
+                value={field.value}
+                onChange={field.onChange}
+                pattern={/[A-Z0-9]/}
+                ariaLabel="Numéro"
+              />
+            )}
           />
         </div>
 
@@ -61,7 +109,15 @@ export function AddressFields({ control }: AddressFieldsProps) {
           <Controller
             control={control}
             name="address.immeuble"
-            render={({ field }) => <input className="text-input" {...field} />}
+            render={({ field }) => (
+              <CharacterGridInput
+                length={IMMEUBLE_LENGTH}
+                value={field.value}
+                onChange={field.onChange}
+                pattern={/[A-Z0-9]/}
+                ariaLabel="Immeuble / Référence"
+              />
+            )}
           />
         </div>
       </div>

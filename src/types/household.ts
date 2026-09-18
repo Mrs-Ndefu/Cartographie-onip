@@ -4,12 +4,30 @@ export const MAX_MEMBRES = 14
 
 export type Sexe = 'M' | 'F'
 
+// Lien de parenté avec le chef de ménage — non présent sur le formulaire papier FACM01,
+// ajouté pour mieux qualifier la composition du ménage.
+export const RELATION_OPTIONS = [
+  'Époux/Épouse',
+  'Fils/Fille',
+  'Père/Mère',
+  'Frère/Sœur',
+  'Petit-fils/Petite-fille',
+  'Beau-fils/Belle-fille',
+  'Neveu/Nièce',
+  'Autre parent',
+  "Employé(e) de maison",
+  'Sans lien de parenté',
+] as const
+
+export type Relation = (typeof RELATION_OPTIONS)[number] | ''
+
 export interface Person {
   nom: string
   postnom: string
   prenom: string
   dateNaissance: string // format JJ/MM/AAAA
   sexe: Sexe | null
+  relation: Relation // vide pour le chef ; lien avec le chef pour un membre
 }
 
 export type HouseholdStatus = 'brouillon' | 'complet' | 'a_verifier'
@@ -60,6 +78,7 @@ export function createEmptyPerson(): Person {
     prenom: '',
     dateNaissance: '',
     sexe: null,
+    relation: '',
   }
 }
 

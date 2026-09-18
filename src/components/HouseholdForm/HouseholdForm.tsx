@@ -181,6 +181,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
               control={control}
               namePrefix={`membres.${index}`}
               title={`Membre ${index + 1}`}
+              showRelation
               onRemove={() => remove(index)}
             />
           ))}

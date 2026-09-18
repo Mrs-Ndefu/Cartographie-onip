@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CODE_MENAGE_LENGTH, MAX_MEMBRES, createEmptyAddress } from '../types/household'
-import type { Sexe, Address } from '../types/household'
+import type { Sexe, Address, Relation } from '../types/household'
 
 export interface PersonFormValues {
   nom: string
@@ -8,6 +8,7 @@ export interface PersonFormValues {
   prenom: string
   dateNaissance: string
   sexe: Sexe | null
+  relation: Relation
 }
 
 export type AddressFormValues = Address
@@ -57,6 +58,7 @@ const personSchema: z.ZodType<PersonFormValues> = z.object({
   sexe: z.union([z.literal('M'), z.literal('F'), z.null()]).refine((v) => v !== null, {
     message: 'Sexe obligatoire (M ou F)',
   }),
+  relation: z.string() as z.ZodType<Relation>,
 })
 
 export const householdSchema: z.ZodType<HouseholdFormValues> = z
@@ -88,7 +90,7 @@ export const householdSchema: z.ZodType<HouseholdFormValues> = z
   })
 
 export function createEmptyPersonForm(): PersonFormValues {
-  return { nom: '', postnom: '', prenom: '', dateNaissance: '', sexe: null }
+  return { nom: '', postnom: '', prenom: '', dateNaissance: '', sexe: null, relation: '' }
 }
 
 export function createDefaultHouseholdFormValues(): HouseholdFormValues {
