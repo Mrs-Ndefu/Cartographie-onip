@@ -4,7 +4,6 @@ import { OfficialHeader } from './OfficialHeader'
 import { CodeMenageInput } from './CodeMenageInput'
 import { AddressFields } from './AddressFields'
 import { PersonFields } from './PersonFields'
-import { FormFooter } from './FormFooter'
 import {
   householdSchema,
   createDefaultHouseholdFormValues,
@@ -187,8 +186,6 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
           ))}
         </div>
       </section>
-
-      <FormFooter control={control} />
 
       <div className="form-actions">
         {household ? (

@@ -109,6 +109,14 @@ public class HouseholdService {
     }
 
     @Transactional(readOnly = true)
+    public Page<HouseholdDto> search(String search, Pageable pageable) {
+        if (search == null || search.isBlank()) {
+            return list(pageable);
+        }
+        return householdRepository.searchByChefName(search.trim(), pageable).map(HouseholdDto::from);
+    }
+
+    @Transactional(readOnly = true)
     public HouseholdDto get(UUID id) {
         Household household = householdRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Ménage introuvable : " + id));

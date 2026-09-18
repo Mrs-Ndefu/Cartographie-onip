@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  <meta name="_csrf_parameter" th:content="${_csrf.parameterName}">
   <title>Carto-Onip-RDC</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -84,8 +87,19 @@
   <section class="table-section">
     <div class="table-card">
       <div class="table-card-header">
-        <h2>Ménages enregistrés</h2>
-        <span class="table-card-count" th:text="${page.totalElements} + ' au total'">0 au total</span>
+        <div>
+          <h2>Ménages enregistrés</h2>
+          <span class="table-card-count" th:text="${page.totalElements} + ' au total'">0 au total</span>
+        </div>
+        <form th:action="@{/dashboard}" method="get" class="table-search-form" role="search">
+          <svg class="table-search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <input type="search" name="search" class="table-search-input"
+                 placeholder="Rechercher un chef de ménage…" th:value="${search}">
+          <button type="submit" class="visually-hidden">Rechercher</button>
+        </form>
       </div>
       <div class="table-scroll">
         <table class="households-table">
@@ -117,7 +131,10 @@
               </td>
             </tr>
             <tr th:if="${households.isEmpty()}">
-              <td colspan="7" class="table-empty">Aucun ménage synchronisé pour l'instant.</td>
+              <td colspan="7" class="table-empty"
+                  th:text="${search != null and !#strings.isEmpty(search)} ? 'Aucun ménage ne correspond à cette recherche.' : 'Aucun ménage synchronisé pour l\'instant.'">
+                Aucun ménage synchronisé pour l'instant.
+              </td>
             </tr>
           </tbody>
         </table>
@@ -126,13 +143,13 @@
       <nav th:if="${page.totalPages > 1}" aria-label="Pagination des ménages" class="table-card-footer">
         <ul class="pagination pagination-sm mb-1">
           <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard(page=${page.number - 1})}">Précédent</a>
+            <a class="page-link" th:href="@{/dashboard(page=${page.number - 1}, search=${search})}">Précédent</a>
           </li>
           <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
-            <a class="page-link" th:href="@{/dashboard(page=${i})}" th:text="${i + 1}">1</a>
+            <a class="page-link" th:href="@{/dashboard(page=${i}, search=${search})}" th:text="${i + 1}">1</a>
           </li>
           <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard(page=${page.number + 1})}">Suivant</a>
+            <a class="page-link" th:href="@{/dashboard(page=${page.number + 1}, search=${search})}">Suivant</a>
           </li>
         </ul>
         <p class="text-secondary small mb-0">
@@ -191,6 +208,84 @@
           .bindPopup((h.codeMenage || '(sans code)') + '<br>' + (h.chef ? h.chef.prenom + ' ' + h.chef.nom : ''));
       }
     });
+
+    // Recherche en direct : filtre dès la première lettre tapée, sans recharger la page.
+    (function () {
+      var STATUS_LABELS = { complet: 'Complet', brouillon: 'Brouillon', a_verifier: 'À vérifier' };
+      var csrfToken = document.querySelector('meta[name="_csrf"]').content;
+      var csrfParam = document.querySelector('meta[name="_csrf_parameter"]').content;
+
+      var searchForm = document.querySelector('.table-search-form');
+      var searchInput = document.querySelector('.table-search-input');
+      var tbody = document.querySelector('.households-table tbody');
+      var countEl = document.querySelector('.table-card-count');
+      var paginationNav = document.querySelector('.table-card-footer');
+      if (!searchForm || !searchInput || !tbody) return;
+
+      searchForm.addEventListener('submit', function (e) { e.preventDefault(); });
+
+      function escapeHtml(value) {
+        var div = document.createElement('div');
+        div.textContent = value == null ? '' : String(value);
+        return div.innerHTML;
+      }
+
+      function formatDate(iso) {
+        var d = new Date(iso);
+        var pad = function (n) { return String(n).padStart(2, '0'); };
+        return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear()
+          + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      }
+
+      function renderRow(h) {
+        var chef = h.chef ? [h.chef.prenom, h.chef.nom].filter(Boolean).join(' ') : '-';
+        var addr = h.address ? [h.address.commune, h.address.quartier].filter(Boolean).join(' / ') : '-';
+        var code = h.codeMenage || '';
+        return '<tr>'
+          + '<td class="cell-code">' + escapeHtml(code || '-') + '</td>'
+          + '<td>' + escapeHtml(chef) + '</td>'
+          + '<td>' + escapeHtml(addr) + '</td>'
+          + '<td><span class="status-badge status-' + h.status + '">' + (STATUS_LABELS[h.status] || h.status) + '</span></td>'
+          + '<td>' + escapeHtml(h.agentUsername || '—') + '</td>'
+          + '<td class="cell-date">' + formatDate(h.updatedAt) + '</td>'
+          + '<td class="col-actions">'
+          +   '<form method="post" action="/dashboard/households/' + h.id + '/delete"'
+          +     ' onsubmit="return confirm(\'Supprimer ce ménage (' + escapeHtml(code) + ') ? Cette action est irréversible.\');">'
+          +     '<input type="hidden" name="' + csrfParam + '" value="' + csrfToken + '">'
+          +     '<button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>'
+          +   '</form>'
+          + '</td>'
+          + '</tr>';
+      }
+
+      var debounceTimer;
+      searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        var term = searchInput.value.trim();
+
+        if (!term) {
+          window.location.href = '/dashboard';
+          return;
+        }
+
+        debounceTimer = setTimeout(function () {
+          fetch('/dashboard/households/search?q=' + encodeURIComponent(term))
+            .then(function (res) { return res.json(); })
+            .then(function (results) {
+              if (paginationNav) paginationNav.style.display = 'none';
+              if (countEl) {
+                countEl.textContent = results.length + ' résultat' + (results.length !== 1 ? 's' : '');
+              }
+              tbody.innerHTML = results.length
+                ? results.map(renderRow).join('')
+                : '<tr><td colspan="7" class="table-empty">Aucun ménage ne correspond à cette recherche.</td></tr>';
+            })
+            .catch(function () {
+              // Recherche live indisponible — la touche Entrée / le rechargement de page reste utilisable.
+            });
+        }, 200);
+      });
+    })();
     /*]]>*/
   </script>
 </body>

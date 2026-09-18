@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
 import java.util.UUID;
 
 @Controller
@@ -50,15 +52,20 @@ public class DashboardController {
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(@RequestParam(defaultValue = "0") int page, Authentication authentication, Model model) {
-        Page<HouseholdDto> households = householdService.list(
-                PageRequest.of(page, 25, Sort.by(Sort.Direction.DESC, "updatedAt")));
+    public String dashboard(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String search,
+            Authentication authentication,
+            Model model) {
+        Page<HouseholdDto> households = householdService.search(
+                search, PageRequest.of(page, 25, Sort.by(Sort.Direction.DESC, "updatedAt")));
 
         agentRepository.findByUsername(authentication.getName())
                 .ifPresent(agent -> model.addAttribute("currentAgent", AgentDto.from(agent)));
 
         model.addAttribute("households", households.getContent());
         model.addAttribute("page", households);
+        model.addAttribute("search", search);
         model.addAttribute("total", householdRepository.count());
         model.addAttribute("countComplet", householdRepository.countByStatus(HouseholdStatus.COMPLET));
         model.addAttribute("countBrouillon", householdRepository.countByStatus(HouseholdStatus.BROUILLON));
@@ -69,6 +76,16 @@ public class DashboardController {
         model.addAttribute("monthlyRegistrations", dashboardService.monthlyRegistrations(12));
 
         return "dashboard";
+    }
+
+    // Recherche "en direct" (auto-filtrage dès la première lettre) consommée en AJAX par le
+    // champ de recherche — renvoie du JSON, pas de vue, d'où @ResponseBody sur ce contrôleur
+    // par ailleurs orienté Thymeleaf. Plafonné à 50 résultats : pensé pour affiner une saisie,
+    // pas pour remplacer la liste paginée complète.
+    @GetMapping("/dashboard/households/search")
+    @ResponseBody
+    public List<HouseholdDto> searchHouseholdsJson(@RequestParam(required = false) String q) {
+        return householdService.search(q, PageRequest.of(0, 50, Sort.by(Sort.Direction.DESC, "updatedAt"))).getContent();
     }
 
     @PostMapping("/dashboard/households/{id}/delete")
