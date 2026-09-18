@@ -1,10 +1,12 @@
 package com.onip.cartoonip.ui.login
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -17,12 +19,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.onip.cartoonip.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,23 +33,24 @@ fun LoginScreen(onLoginSuccess: () -> Unit, viewModel: LoginViewModel = viewMode
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center,
     ) {
+        Image(
+            painter = painterResource(R.drawable.onip_logo),
+            contentDescription = "Logo ONIP",
+            modifier = Modifier.size(96.dp).padding(bottom = 12.dp).align(Alignment.CenterHorizontally),
+        )
         Text(
-            text = "Onip Dashboard",
+            text = "Carto-Onip Terrain",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
         )
         Text(
-            text = "Espace administrateur — Carto-Onip-RDC",
+            text = "Enregistrement des ménages sur le terrain",
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp, top = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp, top = 4.dp),
             textAlign = TextAlign.Center,
         )
 
@@ -56,18 +60,14 @@ fun LoginScreen(onLoginSuccess: () -> Unit, viewModel: LoginViewModel = viewMode
             label = { Text("Adresse du serveur (ex: http://192.168.1.10:8080)") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
         OutlinedTextField(
             value = uiState.username,
             onValueChange = viewModel::onUsernameChange,
             label = { Text("Identifiant") },
             singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
         OutlinedTextField(
             value = uiState.password,
@@ -76,9 +76,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, viewModel: LoginViewModel = viewMode
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
         )
 
         uiState.error?.let { error ->
@@ -93,9 +91,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, viewModel: LoginViewModel = viewMode
         Button(
             onClick = { viewModel.login(onLoginSuccess) },
             enabled = !uiState.isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.padding(4.dp), color = MaterialTheme.colorScheme.onPrimary)
@@ -104,10 +100,4 @@ fun LoginScreen(onLoginSuccess: () -> Unit, viewModel: LoginViewModel = viewMode
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun LoginScreenPreview() {
-    LoginScreen(onLoginSuccess = {})
 }

@@ -1,22 +1,16 @@
 package com.onip.cartoonip.data.network
 
-import com.onip.cartoonip.data.model.AgentDto
-import com.onip.cartoonip.data.model.ChangeRoleRequest
-import com.onip.cartoonip.data.model.CreateAgentRequest
-import com.onip.cartoonip.data.model.DashboardStatsDto
-import com.onip.cartoonip.data.model.HouseholdDto
+import com.onip.cartoonip.data.model.HouseholdSyncRequest
 import com.onip.cartoonip.data.model.LoginRequest
 import com.onip.cartoonip.data.model.LoginResponse
-import com.onip.cartoonip.data.model.PageResponse
-import com.onip.cartoonip.data.model.ResetPasswordRequest
-import com.onip.cartoonip.data.model.SetActiveRequest
+import com.onip.cartoonip.data.model.SyncResponse
+import okhttp3.MultipartBody
+import retrofit2.Retrofit
 import retrofit2.http.Body
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.PATCH
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
-import retrofit2.http.Query
 
 interface AuthApi {
     @POST("api/auth/login")
@@ -24,41 +18,15 @@ interface AuthApi {
 }
 
 interface HouseholdApi {
-    @GET("api/households")
-    suspend fun list(@Query("page") page: Int, @Query("size") size: Int = 25): PageResponse<HouseholdDto>
+    @POST("api/households/sync")
+    suspend fun sync(@Body request: HouseholdSyncRequest): SyncResponse
 
-    @GET("api/households/{id}")
-    suspend fun get(@Path("id") id: String): HouseholdDto
-
-    @DELETE("api/households/{id}")
-    suspend fun delete(@Path("id") id: String)
+    @Multipart
+    @POST("api/households/{id}/photo")
+    suspend fun uploadPhoto(@Path("id") id: String, @Part file: MultipartBody.Part)
 }
 
-interface AgentApi {
-    @GET("api/agents")
-    suspend fun list(): List<AgentDto>
-
-    @POST("api/agents")
-    suspend fun create(@Body request: CreateAgentRequest): AgentDto
-
-    @PATCH("api/agents/{id}/active")
-    suspend fun setActive(@Path("id") id: String, @Body request: SetActiveRequest): AgentDto
-
-    @PATCH("api/agents/{id}/role")
-    suspend fun changeRole(@Path("id") id: String, @Body request: ChangeRoleRequest): AgentDto
-
-    @POST("api/agents/{id}/reset-password")
-    suspend fun resetPassword(@Path("id") id: String, @Body request: ResetPasswordRequest): AgentDto
-}
-
-interface DashboardApi {
-    @GET("api/dashboard/stats")
-    suspend fun stats(): DashboardStatsDto
-}
-
-class ApiServices(retrofit: retrofit2.Retrofit) {
+class ApiServices(retrofit: Retrofit) {
     val auth: AuthApi by lazy { retrofit.create(AuthApi::class.java) }
     val households: HouseholdApi by lazy { retrofit.create(HouseholdApi::class.java) }
-    val agents: AgentApi by lazy { retrofit.create(AgentApi::class.java) }
-    val dashboard: DashboardApi by lazy { retrofit.create(DashboardApi::class.java) }
 }

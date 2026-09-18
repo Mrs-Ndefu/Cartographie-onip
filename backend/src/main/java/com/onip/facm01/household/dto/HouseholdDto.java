@@ -22,7 +22,8 @@ public record HouseholdDto(
         String agentUsername,
         Instant createdAt,
         Instant updatedAt,
-        Instant syncedAt) {
+        Instant syncedAt,
+        boolean hasPhoto) {
 
     public static HouseholdDto from(Household household) {
         PersonDto chef = household.getMembers().stream()
@@ -64,7 +65,8 @@ public record HouseholdDto(
                 Optional.ofNullable(household.getAgent()).map(a -> a.getUsername()).orElse(null),
                 household.getCreatedAt(),
                 household.getUpdatedAt(),
-                household.getSyncedAt());
+                household.getSyncedAt(),
+                household.isHasPhoto());
     }
 
     private static PersonDto toPersonDto(HouseholdMember member) {

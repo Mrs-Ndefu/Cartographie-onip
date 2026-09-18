@@ -22,10 +22,14 @@ import java.util.UUID;
 @Service
 public class HouseholdService {
 
-    private final HouseholdRepository householdRepository;
+    private static final long MAX_PHOTO_SIZE = 2 * 1024 * 1024; // 2 Mo
 
-    public HouseholdService(HouseholdRepository householdRepository) {
+    private final HouseholdRepository householdRepository;
+    private final HouseholdPhotoRepository householdPhotoRepository;
+
+    public HouseholdService(HouseholdRepository householdRepository, HouseholdPhotoRepository householdPhotoRepository) {
         this.householdRepository = householdRepository;
+        this.householdPhotoRepository = householdPhotoRepository;
     }
 
     @Transactional
@@ -165,5 +169,42 @@ public class HouseholdService {
                 && (household.getAgent() == null || !household.getAgent().getId().equals(currentAgent.getId()))) {
             throw new IllegalArgumentException("Ménage introuvable : " + household.getId());
         }
+    }
+
+    @Transactional
+    public void attachPhoto(UUID id, byte[] photo, String contentType, Agent currentAgent) {
+        if (photo.length == 0) {
+            throw new IllegalArgumentException("Le fichier envoyé est vide");
+        }
+        if (photo.length > MAX_PHOTO_SIZE) {
+            throw new IllegalArgumentException("La photo dépasse la taille maximale autorisée (2 Mo)");
+        }
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Le fichier doit être une image");
+        }
+
+        Household household = householdRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Ménage introuvable : " + id));
+        requireAccess(household, currentAgent);
+
+        HouseholdPhoto existing = householdPhotoRepository.findById(id).orElse(null);
+        if (existing != null) {
+            existing.update(photo, contentType);
+            householdPhotoRepository.save(existing);
+        } else {
+            householdPhotoRepository.save(new HouseholdPhoto(id, photo, contentType));
+        }
+
+        household.setHasPhoto(true);
+        householdRepository.save(household);
+    }
+
+    @Transactional(readOnly = true)
+    public HouseholdPhoto getPhoto(UUID id, Agent currentAgent) {
+        Household household = householdRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Ménage introuvable : " + id));
+        requireAccess(household, currentAgent);
+        return householdPhotoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Aucune photo pour ce ménage : " + id));
     }
 }

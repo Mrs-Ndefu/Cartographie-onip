@@ -6,11 +6,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-/**
- * Builds a Retrofit instance pointed at [baseUrl]. [tokenProvider] is read on every request so a
- * token obtained after this client was built (or a token that changes on re-login) is always
- * picked up — callers should not need to rebuild the client just because the session refreshed.
- */
 fun buildRetrofit(baseUrl: String, tokenProvider: () -> String?): Retrofit {
     val normalizedBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
 
@@ -20,7 +15,8 @@ fun buildRetrofit(baseUrl: String, tokenProvider: () -> String?): Retrofit {
 
     val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder().apply {
                 tokenProvider()?.let { header("Authorization", "Bearer $it") }

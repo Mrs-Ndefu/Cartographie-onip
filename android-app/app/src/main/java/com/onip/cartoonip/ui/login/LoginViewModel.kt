@@ -3,7 +3,6 @@ package com.onip.cartoonip.ui.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onip.cartoonip.data.AppContainer
-import com.onip.cartoonip.data.model.AgentRole
 import com.onip.cartoonip.data.model.LoginRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,13 +48,6 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = AppContainer.apiFor(baseUrl).auth.login(LoginRequest(state.username.trim(), state.password))
-                if (response.agent.role != AgentRole.ADMIN) {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = "Cette application est réservée aux comptes administrateur.",
-                    )
-                    return@launch
-                }
                 AppContainer.sessionManager.save(baseUrl, response.token, response.agent)
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 onSuccess()

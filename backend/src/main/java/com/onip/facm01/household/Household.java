@@ -63,6 +63,16 @@ public class Household {
     @Column(name = "synced_at")
     private Instant syncedAt;
 
+    // Juste un indicateur bon marché ("une photo existe-t-elle ?"), toujours chargé avec le
+    // reste de la ligne sans coût. Les octets eux-mêmes vivent dans HouseholdPhoto (table à
+    // part) pour ne jamais alourdir les requêtes de liste/recherche avec un BLOB — ils ne sont
+    // chargés que sur demande explicite (endpoint dédié).
+    // columnDefinition avec DEFAULT : sans ça, la migration auto (ddl-auto=update) d'une colonne
+    // NOT NULL sur une table qui a déjà des lignes échoue (rejeté silencieusement par H2 — juste
+    // un WARN dans les logs, la colonne n'est alors jamais créée).
+    @Column(name = "has_photo", nullable = false, columnDefinition = "boolean default false")
+    private boolean hasPhoto = false;
+
     protected Household() {
     }
 
@@ -164,5 +174,13 @@ public class Household {
 
     public void setSyncedAt(Instant syncedAt) {
         this.syncedAt = syncedAt;
+    }
+
+    public boolean isHasPhoto() {
+        return hasPhoto;
+    }
+
+    public void setHasPhoto(boolean hasPhoto) {
+        this.hasPhoto = hasPhoto;
     }
 }

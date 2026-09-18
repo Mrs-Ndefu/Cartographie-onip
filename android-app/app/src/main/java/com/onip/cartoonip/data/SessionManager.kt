@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.onip.cartoonip.data.model.AgentDto
-import com.onip.cartoonip.data.model.AgentRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,14 +15,9 @@ data class Session(
     val agentId: String,
     val username: String,
     val fullName: String,
-    val role: AgentRole,
 )
 
-/**
- * Stores the backend URL, JWT and logged-in admin's identity in an EncryptedSharedPreferences
- * file so the app can be closed/reopened without re-login. The token is only ever attached to
- * requests aimed at [Session.baseUrl] (see NetworkModule) — never logged or sent elsewhere.
- */
+/** Session chiffrée sur l'appareil : URL du serveur, jeton JWT, identité de l'agent connecté. */
 class SessionManager(context: Context) {
 
     private val masterKey = MasterKey.Builder(context)
@@ -41,7 +35,6 @@ class SessionManager(context: Context) {
     private val _session = MutableStateFlow(loadSession())
     val session: StateFlow<Session?> = _session.asStateFlow()
 
-    /** Last backend URL entered, kept even after logout so the field is pre-filled next time. */
     var lastBaseUrl: String
         get() = prefs.getString(KEY_LAST_BASE_URL, "") ?: ""
         set(value) = prefs.edit().putString(KEY_LAST_BASE_URL, value).apply()
@@ -53,7 +46,6 @@ class SessionManager(context: Context) {
             .putString(KEY_AGENT_ID, agent.id)
             .putString(KEY_USERNAME, agent.username)
             .putString(KEY_FULL_NAME, agent.fullName)
-            .putString(KEY_ROLE, agent.role.name)
             .putString(KEY_LAST_BASE_URL, baseUrl)
             .apply()
         _session.value = loadSession()
@@ -61,12 +53,8 @@ class SessionManager(context: Context) {
 
     fun clear() {
         prefs.edit()
-            .remove(KEY_BASE_URL)
-            .remove(KEY_TOKEN)
-            .remove(KEY_AGENT_ID)
-            .remove(KEY_USERNAME)
-            .remove(KEY_FULL_NAME)
-            .remove(KEY_ROLE)
+            .remove(KEY_BASE_URL).remove(KEY_TOKEN).remove(KEY_AGENT_ID)
+            .remove(KEY_USERNAME).remove(KEY_FULL_NAME)
             .apply()
         _session.value = null
     }
@@ -77,9 +65,7 @@ class SessionManager(context: Context) {
         val agentId = prefs.getString(KEY_AGENT_ID, null) ?: return null
         val username = prefs.getString(KEY_USERNAME, null) ?: return null
         val fullName = prefs.getString(KEY_FULL_NAME, null) ?: return null
-        val role = prefs.getString(KEY_ROLE, null)?.let { runCatching { AgentRole.valueOf(it) }.getOrNull() }
-            ?: return null
-        return Session(baseUrl, token, agentId, username, fullName, role)
+        return Session(baseUrl, token, agentId, username, fullName)
     }
 
     companion object {
@@ -88,7 +74,6 @@ class SessionManager(context: Context) {
         private const val KEY_AGENT_ID = "agent_id"
         private const val KEY_USERNAME = "username"
         private const val KEY_FULL_NAME = "full_name"
-        private const val KEY_ROLE = "role"
         private const val KEY_LAST_BASE_URL = "last_base_url"
     }
 }

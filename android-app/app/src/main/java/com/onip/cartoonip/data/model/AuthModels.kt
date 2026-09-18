@@ -7,3 +7,11 @@ data class LoginResponse(
     val expiresInMinutes: Long,
     val agent: AgentDto,
 )
+
+data class AgentDto(
+    val id: String,
+    val username: String,
+    val fullName: String,
+    val role: String,
+    val active: Boolean,
+)

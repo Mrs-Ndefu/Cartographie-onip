@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,24L27,46v34h18V60h18v20h18V46z" />
-</vector>
+<!-- Le logo occupe toute la zone 108dp ; l'inset de 14dp le ramène dans la "zone sûre" (~72dp)
+     pour ne pas être rogné par le masque adaptatif (cercle/carré arrondi selon le launcher). -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/onip_logo"
+    android:insetLeft="14dp"
+    android:insetTop="14dp"
+    android:insetRight="14dp"
+    android:insetBottom="14dp" />

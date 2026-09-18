@@ -1,6 +1,5 @@
 package com.onip.cartoonip.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,9 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val OnipBlue = Color(0xFF1D4E89)
-private val OnipBlueDark = Color(0xFF0F2D52)
-private val OnipAccent = Color(0xFF2E9E5B)
+private val OnipBlue = Color(0xFF1177C8)
+private val OnipBlueDark = Color(0xFF0B4A84)
+private val OnipAccent = Color(0xFF178A17)
 
 private val LightColors = lightColorScheme(
     primary = OnipBlue,
