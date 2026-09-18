@@ -14,6 +14,8 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
 
     long countByStatus(HouseholdStatus status);
 
+    Page<Household> findByAgent_Id(UUID agentId, Pageable pageable);
+
     @Query("SELECT h.createdAt FROM Household h")
     List<Instant> findAllCreatedAt();
 }

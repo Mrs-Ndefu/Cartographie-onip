@@ -5,6 +5,7 @@ import { HouseholdForm } from './components/HouseholdForm/HouseholdForm'
 import { LoginScreen } from './components/Auth/LoginScreen'
 import { Toast } from './components/Toast/Toast'
 import { SettingsPanel } from './components/Settings/SettingsPanel'
+import { Dashboard } from './components/Dashboard/Dashboard'
 import { useHouseholds } from './hooks/useHouseholds'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useAuth } from './hooks/useAuth'
@@ -13,7 +14,7 @@ import { deleteHouseholdOnServer } from './utils/syncClient'
 import type { Household, GeoLocation } from './types/household'
 import './App.css'
 
-type View = 'map' | 'picking' | 'form'
+type View = 'map' | 'picking' | 'form' | 'dashboard'
 
 const SYNC_STATUS_LABELS: Record<string, string> = {
   idle: 'Synchronisé',
@@ -86,6 +87,20 @@ function App() {
     return <LoginScreen onLogin={login} loading={loginLoading} error={loginError} />
   }
 
+  if (view === 'dashboard' && session) {
+    return (
+      <>
+        <Dashboard
+          session={session}
+          onClose={() => setView('map')}
+          onEditHousehold={selectHouseholdForEdit}
+          onToast={setToast}
+        />
+        {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+      </>
+    )
+  }
+
   return (
     <div className="app">
       {view !== 'form' && (
@@ -97,6 +112,11 @@ function App() {
               {view === 'map' && (
                 <button type="button" className="add-member-btn" onClick={startNewHousehold}>
                   + Nouveau ménage
+                </button>
+              )}
+              {view === 'map' && session && (
+                <button type="button" className="toolbar-btn" onClick={() => setView('dashboard')}>
+                  Tableau de bord
                 </button>
               )}
               <span className={`sync-badge sync-${syncStatus}`}>{SYNC_STATUS_LABELS[syncStatus]}</span>

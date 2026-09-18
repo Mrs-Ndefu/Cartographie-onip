@@ -81,58 +81,66 @@
     <div id="dashboard-map"></div>
   </section>
 
-  <section>
-    <table class="households-table">
-      <thead>
-        <tr>
-          <th>Code Ménage</th>
-          <th>Chef</th>
-          <th>Commune / Quartier</th>
-          <th>Statut</th>
-          <th>Agent</th>
-          <th>Mis à jour</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr th:each="h : ${households}">
-          <td th:text="${h.codeMenage}">-</td>
-          <td th:text="${h.chef != null ? (h.chef.prenom + ' ' + h.chef.nom) : '-'}">-</td>
-          <td th:text="${(h.address != null ? h.address.commune : '') + ' / ' + (h.address != null ? h.address.quartier : '')}">-</td>
-          <td><span th:text="${h.status.value}" th:class="'status-badge status-' + ${h.status.value}">-</span></td>
-          <td th:text="${h.agentUsername ?: '—'}">-</td>
-          <td th:text="${h.updatedAt}">-</td>
-          <td>
-            <form th:action="@{/dashboard/households/{id}/delete(id=${h.id})}" method="post"
-                  onsubmit="return confirm('Supprimer ce ménage (' + this.dataset.code + ') ? Cette action est irréversible.');"
-                  th:data-code="${h.codeMenage}">
-              <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
-            </form>
-          </td>
-        </tr>
-        <tr th:if="${households.isEmpty()}">
-          <td colspan="7">Aucun ménage synchronisé pour l'instant.</td>
-        </tr>
-      </tbody>
-    </table>
+  <section class="table-section">
+    <div class="table-card">
+      <div class="table-card-header">
+        <h2>Ménages enregistrés</h2>
+        <span class="table-card-count" th:text="${page.totalElements} + ' au total'">0 au total</span>
+      </div>
+      <div class="table-scroll">
+        <table class="households-table">
+          <thead>
+            <tr>
+              <th>Code Ménage</th>
+              <th>Chef</th>
+              <th>Commune / Quartier</th>
+              <th>Statut</th>
+              <th>Agent</th>
+              <th>Mis à jour</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="h : ${households}">
+              <td class="cell-code" th:text="${h.codeMenage}">-</td>
+              <td th:text="${h.chef != null ? (h.chef.prenom + ' ' + h.chef.nom) : '-'}">-</td>
+              <td th:text="${(h.address != null ? h.address.commune : '') + ' / ' + (h.address != null ? h.address.quartier : '')}">-</td>
+              <td><span th:text="${h.status.value}" th:class="'status-badge status-' + ${h.status.value}">-</span></td>
+              <td th:text="${h.agentUsername ?: '—'}">-</td>
+              <td class="cell-date" th:text="${#temporals.format(h.updatedAt, 'dd/MM/yyyy HH:mm')}">-</td>
+              <td class="col-actions">
+                <form th:action="@{/dashboard/households/{id}/delete(id=${h.id})}" method="post"
+                      onsubmit="return confirm('Supprimer ce ménage (' + this.dataset.code + ') ? Cette action est irréversible.');"
+                      th:data-code="${h.codeMenage}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${households.isEmpty()}">
+              <td colspan="7" class="table-empty">Aucun ménage synchronisé pour l'instant.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-    <nav th:if="${page.totalPages > 1}" aria-label="Pagination des ménages" class="px-3 py-3">
-      <ul class="pagination pagination-sm mb-1">
-        <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
-          <a class="page-link" th:href="@{/dashboard(page=${page.number - 1})}">Précédent</a>
-        </li>
-        <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
-          <a class="page-link" th:href="@{/dashboard(page=${i})}" th:text="${i + 1}">1</a>
-        </li>
-        <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
-          <a class="page-link" th:href="@{/dashboard(page=${page.number + 1})}">Suivant</a>
-        </li>
-      </ul>
-      <p class="text-secondary small mb-0">
-        Page <span th:text="${page.number + 1}">1</span> / <span th:text="${page.totalPages}">1</span>
-        — <span th:text="${page.totalElements}">0</span> ménage(s) au total
-      </p>
-    </nav>
+      <nav th:if="${page.totalPages > 1}" aria-label="Pagination des ménages" class="table-card-footer">
+        <ul class="pagination pagination-sm mb-1">
+          <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+            <a class="page-link" th:href="@{/dashboard(page=${page.number - 1})}">Précédent</a>
+          </li>
+          <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
+            <a class="page-link" th:href="@{/dashboard(page=${i})}" th:text="${i + 1}">1</a>
+          </li>
+          <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+            <a class="page-link" th:href="@{/dashboard(page=${page.number + 1})}">Suivant</a>
+          </li>
+        </ul>
+        <p class="text-secondary small mb-0">
+          Page <span th:text="${page.number + 1}">1</span> / <span th:text="${page.totalPages}">1</span>
+          — <span th:text="${page.totalElements}">0</span> ménage(s) au total
+        </p>
+      </nav>
+    </div>
   </section>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

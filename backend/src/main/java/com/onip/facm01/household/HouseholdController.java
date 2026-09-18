@@ -42,19 +42,19 @@ public class HouseholdController {
     }
 
     @GetMapping
-    public Page<HouseholdDto> list(@PageableDefault(size = 50) Pageable pageable) {
-        return householdService.list(pageable);
+    public Page<HouseholdDto> list(@PageableDefault(size = 50) Pageable pageable, HttpServletRequest httpRequest) {
+        return householdService.list(pageable, currentAgent(httpRequest));
     }
 
     @GetMapping("/{id}")
-    public HouseholdDto get(@PathVariable UUID id) {
-        return householdService.get(id);
+    public HouseholdDto get(@PathVariable UUID id, HttpServletRequest httpRequest) {
+        return householdService.get(id, currentAgent(httpRequest));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
-        householdService.delete(id);
+    public void delete(@PathVariable UUID id, HttpServletRequest httpRequest) {
+        householdService.delete(id, currentAgent(httpRequest));
     }
 
     private Agent currentAgent(HttpServletRequest request) {

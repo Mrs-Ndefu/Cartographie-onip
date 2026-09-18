@@ -1,6 +1,7 @@
 package com.onip.facm01.household;
 
 import com.onip.facm01.agent.Agent;
+import com.onip.facm01.agent.AgentRole;
 import com.onip.facm01.household.dto.AddressDto;
 import com.onip.facm01.household.dto.GeoLocationDto;
 import com.onip.facm01.household.dto.HouseholdDto;
@@ -120,5 +121,41 @@ public class HouseholdService {
             throw new IllegalArgumentException("Ménage introuvable : " + id);
         }
         householdRepository.deleteById(id);
+    }
+
+    // Variantes utilisées par l'API REST (/api/households), accessible aux comptes AGENT en plus
+    // des ADMIN : un agent ne doit voir/modifier que ses propres ménages, un admin voit tout.
+    // Les routes Thymeleaf /dashboard/** au-dessus utilisent les méthodes sans scope, car déjà
+    // réservées aux ADMIN par la config de sécurité — pas besoin d'y dupliquer la vérification.
+
+    @Transactional(readOnly = true)
+    public Page<HouseholdDto> list(Pageable pageable, Agent currentAgent) {
+        Page<Household> page = currentAgent.getRole() == AgentRole.ADMIN
+                ? householdRepository.findAll(pageable)
+                : householdRepository.findByAgent_Id(currentAgent.getId(), pageable);
+        return page.map(HouseholdDto::from);
+    }
+
+    @Transactional(readOnly = true)
+    public HouseholdDto get(UUID id, Agent currentAgent) {
+        Household household = householdRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Ménage introuvable : " + id));
+        requireAccess(household, currentAgent);
+        return HouseholdDto.from(household);
+    }
+
+    @Transactional
+    public void delete(UUID id, Agent currentAgent) {
+        Household household = householdRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Ménage introuvable : " + id));
+        requireAccess(household, currentAgent);
+        householdRepository.deleteById(id);
+    }
+
+    private void requireAccess(Household household, Agent currentAgent) {
+        if (currentAgent.getRole() != AgentRole.ADMIN
+                && (household.getAgent() == null || !household.getAgent().getId().equals(currentAgent.getId()))) {
+            throw new IllegalArgumentException("Ménage introuvable : " + household.getId());
+        }
     }
 }

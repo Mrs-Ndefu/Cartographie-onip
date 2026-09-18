@@ -416,40 +416,119 @@ h1, h2, h3 {
 
 /* ---------- Tableau des ménages ---------- */
 
-.households-table {
-  width: calc(100% - 3.5rem);
-  margin: 0.5rem 1.75rem 0;
-  border-collapse: collapse;
+.table-section {
+  padding: 0.5rem 1.75rem 2rem;
+}
+
+.table-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
   box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.table-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-card-header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.table-card-count {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.households-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .households-table th,
 .households-table td {
   text-align: left;
-  padding: 0.7rem 1rem;
+  padding: 0.65rem 1.1rem;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.households-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fb;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border);
-  font-size: 0.88rem;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
+
+.households-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.1s ease;
+}
+
+.households-table tbody tr:nth-child(even) {
+  background: #fbfcfd;
 }
 
 .households-table tbody tr:hover {
   background: var(--brand-light);
 }
 
-.households-table th {
-  background: #f8f9fb;
+.households-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.cell-code {
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-date {
   color: var(--ink-muted);
-  text-transform: uppercase;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.col-actions {
+  text-align: right;
+}
+
+.table-empty {
+  text-align: center;
+  color: var(--ink-muted);
+  padding: 2.5rem 1rem !important;
+  white-space: normal;
+}
+
+.table-card-footer {
+  padding: 0.9rem 1.4rem;
+  border-top: 1px solid var(--border);
+  background: #fbfcfd;
 }
 
 .status-badge {
-  padding: 0.2rem 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.65rem;
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 600;
