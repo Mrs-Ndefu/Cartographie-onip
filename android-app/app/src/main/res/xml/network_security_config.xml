@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Le backend tourne en HTTP simple sur le réseau local (pas de certificat HTTPS en usage
+  interne/terrain). Android bloque le trafic non chiffré par défaut depuis l'API 28 ; on
+  l'autorise explicitement ici. À restreindre si le backend est un jour exposé derrière HTTPS.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
