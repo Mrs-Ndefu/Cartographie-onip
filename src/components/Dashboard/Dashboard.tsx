@@ -4,6 +4,7 @@ import { HouseholdsTab } from './HouseholdsTab'
 import { AgentsTab } from './AgentsTab'
 import { AgentOverviewTab } from './AgentOverviewTab'
 import { JournalTab } from './JournalTab'
+import { MapTab } from './MapTab'
 import type { AuthSession } from '../../types/agent'
 import type { Household } from '../../types/household'
 import './Dashboard.css'
@@ -15,19 +16,23 @@ interface DashboardProps {
   onToast: (message: string) => void
 }
 
-type Tab = 'overview' | 'households' | 'agents' | 'journal'
+type Tab = 'overview' | 'households' | 'agents' | 'journal' | 'map'
 
 const ADMIN_TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: "Vue d'ensemble" },
   { id: 'households', label: 'Ménages' },
+  { id: 'map', label: 'Carte' },
   { id: 'agents', label: 'Agents' },
 ]
 
 // Un compte AGENT voit ses propres statistiques (calculées localement, hors ligne) et son
 // journal du jour — pas les stats globales ni la gestion des autres agents, réservées aux ADMIN.
+// La Carte, elle, vient du serveur (via /api/households, déjà filtré à ses propres ménages côté
+// backend) — c'est la seule vue de ce dashboard qui n'est pas purement locale pour un agent.
 const AGENT_TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: "Vue d'ensemble" },
   { id: 'journal', label: 'Journal du jour' },
+  { id: 'map', label: 'Carte' },
 ]
 
 export function Dashboard({ session, onClose, onEditHousehold, onToast }: DashboardProps) {
@@ -62,6 +67,7 @@ export function Dashboard({ session, onClose, onEditHousehold, onToast }: Dashbo
         {tab === 'households' && isAdmin && <HouseholdsTab session={session} />}
         {tab === 'agents' && isAdmin && <AgentsTab session={session} />}
         {tab === 'journal' && !isAdmin && <JournalTab session={session} onEdit={onEditHousehold} onToast={onToast} />}
+        {tab === 'map' && <MapTab session={session} />}
       </div>
     </div>
   )

@@ -28,7 +28,7 @@ data class CapturedHousehold(
     val latitude: Double?,
     val longitude: Double?,
     val locationPrecision: Double?,
-    val photoPath: String?,
+    val photoPath: String? = null,
     val createdAt: String,
     val updatedAt: String,
     val syncedAt: String? = null,

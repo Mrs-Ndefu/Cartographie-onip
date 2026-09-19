@@ -3,6 +3,7 @@ package com.onip.cartoonip.ui.capture
 import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -26,7 +27,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -96,13 +97,11 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                 TopAppBar(
                     title = {},
                     actions = {
+                        val agentPhoto by AppContainer.agentPhoto.collectAsState()
                         TextButton(onClick = { onNavigate(Routes.OVERVIEW) }) { Text("Aperçu") }
                         TextButton(onClick = { onNavigate(Routes.JOURNAL) }) { Text("Journal") }
-                        IconButton(onClick = {
-                            AppContainer.sessionManager.clear()
-                            onNavigate(Routes.LOGIN)
-                        }) {
-                            Icon(Icons.Filled.Logout, contentDescription = "Déconnexion")
+                        IconButton(onClick = { onNavigate(Routes.PROFILE) }) {
+                            TopBarAvatar(photoDataUrl = agentPhoto)
                         }
                     },
                 )
@@ -262,9 +261,6 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
 
             item {
                 StepCard(number = 5, title = "Photo de la fiche complétée") {
-                    if (uiState.photoUri != null) {
-                        LocalPhotoPreview(path = uiState.photoUri.toString())
-                    }
                     uiState.photoError?.let {
                         Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
                     }
@@ -274,6 +270,9 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
+                    if (uiState.photoUri != null) {
+                        LocalPhotoPreview(path = uiState.photoUri.toString())
+                    }
                     OutlinedButton(
                         onClick = { cameraLauncher.launch(viewModel.photoFileUri()) },
                         modifier = Modifier.fillMaxWidth(),
@@ -417,6 +416,29 @@ private fun MembersSection(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TopBarAvatar(photoDataUrl: String?) {
+    val bitmapState = produceState<Bitmap?>(initialValue = null, key1 = photoDataUrl) {
+        value = photoDataUrl?.let { dataUrl ->
+            runCatching {
+                val bytes = Base64.decode(dataUrl.substringAfter(","), Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }.getOrNull()
+        }
+    }
+    val bitmap = bitmapState.value
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = "Profil",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(32.dp).clip(CircleShape),
+        )
+    } else {
+        Icon(Icons.Filled.Person, contentDescription = "Profil")
     }
 }
 

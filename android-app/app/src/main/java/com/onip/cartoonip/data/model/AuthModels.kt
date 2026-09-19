@@ -14,4 +14,7 @@ data class AgentDto(
     val fullName: String,
     val role: String,
     val active: Boolean,
+    val photoDataUrl: String? = null,
 )
+
+data class ChangePasswordRequest(val currentPassword: String, val newPassword: String)

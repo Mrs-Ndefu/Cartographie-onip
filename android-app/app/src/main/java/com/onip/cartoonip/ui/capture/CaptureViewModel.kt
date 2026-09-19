@@ -89,6 +89,18 @@ class CaptureViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(CaptureUiState())
     val uiState: StateFlow<CaptureUiState> = _uiState.asStateFlow()
 
+    init {
+        // Recharge la photo de profil pour l'avatar de la barre du haut — pas persistée en
+        // session, donc absente tant qu'on ne l'a pas redemandée après un redémarrage de l'app.
+        if (AppContainer.agentPhoto.value == null) {
+            viewModelScope.launch {
+                runCatching { AppContainer.api().agent.me() }.getOrNull()?.let {
+                    AppContainer.setAgentPhoto(it.photoDataUrl)
+                }
+            }
+        }
+    }
+
     // Toute saisie est forcée en majuscules — convention de la fiche papier FACM01.
     private fun String.toFieldCase() = uppercase()
 

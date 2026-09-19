@@ -62,6 +62,21 @@
   color: #52514e;
 }
 
+.map-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.map-tab-container {
+  flex: 1;
+  min-height: 420px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  overflow: hidden;
+}
+
 .dashboard-error {
   color: #d33;
 }

@@ -6,6 +6,7 @@ object Routes {
     const val CAPTURE_EDIT = "capture/{householdId}"
     const val JOURNAL = "journal"
     const val OVERVIEW = "overview"
+    const val PROFILE = "profile"
 
     fun captureEdit(id: String) = "capture/$id"
 }

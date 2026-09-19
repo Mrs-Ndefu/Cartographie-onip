@@ -115,7 +115,7 @@ function App() {
                 </button>
               )}
               {view === 'map' && session && (
-                <button type="button" className="toolbar-btn" onClick={() => setView('dashboard')}>
+                <button type="button" className="dashboard-btn" onClick={() => setView('dashboard')}>
                   Tableau de bord
                 </button>
               )}

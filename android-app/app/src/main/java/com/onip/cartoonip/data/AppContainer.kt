@@ -3,6 +3,9 @@ package com.onip.cartoonip.data
 import android.content.Context
 import com.onip.cartoonip.data.network.ApiServices
 import com.onip.cartoonip.data.network.buildRetrofit
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import retrofit2.Retrofit
 
 object AppContainer {
@@ -15,6 +18,15 @@ object AppContainer {
 
     lateinit var appContext: Context
         private set
+
+    // Mise en cache légère de la photo de profil de l'agent connecté (affichée dans la barre du
+    // haut) — pas persistée : rechargée depuis /api/me au démarrage et mise à jour après upload.
+    private val _agentPhoto = MutableStateFlow<String?>(null)
+    val agentPhoto: StateFlow<String?> = _agentPhoto.asStateFlow()
+
+    fun setAgentPhoto(photoDataUrl: String?) {
+        _agentPhoto.value = photoDataUrl
+    }
 
     private var retrofit: Retrofit? = null
     private var cachedBaseUrl: String? = null

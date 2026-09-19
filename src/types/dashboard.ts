@@ -1,4 +1,4 @@
-import type { HouseholdStatus } from './household'
+import type { GeoLocation, HouseholdStatus } from './household'
 
 export interface RegistrationCounts {
   today: number
@@ -27,6 +27,7 @@ export interface AdminHousehold {
   nombreMembres: number | null
   chef: { nom: string | null; postnom: string | null; prenom: string | null } | null
   address: { commune: string | null; quartier: string | null } | null
+  location: GeoLocation | null
   status: HouseholdStatus
   agentUsername: string | null
   createdAt: string

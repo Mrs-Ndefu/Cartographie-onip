@@ -49,6 +49,7 @@ class LoginViewModel : ViewModel() {
             try {
                 val response = AppContainer.apiFor(baseUrl).auth.login(LoginRequest(state.username.trim(), state.password))
                 AppContainer.sessionManager.save(baseUrl, response.token, response.agent)
+                AppContainer.setAgentPhoto(response.agent.photoDataUrl)
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 onSuccess()
             } catch (e: HttpException) {

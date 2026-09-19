@@ -14,6 +14,7 @@ import com.onip.cartoonip.ui.capture.CaptureScreen
 import com.onip.cartoonip.ui.journal.JournalScreen
 import com.onip.cartoonip.ui.login.LoginScreen
 import com.onip.cartoonip.ui.overview.OverviewScreen
+import com.onip.cartoonip.ui.profile.ProfileScreen
 
 @Composable
 fun CartoOnipNavHost(navController: NavHostController = rememberNavController()) {
@@ -56,6 +57,12 @@ fun CartoOnipNavHost(navController: NavHostController = rememberNavController())
         }
         composable(Routes.OVERVIEW) {
             OverviewScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.PROFILE) {
+            ProfileScreen(
+                onBack = { navController.popBackStack() },
+                onLogout = { onNavigate(Routes.LOGIN) },
+            )
         }
     }
 }

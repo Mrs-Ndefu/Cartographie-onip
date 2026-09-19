@@ -218,8 +218,8 @@ private fun JournalRow(
         Row(Modifier.fillMaxWidth()) {
             Box(Modifier.width(4.dp).fillMaxHeight().background(accentColor))
 
-            if (household.photoPath != null) {
-                JournalThumbnail(path = household.photoPath)
+            household.photoPath?.let { path ->
+                JournalThumbnail(path = path)
             }
 
             Column(Modifier.weight(1f).padding(14.dp)) {

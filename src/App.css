@@ -81,6 +81,26 @@
   background: #f2f2f2;
 }
 
+.dashboard-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  border: 1.5px solid #1177c8;
+  background: white;
+  color: #1177c8;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dashboard-btn:hover {
+  background: #1177c8;
+  color: white;
+}
+
 .resync-btn {
   width: 1.7rem;
   height: 1.7rem;
