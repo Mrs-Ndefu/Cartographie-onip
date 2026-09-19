@@ -22,7 +22,7 @@ import java.util.UUID;
 @Service
 public class HouseholdService {
 
-    private static final long MAX_PHOTO_SIZE = 2 * 1024 * 1024; // 2 Mo
+    private static final long MAX_PHOTO_SIZE = 6 * 1024 * 1024; // 6 Mo
 
     private final HouseholdRepository householdRepository;
     private final HouseholdPhotoRepository householdPhotoRepository;
@@ -177,7 +177,7 @@ public class HouseholdService {
             throw new IllegalArgumentException("Le fichier envoyé est vide");
         }
         if (photo.length > MAX_PHOTO_SIZE) {
-            throw new IllegalArgumentException("La photo dépasse la taille maximale autorisée (2 Mo)");
+            throw new IllegalArgumentException("La photo dépasse la taille maximale autorisée (6 Mo)");
         }
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException("Le fichier doit être une image");
