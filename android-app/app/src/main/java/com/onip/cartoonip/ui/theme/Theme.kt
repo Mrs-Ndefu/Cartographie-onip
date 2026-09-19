@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val OnipBlue = Color(0xFF1177C8)
+val OnipBlue = Color(0xFF1177C8)
 private val OnipBlueDark = Color(0xFF0B4A84)
 private val OnipAccent = Color(0xFF178A17)
 

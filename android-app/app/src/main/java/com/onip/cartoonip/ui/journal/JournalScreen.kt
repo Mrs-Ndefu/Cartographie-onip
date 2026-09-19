@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +32,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,12 +62,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onip.cartoonip.data.model.CapturedHousehold
+import com.onip.cartoonip.ui.theme.OnipBlue
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-private val TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.systemDefault())
+private val TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
+private val DATE_HEADER_FORMAT = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.FRENCH)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,17 +95,7 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Column {
-                        Text("Journal")
-                        Text(
-                            "${households.size} ménage${if (households.size != 1) "s" else ""}" +
-                                if (pendingCount > 0) " · $pendingCount en attente" else "",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
+                title = { Text("Journal du jour", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, contentDescription = "Retour") }
                 },
@@ -112,37 +108,42 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
-        if (households.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        Icons.Filled.Inbox,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.outline,
-                    )
-                    Text(
-                        "Aucun ménage enregistré pour l'instant.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            JournalSummaryHeader(total = households.size, pending = pendingCount)
+
+            if (households.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Filled.Inbox,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.outline,
+                        )
+                        Text(
+                            "Aucun ménage enregistré aujourd'hui.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                    }
                 }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                items(households, key = { it.id }) { household ->
-                    JournalRow(
-                        household = household,
-                        isSyncing = syncingIds.contains(household.id),
-                        onRetry = { viewModel.retrySync(household) },
-                        onEdit = { onEdit(household.id) },
-                        onDelete = { deleteTarget = household },
-                    )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                    contentPadding = PaddingValues(bottom = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    items(households, key = { it.id }) { household ->
+                        JournalRow(
+                            household = household,
+                            isSyncing = syncingIds.contains(household.id),
+                            onRetry = { viewModel.retrySync(household) },
+                            onEdit = { onEdit(household.id) },
+                            onDelete = { deleteTarget = household },
+                        )
+                    }
                 }
             }
         }
@@ -167,6 +168,38 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
 }
 
 @Composable
+private fun JournalSummaryHeader(total: Int, pending: Int) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Text(
+            DATE_HEADER_FORMAT.format(LocalDate.now()).replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = OnipBlue,
+        )
+        Row(modifier = Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "$total ménage${if (total != 1) "s" else ""} aujourd'hui",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (pending > 0) {
+                Text(
+                    " · $pending en attente",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun JournalRow(
     household: CapturedHousehold,
     isSyncing: Boolean,
@@ -176,7 +209,12 @@ private fun JournalRow(
 ) {
     val accentColor = if (household.isFullySynced) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
 
-    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(), elevation = CardDefaults.cardElevation(1.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(),
+        elevation = CardDefaults.cardElevation(2.dp),
+    ) {
         Row(Modifier.fillMaxWidth()) {
             Box(Modifier.width(4.dp).fillMaxHeight().background(accentColor))
 
@@ -186,12 +224,13 @@ private fun JournalRow(
 
             Column(Modifier.weight(1f).padding(14.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                    Text(household.codeMenage, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text(household.codeMenage, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = OnipBlue)
                     SyncBadge(household = household, isSyncing = isSyncing, onRetry = onRetry)
                 }
                 Text(
                     household.chefFullName.ifBlank { "(sans nom)" },
                     style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(top = 2.dp),
                 )
                 Text(
@@ -203,6 +242,7 @@ private fun JournalRow(
                     Text(
                         TIME_FORMAT.format(runCatching { Instant.parse(household.createdAt) }.getOrDefault(Instant.now())),
                         style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.outline,
                     )
                     if (household.membres.isNotEmpty()) {
@@ -223,7 +263,8 @@ private fun JournalRow(
                         )
                     }
                 }
-                Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.End) {
+                HorizontalDivider(modifier = Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                Row(modifier = Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.End) {
                     IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
                         Icon(Icons.Filled.Edit, contentDescription = "Modifier", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }

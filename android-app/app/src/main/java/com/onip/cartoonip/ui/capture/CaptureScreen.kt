@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onip.cartoonip.data.AppContainer
 import com.onip.cartoonip.ui.navigation.Routes
+import com.onip.cartoonip.ui.theme.OnipBlue
 
 private val fieldKeyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters)
 private val dateKeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -91,24 +92,28 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (uiState.isEditing) "Modifier le ménage" else "Nouveau ménage",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                },
-                actions = {
-                    TextButton(onClick = { onNavigate(Routes.OVERVIEW) }) { Text("Aperçu") }
-                    TextButton(onClick = { onNavigate(Routes.JOURNAL) }) { Text("Journal") }
-                    IconButton(onClick = {
-                        AppContainer.sessionManager.clear()
-                        onNavigate(Routes.LOGIN)
-                    }) {
-                        Icon(Icons.Filled.Logout, contentDescription = "Déconnexion")
-                    }
-                },
-            )
+            Column {
+                TopAppBar(
+                    title = {},
+                    actions = {
+                        TextButton(onClick = { onNavigate(Routes.OVERVIEW) }) { Text("Aperçu") }
+                        TextButton(onClick = { onNavigate(Routes.JOURNAL) }) { Text("Journal") }
+                        IconButton(onClick = {
+                            AppContainer.sessionManager.clear()
+                            onNavigate(Routes.LOGIN)
+                        }) {
+                            Icon(Icons.Filled.Logout, contentDescription = "Déconnexion")
+                        }
+                    },
+                )
+                Text(
+                    if (uiState.isEditing) "Modifier le ménage" else "Nouveau ménage",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OnipBlue,
+                    modifier = Modifier.padding(start = 16.dp, top = 2.dp, bottom = 8.dp),
+                )
+            }
         },
     ) { padding ->
         LazyColumn(
