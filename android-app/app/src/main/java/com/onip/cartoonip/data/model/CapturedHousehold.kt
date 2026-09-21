@@ -5,6 +5,7 @@ data class CapturedMember(
     val postnom: String,
     val prenom: String,
     val dateNaissance: String = "",
+    val lieuNaissance: String = "",
     val sexe: String? = null,
     val relation: String = "",
 )
@@ -17,6 +18,7 @@ data class CapturedHousehold(
     val chefPostnom: String,
     val chefPrenom: String,
     val chefDateNaissance: String = "",
+    val chefLieuNaissance: String = "",
     val chefSexe: String? = null,
     val ville: String,
     val commune: String,

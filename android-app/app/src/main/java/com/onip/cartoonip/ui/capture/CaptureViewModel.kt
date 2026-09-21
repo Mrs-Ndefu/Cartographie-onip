@@ -39,6 +39,7 @@ data class MemberInput(
     val postnom: String = "",
     val prenom: String = "",
     val dateNaissance: String = "",
+    val lieuNaissance: String = "",
     val sexe: String? = null,
     val relation: String = "",
 )
@@ -49,6 +50,7 @@ data class CaptureUiState(
     val chefPostnom: String = "",
     val chefPrenom: String = "",
     val chefDateNaissance: String = "",
+    val chefLieuNaissance: String = "",
     val chefSexe: String? = null,
     val ville: String = "",
     val commune: String = "",
@@ -104,17 +106,20 @@ class CaptureViewModel : ViewModel() {
     // Toute saisie est forcée en majuscules — convention de la fiche papier FACM01.
     private fun String.toFieldCase() = uppercase()
 
-    fun onChefNomChange(v: String) = update { copy(chefNom = v.toFieldCase(), generatedCode = null) }
-    fun onChefPostnomChange(v: String) = update { copy(chefPostnom = v.toFieldCase(), generatedCode = null) }
-    fun onChefPrenomChange(v: String) = update { copy(chefPrenom = v.toFieldCase(), generatedCode = null) }
+    // Une fois généré, le code du ménage n'est plus jamais invalidé par la suite (même si le
+    // chef/l'adresse changent ensuite) — il ne doit pouvoir être régénéré qu'une seule fois.
+    fun onChefNomChange(v: String) = update { copy(chefNom = v.toFieldCase()) }
+    fun onChefPostnomChange(v: String) = update { copy(chefPostnom = v.toFieldCase()) }
+    fun onChefPrenomChange(v: String) = update { copy(chefPrenom = v.toFieldCase()) }
     fun onChefDateNaissanceChange(v: String) = update { copy(chefDateNaissance = formatDateDigits(v)) }
+    fun onChefLieuNaissanceChange(v: String) = update { copy(chefLieuNaissance = v.toFieldCase()) }
     fun onChefSexeChange(v: String) = update { copy(chefSexe = v) }
-    fun onVilleChange(v: String) = update { copy(ville = v.toFieldCase(), generatedCode = null) }
-    fun onCommuneChange(v: String) = update { copy(commune = v.toFieldCase(), generatedCode = null) }
-    fun onQuartierChange(v: String) = update { copy(quartier = v.toFieldCase(), generatedCode = null) }
-    fun onRueChange(v: String) = update { copy(rue = v.toFieldCase(), generatedCode = null) }
-    fun onNumeroChange(v: String) = update { copy(numero = v.toFieldCase(), generatedCode = null) }
-    fun onImmeubleChange(v: String) = update { copy(immeuble = v.toFieldCase(), generatedCode = null) }
+    fun onVilleChange(v: String) = update { copy(ville = v.toFieldCase(), commune = "") }
+    fun onCommuneChange(v: String) = update { copy(commune = v.toFieldCase()) }
+    fun onQuartierChange(v: String) = update { copy(quartier = v.toFieldCase()) }
+    fun onRueChange(v: String) = update { copy(rue = v.toFieldCase()) }
+    fun onNumeroChange(v: String) = update { copy(numero = v.toFieldCase()) }
+    fun onImmeubleChange(v: String) = update { copy(immeuble = v.toFieldCase()) }
 
     fun toggleMembersExpanded() = update { copy(membersExpanded = !membersExpanded) }
 
@@ -126,6 +131,7 @@ class CaptureViewModel : ViewModel() {
     fun onMemberPostnomChange(key: String, v: String) = updateMember(key) { copy(postnom = v.toFieldCase()) }
     fun onMemberPrenomChange(key: String, v: String) = updateMember(key) { copy(prenom = v.toFieldCase()) }
     fun onMemberDateNaissanceChange(key: String, v: String) = updateMember(key) { copy(dateNaissance = formatDateDigits(v)) }
+    fun onMemberLieuNaissanceChange(key: String, v: String) = updateMember(key) { copy(lieuNaissance = v.uppercase()) }
     fun onMemberSexeChange(key: String, v: String) = updateMember(key) { copy(sexe = v) }
     fun onMemberRelationChange(key: String, v: String) = updateMember(key) { copy(relation = v) }
 
@@ -146,6 +152,7 @@ class CaptureViewModel : ViewModel() {
             chefPostnom = h.chefPostnom,
             chefPrenom = h.chefPrenom,
             chefDateNaissance = h.chefDateNaissance,
+            chefLieuNaissance = h.chefLieuNaissance,
             chefSexe = h.chefSexe,
             ville = h.ville,
             commune = h.commune,
@@ -156,7 +163,8 @@ class CaptureViewModel : ViewModel() {
             members = h.membres.map {
                 MemberInput(
                     nom = it.nom, postnom = it.postnom, prenom = it.prenom,
-                    dateNaissance = it.dateNaissance, sexe = it.sexe, relation = it.relation,
+                    dateNaissance = it.dateNaissance, lieuNaissance = it.lieuNaissance,
+                    sexe = it.sexe, relation = it.relation,
                 )
             },
             membersExpanded = h.membres.isNotEmpty(),
@@ -194,7 +202,7 @@ class CaptureViewModel : ViewModel() {
     }
 
     fun generateCode() {
-        if (!_uiState.value.canGenerateCode) return
+        if (!_uiState.value.canGenerateCode || _uiState.value.generatedCode != null) return
         update { copy(generatedCode = generateCodeMenage()) }
     }
 
@@ -239,6 +247,7 @@ class CaptureViewModel : ViewModel() {
                 chefPostnom = state.chefPostnom.trim(),
                 chefPrenom = state.chefPrenom.trim(),
                 chefDateNaissance = state.chefDateNaissance.trim(),
+                chefLieuNaissance = state.chefLieuNaissance.trim(),
                 chefSexe = state.chefSexe,
                 ville = state.ville.trim(),
                 commune = state.commune.trim(),
@@ -254,6 +263,7 @@ class CaptureViewModel : ViewModel() {
                             postnom = it.postnom.trim(),
                             prenom = it.prenom.trim(),
                             dateNaissance = it.dateNaissance.trim(),
+                            lieuNaissance = it.lieuNaissance.trim(),
                             sexe = it.sexe,
                             relation = it.relation,
                         )

@@ -66,6 +66,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onip.cartoonip.data.AppContainer
+import com.onip.cartoonip.data.DRC_VILLES
+import com.onip.cartoonip.data.communesForVille
 import com.onip.cartoonip.ui.navigation.Routes
 import com.onip.cartoonip.ui.theme.OnipBlue
 
@@ -171,21 +173,22 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         label = { Text("Date de naissance (JJ/MM/AAAA)") }, singleLine = true, keyboardOptions = dateKeyboardOptions,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                     )
+                    OutlinedTextField(
+                        value = uiState.chefLieuNaissance, onValueChange = viewModel::onChefLieuNaissanceChange,
+                        label = { Text("Lieu de naissance") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    )
                     SexeSelector(value = uiState.chefSexe, onChange = viewModel::onChefSexeChange)
                 }
             }
 
             item {
                 StepCard(number = 3, title = "Adresse complète") {
-                    OutlinedTextField(
-                        value = uiState.ville, onValueChange = viewModel::onVilleChange,
-                        label = { Text("Ville") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                    )
-                    OutlinedTextField(
-                        value = uiState.commune, onValueChange = viewModel::onCommuneChange,
-                        label = { Text("Commune*") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    VilleCommuneFields(
+                        ville = uiState.ville,
+                        commune = uiState.commune,
+                        onVilleChange = viewModel::onVilleChange,
+                        onCommuneChange = viewModel::onCommuneChange,
                     )
                     OutlinedTextField(
                         value = uiState.quartier, onValueChange = viewModel::onQuartierChange,
@@ -223,6 +226,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                     onPostnomChange = viewModel::onMemberPostnomChange,
                     onPrenomChange = viewModel::onMemberPrenomChange,
                     onDateNaissanceChange = viewModel::onMemberDateNaissanceChange,
+                    onLieuNaissanceChange = viewModel::onMemberLieuNaissanceChange,
                     onSexeChange = viewModel::onMemberSexeChange,
                     onRelationChange = viewModel::onMemberRelationChange,
                 )
@@ -238,7 +242,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                             modifier = Modifier.padding(vertical = 8.dp),
                         )
                         Text(
-                            "Recopiez ce code sur la fiche papier avant de continuer.",
+                            "Recopiez ce code sur la fiche papier avant de continuer. Il ne peut plus être régénéré.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -248,13 +252,13 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    }
-                    Button(
-                        onClick = viewModel::generateCode,
-                        enabled = uiState.canGenerateCode,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    ) {
-                        Text(if (uiState.generatedCode != null) "Régénérer le code" else "Générer le code")
+                        Button(
+                            onClick = viewModel::generateCode,
+                            enabled = uiState.canGenerateCode,
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        ) {
+                            Text("Générer le code")
+                        }
                     }
                 }
             }
@@ -324,6 +328,96 @@ private fun SexeSelector(value: String?, onChange: (String) -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun VilleCommuneFields(
+    ville: String,
+    commune: String,
+    onVilleChange: (String) -> Unit,
+    onCommuneChange: (String) -> Unit,
+) {
+    val villeNames = remember { DRC_VILLES.map { it.name } }
+    var villeOther by remember { mutableStateOf(ville.isNotBlank() && villeNames.none { it.equals(ville, ignoreCase = true) }) }
+    val communeOptions = if (villeOther) emptyList() else communesForVille(ville)
+    var communeOther by remember(ville) {
+        mutableStateOf(commune.isNotBlank() && communeOptions.none { it.equals(commune, ignoreCase = true) })
+    }
+    var villeExpanded by remember { mutableStateOf(false) }
+    var communeExpanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = villeExpanded, onExpandedChange = { villeExpanded = it },
+        modifier = Modifier.padding(bottom = 8.dp),
+    ) {
+        OutlinedTextField(
+            value = if (villeOther) "Autre (saisie libre)" else ville,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Ville") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = villeExpanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+        )
+        ExposedDropdownMenu(expanded = villeExpanded, onDismissRequest = { villeExpanded = false }) {
+            villeNames.forEach { name ->
+                DropdownMenuItem(text = { Text(name) }, onClick = {
+                    villeOther = false
+                    onVilleChange(name)
+                    onCommuneChange("")
+                    villeExpanded = false
+                })
+            }
+            DropdownMenuItem(text = { Text("Autre (saisie libre)") }, onClick = {
+                villeOther = true
+                onVilleChange("")
+                onCommuneChange("")
+                villeExpanded = false
+            })
+        }
+    }
+    if (villeOther) {
+        OutlinedTextField(
+            value = ville, onValueChange = { onVilleChange(it.uppercase()) },
+            label = { Text("Ville / territoire") }, singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        )
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = communeExpanded, onExpandedChange = { communeExpanded = it },
+        modifier = Modifier.padding(bottom = 8.dp),
+    ) {
+        OutlinedTextField(
+            value = if (communeOther) "Autre (saisie libre)" else commune,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Commune*") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = communeExpanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+        )
+        ExposedDropdownMenu(expanded = communeExpanded, onDismissRequest = { communeExpanded = false }) {
+            communeOptions.forEach { name ->
+                DropdownMenuItem(text = { Text(name) }, onClick = {
+                    communeOther = false
+                    onCommuneChange(name)
+                    communeExpanded = false
+                })
+            }
+            DropdownMenuItem(text = { Text("Autre (saisie libre)") }, onClick = {
+                communeOther = true
+                onCommuneChange("")
+                communeExpanded = false
+            })
+        }
+    }
+    if (communeOther) {
+        OutlinedTextField(
+            value = commune, onValueChange = { onCommuneChange(it.uppercase()) },
+            label = { Text("Commune") }, singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 private fun RelationDropdown(value: String, onChange: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
@@ -354,6 +448,7 @@ private fun MembersSection(
     onPostnomChange: (String, String) -> Unit,
     onPrenomChange: (String, String) -> Unit,
     onDateNaissanceChange: (String, String) -> Unit,
+    onLieuNaissanceChange: (String, String) -> Unit,
     onSexeChange: (String, String) -> Unit,
     onRelationChange: (String, String) -> Unit,
 ) {
@@ -400,6 +495,11 @@ private fun MembersSection(
                             OutlinedTextField(
                                 value = member.dateNaissance, onValueChange = { onDateNaissanceChange(member.key, it) },
                                 label = { Text("Date de naissance (JJ/MM/AAAA)") }, singleLine = true, keyboardOptions = dateKeyboardOptions,
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                            )
+                            OutlinedTextField(
+                                value = member.lieuNaissance, onValueChange = { onLieuNaissanceChange(member.key, it) },
+                                label = { Text("Lieu de naissance") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
                                 modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
                             )
                             SexeSelector(value = member.sexe, onChange = { onSexeChange(member.key, it) })

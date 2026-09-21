@@ -35,6 +35,7 @@ object SyncRepository {
                     postnom = current.chefPostnom.ifBlank { null },
                     prenom = current.chefPrenom.ifBlank { null },
                     dateNaissance = current.chefDateNaissance.ifBlank { null },
+                    lieuNaissance = current.chefLieuNaissance.ifBlank { null },
                     sexe = current.chefSexe,
                     relation = null,
                 ),
@@ -44,6 +45,7 @@ object SyncRepository {
                         postnom = it.postnom.ifBlank { null },
                         prenom = it.prenom.ifBlank { null },
                         dateNaissance = it.dateNaissance.ifBlank { null },
+                        lieuNaissance = it.lieuNaissance.ifBlank { null },
                         sexe = it.sexe,
                         relation = it.relation.ifBlank { null },
                     )

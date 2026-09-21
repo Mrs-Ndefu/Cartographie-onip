@@ -26,6 +26,7 @@ data class PersonDto(
     val postnom: String?,
     val prenom: String?,
     val dateNaissance: String?,
+    val lieuNaissance: String?,
     val sexe: String?,
     val relation: String?,
 )

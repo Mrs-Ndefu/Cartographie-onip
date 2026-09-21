@@ -1,20 +1,31 @@
-import { Controller } from 'react-hook-form'
-import type { Control } from 'react-hook-form'
+import { useState } from 'react'
+import { Controller, useWatch } from 'react-hook-form'
+import type { Control, UseFormSetValue } from 'react-hook-form'
 import { CharacterGridInput } from './CharacterGridInput'
+import { DRC_VILLES, AUTRE_VILLE, communesForVille } from '../../data/drcLocations'
 import type { HouseholdFormValues } from '../../utils/validation'
 
 interface AddressFieldsProps {
   control: Control<HouseholdFormValues>
+  setValue: UseFormSetValue<HouseholdFormValues>
 }
 
-const VILLE_LENGTH = 15
-const COMMUNE_LENGTH = 15
 const QUARTIER_LENGTH = 15
 const RUE_LENGTH = 19
 const NUMERO_LENGTH = 5
 const IMMEUBLE_LENGTH = 15
 
-export function AddressFields({ control }: AddressFieldsProps) {
+const SORTED_VILLES = [...DRC_VILLES].sort((a, b) => a.name.localeCompare(b.name))
+
+export function AddressFields({ control, setValue }: AddressFieldsProps) {
+  const ville = useWatch({ control, name: 'address.ville' }) ?? ''
+  const commune = useWatch({ control, name: 'address.commune' }) ?? ''
+  const [villeIsOther, setVilleIsOther] = useState(ville !== '' && !SORTED_VILLES.some((v) => v.name === ville))
+  const communeOptions = villeIsOther ? [] : communesForVille(ville)
+  const [communeIsOther, setCommuneIsOther] = useState(
+    commune !== '' && !communeOptions.some((c) => c === commune),
+  )
+
   return (
     <section className="form-section">
       <h2>Adresse</h2>
@@ -25,13 +36,41 @@ export function AddressFields({ control }: AddressFieldsProps) {
             control={control}
             name="address.ville"
             render={({ field }) => (
-              <CharacterGridInput
-                length={VILLE_LENGTH}
-                value={field.value}
-                onChange={field.onChange}
-                pattern={/[A-Z0-9]/}
-                ariaLabel="Ville"
-              />
+              <>
+                <select
+                  className="text-input"
+                  value={villeIsOther ? AUTRE_VILLE : field.value}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value === AUTRE_VILLE) {
+                      setVilleIsOther(true)
+                      field.onChange('')
+                    } else {
+                      setVilleIsOther(false)
+                      field.onChange(value)
+                    }
+                    setCommuneIsOther(false)
+                    setValue('address.commune', '')
+                  }}
+                >
+                  <option value="">—</option>
+                  {SORTED_VILLES.map((v) => (
+                    <option key={v.name} value={v.name}>
+                      {v.name}
+                    </option>
+                  ))}
+                  <option value={AUTRE_VILLE}>Autre (saisie libre)</option>
+                </select>
+                {villeIsOther && (
+                  <input
+                    type="text"
+                    className="text-input"
+                    placeholder="Ville / territoire"
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                  />
+                )}
+              </>
             )}
           />
         </div>
@@ -42,13 +81,40 @@ export function AddressFields({ control }: AddressFieldsProps) {
             control={control}
             name="address.commune"
             render={({ field }) => (
-              <CharacterGridInput
-                length={COMMUNE_LENGTH}
-                value={field.value}
-                onChange={field.onChange}
-                pattern={/[A-Z0-9]/}
-                ariaLabel="Commune"
-              />
+              <>
+                <select
+                  className="text-input"
+                  value={communeIsOther ? AUTRE_VILLE : field.value}
+                  disabled={ville === '' && !villeIsOther}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value === AUTRE_VILLE) {
+                      setCommuneIsOther(true)
+                      field.onChange('')
+                    } else {
+                      setCommuneIsOther(false)
+                      field.onChange(value)
+                    }
+                  }}
+                >
+                  <option value="">—</option>
+                  {communeOptions.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                  <option value={AUTRE_VILLE}>Autre (saisie libre)</option>
+                </select>
+                {communeIsOther && (
+                  <input
+                    type="text"
+                    className="text-input"
+                    placeholder="Commune"
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                  />
+                )}
+              </>
             )}
           />
         </div>

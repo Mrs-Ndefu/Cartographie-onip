@@ -99,8 +99,8 @@ public class HouseholdService {
     private HouseholdMember toEntity(PersonDto person, boolean chef, int position) {
         return new HouseholdMember(
                 UUID.randomUUID(), null, chef, position,
-                person.nom(), person.postnom(), person.prenom(), person.dateNaissance(), person.sexe(),
-                person.relation());
+                person.nom(), person.postnom(), person.prenom(), person.dateNaissance(), person.lieuNaissance(),
+                person.sexe(), person.relation());
     }
 
     // readOnly = true : garde la session Hibernate ouverte le temps du mapping vers HouseholdDto,

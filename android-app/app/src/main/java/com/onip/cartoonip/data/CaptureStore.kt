@@ -44,6 +44,8 @@ class CaptureStore(context: Context) {
     private fun sanitize(h: CapturedHousehold): CapturedHousehold {
         var fixed = h
         if (fixed.membres == null) fixed = fixed.copy(membres = emptyList())
+        if (fixed.chefLieuNaissance == null) fixed = fixed.copy(chefLieuNaissance = "")
+        fixed = fixed.copy(membres = fixed.membres.map { if (it.lieuNaissance == null) it.copy(lieuNaissance = "") else it })
         return fixed
     }
 

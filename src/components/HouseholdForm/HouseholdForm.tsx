@@ -69,6 +69,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<HouseholdFormValues>({
     resolver: zodResolver(householdSchema),
@@ -76,6 +77,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'membres' })
+  const codeMenage = watch('codeMenage')
 
   async function onSubmit(values: HouseholdFormValues) {
     if (household) {
@@ -116,7 +118,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
               />
             )}
           />
-          {!household && (
+          {!household && !codeMenage && (
             <button
               type="button"
               className="generate-code-btn"
@@ -126,8 +128,11 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
             </button>
           )}
           {errors.codeMenage && <span className="field-error">{errors.codeMenage.message}</span>}
-          {!household && (
+          {!household && !codeMenage && (
             <span className="hint">Laisser vide : un code sera généré automatiquement à l'enregistrement.</span>
+          )}
+          {!household && codeMenage && (
+            <span className="hint">Code généré — il ne peut plus être régénéré.</span>
           )}
         </div>
         <div className="header-field">
@@ -150,7 +155,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
         <PersonFields control={control} namePrefix="chef" title="Chef de ménage" />
       </section>
 
-      <AddressFields control={control} />
+      <AddressFields control={control} setValue={setValue} />
 
       <section className="form-section">
         <div className="section-header-row">
