@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Connexion — Carto-Onip-RDC</title>
+  <title>Connexion — Adressage de Ménages</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +13,7 @@
 <body class="login-body">
   <form class="login-card" th:action="@{/login}" method="post">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="login-logo">
-    <h1>Carto-Onip-RDC</h1>
+    <h1>ADRESSAGE</h1>
     <p class="subtitle">Tableau de bord — connexion administrateur</p>
     <p th:if="${param.error}" class="error">Identifiants invalides.</p>
     <p th:if="${param.logout}" class="info">Vous avez été déconnecté.</p>

@@ -27,10 +27,10 @@ app:
     secret: ${JWT_SECRET:changeme-this-must-be-at-least-32-characters-long-for-hs256}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:10080}
   bootstrap-admin:
-    username: ${BOOTSTRAP_ADMIN_USERNAME:admin}
+    username: ${BOOTSTRAP_ADMIN_USERNAME:admin@onip.local}
     password: ${BOOTSTRAP_ADMIN_PASSWORD:admin123}
   bootstrap-agent:
-    username: ${BOOTSTRAP_AGENT_USERNAME:agent1}
+    username: ${BOOTSTRAP_AGENT_USERNAME:agent1@onip.local}
     password: ${BOOTSTRAP_AGENT_PASSWORD:agent123}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}

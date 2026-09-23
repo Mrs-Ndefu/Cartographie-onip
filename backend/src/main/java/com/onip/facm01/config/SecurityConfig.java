@@ -84,10 +84,23 @@ public class SecurityConfig {
                 .securityMatcher("/dashboard/**", "/login")
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").permitAll()
+                        // Le SUPERVISEUR n'a accès qu'à la gestion des agents (et son propre
+                        // profil) — pas au tableau de bord des ménages, réservé à ADMIN/SUPER_ADMIN
+                        // (qui reçoivent tous deux ROLE_ADMIN, cf. AgentUserDetailsService).
+                        .requestMatchers("/dashboard/agents", "/dashboard/agents/**",
+                                "/dashboard/profile", "/dashboard/profile/**")
+                        .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .anyRequest().hasRole("ADMIN"))
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        // Redirection après connexion selon le rôle : un SUPERVISEUR n'a pas accès
+                        // à /dashboard (cf. règles ci-dessus), donc defaultSuccessUrl("/dashboard")
+                        // pour tous le renverrait vers une page interdite.
+                        .successHandler((request, response, authentication) -> {
+                            boolean hasFullDashboard = authentication.getAuthorities().stream()
+                                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                            response.sendRedirect(hasFullDashboard ? "/dashboard" : "/dashboard/agents");
+                        })
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/logout")

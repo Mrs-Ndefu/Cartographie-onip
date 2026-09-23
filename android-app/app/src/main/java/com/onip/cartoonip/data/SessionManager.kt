@@ -2,6 +2,7 @@ package com.onip.cartoonip.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.onip.cartoonip.data.model.AgentDto
@@ -20,17 +21,24 @@ data class Session(
 /** Session chiffrée sur l'appareil : URL du serveur, jeton JWT, identité de l'agent connecté. */
 class SessionManager(context: Context) {
 
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
-
-    private val prefs: SharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "carto_onip_session",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-    )
+    // Le Keystore Android ne supporte les clés AES symétriques (requises par MasterKey) qu'à
+    // partir de l'API 23 — sur les appareils plus anciens (la tablette terrain tourne en API 21),
+    // la génération de la clé plante. On retombe sur des SharedPreferences en clair dans ce cas :
+    // moins bien, mais préférable à un crash au démarrage de l'app.
+    private val prefs: SharedPreferences = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        EncryptedSharedPreferences.create(
+            context,
+            "carto_onip_session",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+        )
+    } else {
+        context.getSharedPreferences("carto_onip_session_legacy", Context.MODE_PRIVATE)
+    }
 
     private val _session = MutableStateFlow(loadSession())
     val session: StateFlow<Session?> = _session.asStateFlow()

@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -32,17 +35,25 @@ import com.onip.cartoonip.R
 fun LoginScreen(onLoginSuccess: () -> Unit, viewModel: LoginViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Arrangement.Top (pas Center) : avec verticalScroll, un contenu plus haut que l'écran (clavier
+    // ouvert notamment, via imePadding) pousserait sinon le logo au-dessus du bord visible sans
+    // aucun moyen d'y remonter — il resterait invisible en permanence.
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Top,
     ) {
         Image(
             painter = painterResource(R.drawable.onip_logo),
             contentDescription = "Logo ONIP",
-            modifier = Modifier.size(96.dp).padding(bottom = 12.dp).align(Alignment.CenterHorizontally),
+            contentScale = ContentScale.FillWidth,
+            modifier = Modifier.fillMaxWidth(0.8f).padding(top = 24.dp, bottom = 20.dp).align(Alignment.CenterHorizontally),
         )
         Text(
-            text = "Carto-Onip Terrain",
+            text = "ADRESSAGE",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,

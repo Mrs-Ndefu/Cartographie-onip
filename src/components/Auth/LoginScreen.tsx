@@ -22,7 +22,7 @@ export function LoginScreen({ onLogin, loading, error }: LoginScreenProps) {
     <div className="login-screen">
       <form className="login-card" onSubmit={handleSubmit}>
         <img src="/onip-logo.png" alt="ONIP" className="login-logo" />
-        <h1>Carto-Onip-RDC</h1>
+        <h1>Adressage de Ménages</h1>
         <p className="subtitle">Connexion agent cartographe</p>
         {error && <p className="field-error">{error}</p>}
         <label>

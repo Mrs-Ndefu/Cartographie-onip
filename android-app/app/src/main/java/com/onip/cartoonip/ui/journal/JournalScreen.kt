@@ -218,7 +218,7 @@ private fun JournalRow(
         Row(Modifier.fillMaxWidth()) {
             Box(Modifier.width(4.dp).fillMaxHeight().background(accentColor))
 
-            household.photoPath?.let { path ->
+            household.photoPaths.firstOrNull()?.let { path ->
                 JournalThumbnail(path = path)
             }
 
@@ -256,11 +256,18 @@ private fun JournalRow(
                             color = MaterialTheme.colorScheme.outline,
                         )
                     }
-                    if (household.photoPath != null) {
+                    if (household.photoPaths.isNotEmpty()) {
                         Icon(
-                            Icons.Filled.PhotoCamera, contentDescription = "Photo jointe",
+                            Icons.Filled.PhotoCamera, contentDescription = "Photos jointes",
                             modifier = Modifier.size(14.dp).padding(start = 10.dp), tint = MaterialTheme.colorScheme.outline,
                         )
+                        if (household.photoPaths.size > 1) {
+                            Text(
+                                " ${household.photoPaths.size}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.outline,
+                            )
+                        }
                     }
                 }
                 HorizontalDivider(modifier = Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)

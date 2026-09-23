@@ -7,7 +7,6 @@ export interface PersonFormValues {
   postnom: string
   prenom: string
   dateNaissance: string
-  lieuNaissance: string
   sexe: Sexe | null
   relation: Relation
 }
@@ -56,7 +55,6 @@ const personSchema: z.ZodType<PersonFormValues> = z.object({
   postnom: z.string(),
   prenom: z.string(),
   dateNaissance: dateField,
-  lieuNaissance: z.string(),
   sexe: z.union([z.literal('M'), z.literal('F'), z.null()]).refine((v) => v !== null, {
     message: 'Sexe obligatoire (M ou F)',
   }),
@@ -92,7 +90,7 @@ export const householdSchema: z.ZodType<HouseholdFormValues> = z
   })
 
 export function createEmptyPersonForm(): PersonFormValues {
-  return { nom: '', postnom: '', prenom: '', dateNaissance: '', lieuNaissance: '', sexe: null, relation: '' }
+  return { nom: '', postnom: '', prenom: '', dateNaissance: '', sexe: null, relation: '' }
 }
 
 export function createDefaultHouseholdFormValues(): HouseholdFormValues {

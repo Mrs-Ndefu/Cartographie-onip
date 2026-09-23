@@ -4,6 +4,7 @@ import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -60,14 +63,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onip.cartoonip.data.AppContainer
 import com.onip.cartoonip.data.DRC_VILLES
 import com.onip.cartoonip.data.communesForVille
+import com.onip.cartoonip.data.model.MAX_HOUSEHOLD_PHOTOS
 import com.onip.cartoonip.ui.navigation.Routes
 import com.onip.cartoonip.ui.theme.OnipBlue
 
@@ -78,6 +84,8 @@ private val dateKeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Nu
 @Composable
 fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewModel: CaptureViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    var showSaveConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(editId) {
         if (editId != null) viewModel.loadForEdit(editId)
@@ -169,13 +177,13 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                     )
                     OutlinedTextField(
-                        value = uiState.chefDateNaissance, onValueChange = viewModel::onChefDateNaissanceChange,
+                        // TextFieldValue avec sélection forcée en fin de texte : le formatage auto (ajout
+                        // des "/") réécrit la chaîne à chaque frappe, et sans forcer la sélection, Compose
+                        // replace parfois le curseur n'importe où dans le texte reformaté au lieu de le
+                        // laisser là où l'utilisateur tape.
+                        value = TextFieldValue(uiState.chefDateNaissance, TextRange(uiState.chefDateNaissance.length)),
+                        onValueChange = { viewModel.onChefDateNaissanceChange(it.text) },
                         label = { Text("Date de naissance (JJ/MM/AAAA)") }, singleLine = true, keyboardOptions = dateKeyboardOptions,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                    )
-                    OutlinedTextField(
-                        value = uiState.chefLieuNaissance, onValueChange = viewModel::onChefLieuNaissanceChange,
-                        label = { Text("Lieu de naissance") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                     )
                     SexeSelector(value = uiState.chefSexe, onChange = viewModel::onChefSexeChange)
@@ -207,17 +215,25 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                             modifier = Modifier.weight(1f),
                         )
                     }
-                    OutlinedTextField(
-                        value = uiState.immeuble, onValueChange = viewModel::onImmeubleChange,
-                        label = { Text("Immeuble / repère") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                        OutlinedTextField(
+                            value = uiState.immeuble, onValueChange = viewModel::onImmeubleChange,
+                            label = { Text("Immeuble ou appartement") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
+                            modifier = Modifier.weight(2f),
+                        )
+                        OutlinedTextField(
+                            value = uiState.etage, onValueChange = viewModel::onEtageChange,
+                            label = { Text("Étage") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
 
             item {
                 MembersSection(
                     members = uiState.members,
+                    totalMembers = uiState.totalMembers,
                     expanded = uiState.membersExpanded,
                     onToggle = viewModel::toggleMembersExpanded,
                     onAdd = viewModel::addMember,
@@ -226,7 +242,6 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                     onPostnomChange = viewModel::onMemberPostnomChange,
                     onPrenomChange = viewModel::onMemberPrenomChange,
                     onDateNaissanceChange = viewModel::onMemberDateNaissanceChange,
-                    onLieuNaissanceChange = viewModel::onMemberLieuNaissanceChange,
                     onSexeChange = viewModel::onMemberSexeChange,
                     onRelationChange = viewModel::onMemberRelationChange,
                 )
@@ -248,40 +263,44 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         )
                     } else {
                         Text(
-                            "Renseignez le chef de ménage et l'adresse pour générer le code.",
+                            "Le code est généré automatiquement à partir du GPS, du chef de ménage et de l'adresse (commune et quartier) dès qu'ils sont renseignés.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Button(
-                            onClick = viewModel::generateCode,
-                            enabled = uiState.canGenerateCode,
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        ) {
-                            Text("Générer le code")
-                        }
                     }
                 }
             }
 
             item {
-                StepCard(number = 5, title = "Photo de la fiche complétée") {
+                StepCard(number = 5, title = "Photos de la fiche complétée") {
                     uiState.photoError?.let {
                         Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
                     }
                     Text(
-                        "Facultatif, mais recommandé : la photo sert de référence complète de la fiche papier.",
+                        "Facultatif, mais recommandé : jusqu'à ${MAX_HOUSEHOLD_PHOTOS} photos servent de référence complète de la fiche papier.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
-                    if (uiState.photoUri != null) {
-                        LocalPhotoPreview(path = uiState.photoUri.toString())
+                    if (uiState.photoPaths.isNotEmpty()) {
+                        PhotoGallery(paths = uiState.photoPaths, onRemove = viewModel::removePhoto)
                     }
-                    OutlinedButton(
-                        onClick = { cameraLauncher.launch(viewModel.photoFileUri()) },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(if (uiState.photoUri != null) "Reprendre la photo" else "Prendre la photo")
+                    // Un seul bouton, réutilisé pour chaque prise successive (pas un bouton par
+                    // emplacement de la galerie) — masqué une fois les 4 emplacements remplis.
+                    if (uiState.canAddPhoto) {
+                        OutlinedButton(
+                            onClick = { cameraLauncher.launch(viewModel.photoFileUri()) },
+                            modifier = Modifier.fillMaxWidth().padding(top = if (uiState.photoPaths.isNotEmpty()) 8.dp else 0.dp),
+                        ) {
+                            Text("Prendre une photo")
+                        }
+                    } else {
+                        Text(
+                            "Galerie complète (${MAX_HOUSEHOLD_PHOTOS}/${MAX_HOUSEHOLD_PHOTOS}) — retirez une photo pour en reprendre une autre.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
                     }
                 }
             }
@@ -299,11 +318,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                     )
                 }
                 Button(
-                    onClick = {
-                        viewModel.submit {
-                            if (uiState.isEditing) onNavigate(Routes.JOURNAL) else viewModel.resetForm()
-                        }
-                    },
+                    onClick = { showSaveConfirm = true },
                     enabled = uiState.canSubmit && !uiState.isSaving,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -315,6 +330,25 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                 }
             }
         }
+    }
+
+    if (showSaveConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSaveConfirm = false },
+            title = { Text("Voulez-vous enregistrer ce ménage ?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSaveConfirm = false
+                    viewModel.submit {
+                        Toast.makeText(context, "Ménage enregistré avec succès", Toast.LENGTH_SHORT).show()
+                        if (uiState.isEditing) onNavigate(Routes.JOURNAL) else viewModel.resetForm()
+                    }
+                }) { Text("Oui") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSaveConfirm = false }) { Text("Annuler") }
+            },
+        )
     }
 }
 
@@ -440,6 +474,7 @@ private fun RelationDropdown(value: String, onChange: (String) -> Unit) {
 @Composable
 private fun MembersSection(
     members: List<MemberInput>,
+    totalMembers: Int,
     expanded: Boolean,
     onToggle: () -> Unit,
     onAdd: () -> Unit,
@@ -448,7 +483,6 @@ private fun MembersSection(
     onPostnomChange: (String, String) -> Unit,
     onPrenomChange: (String, String) -> Unit,
     onDateNaissanceChange: (String, String) -> Unit,
-    onLieuNaissanceChange: (String, String) -> Unit,
     onSexeChange: (String, String) -> Unit,
     onRelationChange: (String, String) -> Unit,
 ) {
@@ -459,10 +493,15 @@ private fun MembersSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Membres du ménage (facultatif)", style = MaterialTheme.typography.titleMedium)
+                    // Chef + fiches membres — recalculé tout seul à chaque ajout/retrait, jamais
+                    // saisi à la main.
                     Text(
-                        "Membres du ménage (facultatif)" + if (members.isNotEmpty()) " · ${members.size}" else "",
-                        style = MaterialTheme.typography.titleMedium,
+                        "Nombre de membres : $totalMembers",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = OnipBlue,
+                        fontWeight = FontWeight.Bold,
                     )
                 }
                 IconButton(onClick = onToggle) {
@@ -493,13 +532,9 @@ private fun MembersSection(
                                 modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
                             )
                             OutlinedTextField(
-                                value = member.dateNaissance, onValueChange = { onDateNaissanceChange(member.key, it) },
+                                value = TextFieldValue(member.dateNaissance, TextRange(member.dateNaissance.length)),
+                                onValueChange = { onDateNaissanceChange(member.key, it.text) },
                                 label = { Text("Date de naissance (JJ/MM/AAAA)") }, singleLine = true, keyboardOptions = dateKeyboardOptions,
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
-                            )
-                            OutlinedTextField(
-                                value = member.lieuNaissance, onValueChange = { onLieuNaissanceChange(member.key, it) },
-                                label = { Text("Lieu de naissance") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
                                 modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
                             )
                             SexeSelector(value = member.sexe, onChange = { onSexeChange(member.key, it) })
@@ -542,21 +577,43 @@ private fun TopBarAvatar(photoDataUrl: String?) {
     }
 }
 
+// Galerie des photos déjà prises (jusqu'à MAX_HOUSEHOLD_PHOTOS), 2 par ligne, chacune avec son
+// propre bouton de suppression — la prise elle-même reste sur un unique bouton (cf. StepCard 5).
 @Composable
-private fun LocalPhotoPreview(path: String) {
-    val context = LocalContext.current
-    val bitmapState = produceState<Bitmap?>(initialValue = null, key1 = path) {
-        value = runCatching {
-            context.contentResolver.openInputStream(android.net.Uri.parse(path))?.use { BitmapFactory.decodeStream(it) }
-        }.getOrNull()
+private fun PhotoGallery(paths: List<String>, onRemove: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
+        paths.chunked(2).forEach { rowPaths ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                rowPaths.forEach { path ->
+                    PhotoThumbnail(path = path, onRemove = { onRemove(path) }, modifier = Modifier.weight(1f))
+                }
+                if (rowPaths.size == 1) Spacer(modifier = Modifier.weight(1f))
+            }
+        }
     }
-    bitmapState.value?.let { bitmap ->
-        Image(
-            bitmap = bitmap.asImageBitmap(),
-            contentDescription = "Photo de la fiche",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(8.dp)).padding(bottom = 8.dp),
-        )
+}
+
+@Composable
+private fun PhotoThumbnail(path: String, onRemove: () -> Unit, modifier: Modifier = Modifier) {
+    val bitmapState = produceState<Bitmap?>(initialValue = null, key1 = path) {
+        value = runCatching { BitmapFactory.decodeFile(path) }.getOrNull()
+    }
+    Box(modifier = modifier) {
+        bitmapState.value?.let { bitmap ->
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Photo de la fiche",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().height(110.dp).clip(RoundedCornerShape(8.dp)),
+            )
+        }
+        IconButton(
+            onClick = onRemove,
+            modifier = Modifier.align(Alignment.TopEnd).size(28.dp)
+                .background(MaterialTheme.colorScheme.surface, CircleShape),
+        ) {
+            Icon(Icons.Filled.Close, contentDescription = "Retirer cette photo", modifier = Modifier.size(16.dp))
+        }
     }
 }
 

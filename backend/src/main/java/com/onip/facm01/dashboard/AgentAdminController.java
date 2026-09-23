@@ -1,9 +1,13 @@
 package com.onip.facm01.dashboard;
 
 import com.onip.facm01.agent.Agent;
+import com.onip.facm01.agent.AgentRepository;
 import com.onip.facm01.agent.AgentRole;
 import com.onip.facm01.agent.AgentService;
 import com.onip.facm01.agent.dto.AgentDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,20 +25,27 @@ import java.util.UUID;
 public class AgentAdminController {
 
     private final AgentService agentService;
+    private final AgentRepository agentRepository;
 
-    public AgentAdminController(AgentService agentService) {
+    public AgentAdminController(AgentService agentService, AgentRepository agentRepository) {
         this.agentService = agentService;
+        this.agentRepository = agentRepository;
     }
 
     @GetMapping
-    public String list(Authentication authentication, Model model) {
-        var agentDtos = agentService.listAgents().stream().map(AgentDto::from).toList();
-        model.addAttribute("agents", agentDtos);
-        model.addAttribute("roles", AgentRole.values());
-        agentDtos.stream()
-                .filter(a -> a.username().equals(authentication.getName()))
-                .findFirst()
-                .ifPresent(a -> model.addAttribute("currentAgent", a));
+    public String list(@RequestParam(defaultValue = "0") int page, Authentication authentication, Model model) {
+        Page<AgentDto> agentPage = agentService
+                .listAgents(PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .map(AgentDto::from);
+        model.addAttribute("agents", agentPage.getContent());
+        model.addAttribute("page", agentPage);
+
+        Agent actor = actor(authentication);
+        AgentRole actorRole = actor.getRole();
+        model.addAttribute("actorRole", actorRole);
+        model.addAttribute("hasFullDashboard", actorRole.isAdminTier());
+        model.addAttribute("roles", actorRole.assignableRoles());
+        model.addAttribute("currentAgent", AgentDto.from(actor));
         return "agents";
     }
 
@@ -44,8 +55,10 @@ public class AgentAdminController {
             @RequestParam String password,
             @RequestParam String fullName,
             @RequestParam AgentRole role,
+            Authentication authentication,
             RedirectAttributes redirectAttributes) {
         try {
+            requireCanManage(authentication, role);
             if (password == null || password.length() < 6) {
                 throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères");
             }
@@ -65,6 +78,7 @@ public class AgentAdminController {
             RedirectAttributes redirectAttributes) {
         try {
             Agent target = agentService.getAgent(id);
+            requireCanManage(authentication, target.getRole());
             if (!active && target.getUsername().equals(authentication.getName())) {
                 redirectAttributes.addFlashAttribute("error", "Vous ne pouvez pas désactiver votre propre compte.");
                 return "redirect:/dashboard/agents";
@@ -86,8 +100,11 @@ public class AgentAdminController {
             RedirectAttributes redirectAttributes) {
         try {
             Agent target = agentService.getAgent(id);
-            if (role != AgentRole.ADMIN && target.getUsername().equals(authentication.getName())) {
-                redirectAttributes.addFlashAttribute("error", "Vous ne pouvez pas retirer votre propre rôle ADMIN.");
+            requireCanManage(authentication, target.getRole());
+            requireCanManage(authentication, role);
+            boolean losesDashboardAccess = !role.isAdminTier() && role != AgentRole.SUPERVISEUR;
+            if (losesDashboardAccess && target.getUsername().equals(authentication.getName())) {
+                redirectAttributes.addFlashAttribute("error", "Vous ne pouvez pas retirer votre propre rôle admin.");
                 return "redirect:/dashboard/agents";
             }
             agentService.changeRole(id, role);
@@ -102,16 +119,32 @@ public class AgentAdminController {
     public String resetPassword(
             @PathVariable UUID id,
             @RequestParam String newPassword,
+            Authentication authentication,
             RedirectAttributes redirectAttributes) {
         try {
+            Agent target = agentService.getAgent(id);
+            requireCanManage(authentication, target.getRole());
             if (newPassword == null || newPassword.length() < 6) {
                 throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères");
             }
-            Agent target = agentService.resetPassword(id, newPassword);
+            agentService.resetPassword(id, newPassword);
             redirectAttributes.addFlashAttribute("success", "Mot de passe réinitialisé pour " + target.getUsername());
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/dashboard/agents";
+    }
+
+    // Seul un SUPER_ADMIN peut créer/modifier un compte admin-tier (ADMIN ou SUPER_ADMIN) ; un
+    // ADMIN gère SUPERVISEUR et AGENT ; un SUPERVISEUR ne gère que les AGENT (cf. AgentRole).
+    private void requireCanManage(Authentication authentication, AgentRole roleInvolved) {
+        if (!roleInvolved.canBeManagedBy(actor(authentication).getRole())) {
+            throw new IllegalArgumentException("Vous n'avez pas les droits pour gérer ce rôle.");
+        }
+    }
+
+    private Agent actor(Authentication authentication) {
+        return agentRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Compte introuvable"));
     }
 }

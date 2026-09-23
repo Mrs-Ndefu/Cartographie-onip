@@ -10,11 +10,13 @@ import com.onip.cartoonip.data.SyncRepository
 import com.onip.cartoonip.data.generateCodeMenage
 import com.onip.cartoonip.data.model.CapturedHousehold
 import com.onip.cartoonip.data.model.CapturedMember
+import com.onip.cartoonip.data.model.MAX_HOUSEHOLD_PHOTOS
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
 import java.time.Instant
 import java.util.UUID
 
@@ -39,7 +41,6 @@ data class MemberInput(
     val postnom: String = "",
     val prenom: String = "",
     val dateNaissance: String = "",
-    val lieuNaissance: String = "",
     val sexe: String? = null,
     val relation: String = "",
 )
@@ -50,7 +51,6 @@ data class CaptureUiState(
     val chefPostnom: String = "",
     val chefPrenom: String = "",
     val chefDateNaissance: String = "",
-    val chefLieuNaissance: String = "",
     val chefSexe: String? = null,
     val ville: String = "",
     val commune: String = "",
@@ -58,6 +58,7 @@ data class CaptureUiState(
     val rue: String = "",
     val numero: String = "",
     val immeuble: String = "",
+    val etage: String = "",
     val members: List<MemberInput> = emptyList(),
     val membersExpanded: Boolean = false,
     val latitude: Double? = null,
@@ -66,7 +67,7 @@ data class CaptureUiState(
     val gpsLoading: Boolean = false,
     val gpsError: String? = null,
     val generatedCode: String? = null,
-    val photoUri: Uri? = null,
+    val photoPaths: List<String> = emptyList(),
     val photoError: String? = null,
     val isSaving: Boolean = false,
     val saveError: String? = null,
@@ -76,8 +77,15 @@ data class CaptureUiState(
     val hasLocation get() = latitude != null && longitude != null
     val chefFilled get() = chefNom.isNotBlank()
     val addressFilled get() = commune.isNotBlank() && quartier.isNotBlank()
-    val canGenerateCode get() = chefFilled && addressFilled
-    val hasPhoto get() = photoUri != null
+    // Le code étant dérivé du GPS + chef + adresse (cf. CodeGenerator), le GPS est désormais une
+    // condition de génération, pas seulement de soumission.
+    val canGenerateCode get() = hasLocation && chefFilled && addressFilled
+    val hasPhoto get() = photoPaths.isNotEmpty()
+    val canAddPhoto get() = photoPaths.size < MAX_HOUSEHOLD_PHOTOS
+
+    // Chef + membres additionnels — recalculé automatiquement à chaque ajout/retrait de fiche
+    // membre, jamais saisi à la main (cf. demande "synchronisé avec l'ajout de fiches").
+    val totalMembers get() = 1 + members.size
 
     // Le GPS est obligatoire ; la photo de la fiche est recommandée mais pas bloquante (utile si
     // l'appareil photo est indisponible ou pour compléter plus tard).
@@ -112,7 +120,6 @@ class CaptureViewModel : ViewModel() {
     fun onChefPostnomChange(v: String) = update { copy(chefPostnom = v.toFieldCase()) }
     fun onChefPrenomChange(v: String) = update { copy(chefPrenom = v.toFieldCase()) }
     fun onChefDateNaissanceChange(v: String) = update { copy(chefDateNaissance = formatDateDigits(v)) }
-    fun onChefLieuNaissanceChange(v: String) = update { copy(chefLieuNaissance = v.toFieldCase()) }
     fun onChefSexeChange(v: String) = update { copy(chefSexe = v) }
     fun onVilleChange(v: String) = update { copy(ville = v.toFieldCase(), commune = "") }
     fun onCommuneChange(v: String) = update { copy(commune = v.toFieldCase()) }
@@ -120,6 +127,7 @@ class CaptureViewModel : ViewModel() {
     fun onRueChange(v: String) = update { copy(rue = v.toFieldCase()) }
     fun onNumeroChange(v: String) = update { copy(numero = v.toFieldCase()) }
     fun onImmeubleChange(v: String) = update { copy(immeuble = v.toFieldCase()) }
+    fun onEtageChange(v: String) = update { copy(etage = v.toFieldCase()) }
 
     fun toggleMembersExpanded() = update { copy(membersExpanded = !membersExpanded) }
 
@@ -131,7 +139,6 @@ class CaptureViewModel : ViewModel() {
     fun onMemberPostnomChange(key: String, v: String) = updateMember(key) { copy(postnom = v.toFieldCase()) }
     fun onMemberPrenomChange(key: String, v: String) = updateMember(key) { copy(prenom = v.toFieldCase()) }
     fun onMemberDateNaissanceChange(key: String, v: String) = updateMember(key) { copy(dateNaissance = formatDateDigits(v)) }
-    fun onMemberLieuNaissanceChange(key: String, v: String) = updateMember(key) { copy(lieuNaissance = v.uppercase()) }
     fun onMemberSexeChange(key: String, v: String) = updateMember(key) { copy(sexe = v) }
     fun onMemberRelationChange(key: String, v: String) = updateMember(key) { copy(relation = v) }
 
@@ -139,8 +146,24 @@ class CaptureViewModel : ViewModel() {
         update { copy(members = members.map { if (it.key == key) it.block() else it }) }
     }
 
+    // Génère le code automatiquement dès que le GPS, le chef et l'adresse sont renseignés — plus
+    // besoin d'un bouton "Générer le code" pour ça. Une fois posé, il n'est plus jamais régénéré
+    // (même si le chef/l'adresse changent ensuite), quel que soit le champ qui a déclenché cette
+    // mise à jour : la condition `generatedCode == null` protège ça.
     private inline fun update(block: CaptureUiState.() -> CaptureUiState) {
-        _uiState.value = _uiState.value.block()
+        var newState = _uiState.value.block()
+        if (newState.canGenerateCode && newState.generatedCode == null) {
+            newState = newState.copy(
+                generatedCode = generateCodeMenage(
+                    latitude = newState.latitude!!,
+                    longitude = newState.longitude!!,
+                    chefNom = newState.chefNom,
+                    commune = newState.commune,
+                    quartier = newState.quartier,
+                ),
+            )
+        }
+        _uiState.value = newState
     }
 
     /** Recharge un ménage déjà enregistré localement pour le corriger. */
@@ -152,7 +175,6 @@ class CaptureViewModel : ViewModel() {
             chefPostnom = h.chefPostnom,
             chefPrenom = h.chefPrenom,
             chefDateNaissance = h.chefDateNaissance,
-            chefLieuNaissance = h.chefLieuNaissance,
             chefSexe = h.chefSexe,
             ville = h.ville,
             commune = h.commune,
@@ -160,10 +182,11 @@ class CaptureViewModel : ViewModel() {
             rue = h.rue,
             numero = h.numero,
             immeuble = h.immeuble,
+            etage = h.etage,
             members = h.membres.map {
                 MemberInput(
                     nom = it.nom, postnom = it.postnom, prenom = it.prenom,
-                    dateNaissance = it.dateNaissance, lieuNaissance = it.lieuNaissance,
+                    dateNaissance = it.dateNaissance,
                     sexe = it.sexe, relation = it.relation,
                 )
             },
@@ -172,7 +195,7 @@ class CaptureViewModel : ViewModel() {
             longitude = h.longitude,
             locationPrecision = h.locationPrecision,
             generatedCode = h.codeMenage,
-            photoUri = h.photoPath?.let { PhotoFiles.uriFor(AppContainer.appContext, java.io.File(it)) },
+            photoPaths = h.photoPaths,
             isEditing = true,
         )
     }
@@ -201,30 +224,34 @@ class CaptureViewModel : ViewModel() {
         }
     }
 
-    fun generateCode() {
-        if (!_uiState.value.canGenerateCode || _uiState.value.generatedCode != null) return
-        update { copy(generatedCode = generateCodeMenage()) }
-    }
+    // Emplacement de la photo en cours de prise — un seul bouton "Prendre une photo" réutilisé
+    // pour toute la galerie (jusqu'à MAX_HOUSEHOLD_PHOTOS) plutôt qu'un bouton par emplacement ;
+    // un jeton unique par prise (pas un simple index 0..3) pour que retirer une photo du milieu
+    // de la galerie ne fasse jamais correspondre le mauvais fichier à la mauvaise position.
+    private var pendingPhotoFile: File? = null
 
     fun photoFileUri(): Uri {
-        val file = PhotoFiles.fileFor(AppContainer.appContext, _uiState.value.householdId)
+        val token = UUID.randomUUID().toString()
+        val file = PhotoFiles.fileFor(AppContainer.appContext, _uiState.value.householdId, token)
+        pendingPhotoFile = file
         return PhotoFiles.uriFor(AppContainer.appContext, file)
     }
 
     fun onPhotoCaptured(success: Boolean) {
-        if (success) {
-            // Le fichier existe-t-il vraiment et fait-il un poids plausible ? Certains appareils
-            // renvoient "success" alors que le fichier est resté vide (annulation silencieuse).
-            val file = PhotoFiles.fileFor(AppContainer.appContext, _uiState.value.householdId)
-            if (file.exists() && file.length() > 0) {
-                update { copy(photoUri = photoFileUri(), photoError = null) }
-            } else {
-                update { copy(photoUri = null, photoError = "La photo n'a pas été enregistrée — réessayez.") }
-            }
+        val file = pendingPhotoFile
+        pendingPhotoFile = null
+        // Le fichier existe-t-il vraiment et fait-il un poids plausible ? Certains appareils
+        // renvoient "success" alors que le fichier est resté vide (annulation silencieuse).
+        if (success && file != null && file.exists() && file.length() > 0) {
+            update { copy(photoPaths = (photoPaths + file.absolutePath).take(MAX_HOUSEHOLD_PHOTOS), photoError = null) }
+        } else if (success) {
+            update { copy(photoError = "La photo n'a pas été enregistrée — réessayez.") }
         } else {
             update { copy(photoError = "Prise de photo annulée.") }
         }
     }
+
+    fun removePhoto(path: String) = update { copy(photoPaths = photoPaths.filterNot { it == path }) }
 
     fun submit(onDone: (String) -> Unit) {
         val state = _uiState.value
@@ -233,9 +260,6 @@ class CaptureViewModel : ViewModel() {
         update { copy(isSaving = true, saveError = null) }
         viewModelScope.launch {
             val now = Instant.now().toString()
-            val photoPath = if (state.hasPhoto) {
-                PhotoFiles.fileFor(AppContainer.appContext, state.householdId).absolutePath
-            } else null
             // En modification, on garde la date de création d'origine et on force une
             // re-synchronisation (champs + photo) puisque le contenu a pu changer.
             val existing = AppContainer.captureStore.get(state.householdId)
@@ -247,7 +271,6 @@ class CaptureViewModel : ViewModel() {
                 chefPostnom = state.chefPostnom.trim(),
                 chefPrenom = state.chefPrenom.trim(),
                 chefDateNaissance = state.chefDateNaissance.trim(),
-                chefLieuNaissance = state.chefLieuNaissance.trim(),
                 chefSexe = state.chefSexe,
                 ville = state.ville.trim(),
                 commune = state.commune.trim(),
@@ -255,6 +278,7 @@ class CaptureViewModel : ViewModel() {
                 rue = state.rue.trim(),
                 numero = state.numero.trim(),
                 immeuble = state.immeuble.trim(),
+                etage = state.etage.trim(),
                 membres = state.members
                     .filter { it.nom.isNotBlank() || it.postnom.isNotBlank() || it.prenom.isNotBlank() }
                     .map {
@@ -263,7 +287,6 @@ class CaptureViewModel : ViewModel() {
                             postnom = it.postnom.trim(),
                             prenom = it.prenom.trim(),
                             dateNaissance = it.dateNaissance.trim(),
-                            lieuNaissance = it.lieuNaissance.trim(),
                             sexe = it.sexe,
                             relation = it.relation,
                         )
@@ -271,7 +294,7 @@ class CaptureViewModel : ViewModel() {
                 latitude = state.latitude,
                 longitude = state.longitude,
                 locationPrecision = state.locationPrecision,
-                photoPath = photoPath,
+                photoPaths = state.photoPaths,
                 createdAt = existing?.createdAt ?: now,
                 updatedAt = now,
                 syncedAt = null,

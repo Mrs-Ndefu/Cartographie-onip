@@ -11,17 +11,20 @@ public class AddressEmbeddable {
     private String rue;
     private String numero;
     private String immeuble;
+    private String etage;
 
     protected AddressEmbeddable() {
     }
 
-    public AddressEmbeddable(String ville, String commune, String quartier, String rue, String numero, String immeuble) {
+    public AddressEmbeddable(
+            String ville, String commune, String quartier, String rue, String numero, String immeuble, String etage) {
         this.ville = ville;
         this.commune = commune;
         this.quartier = quartier;
         this.rue = rue;
         this.numero = numero;
         this.immeuble = immeuble;
+        this.etage = etage;
     }
 
     public String getVille() {
@@ -46,5 +49,9 @@ public class AddressEmbeddable {
 
     public String getImmeuble() {
         return immeuble;
+    }
+
+    public String getEtage() {
+        return etage;
     }
 }

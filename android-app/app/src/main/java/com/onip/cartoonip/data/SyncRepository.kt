@@ -15,9 +15,11 @@ import java.time.Instant
 
 /**
  * Synchronise un ménage capturé localement : d'abord les champs (sync JSON, comme le fait déjà
- * l'app terrain React), puis la photo si elle n'est pas encore envoyée. Les deux étapes sont
- * indépendantes exprès — une coupure réseau entre les deux laisse le ménage "à moitié synchronisé"
- * (syncedAt posé, photoSyncedAt vide), ce que l'écran Journal peut détecter et relancer seul.
+ * l'app terrain React), puis les photos (jusqu'à MAX_HOUSEHOLD_PHOTOS, envoyées en un seul appel
+ * qui remplace tout le jeu côté serveur) si elles ne sont pas encore envoyées. Les deux étapes
+ * sont indépendantes exprès — une coupure réseau entre les deux laisse le ménage "à moitié
+ * synchronisé" (syncedAt posé, photoSyncedAt vide), ce que l'écran Journal peut détecter et
+ * relancer seul.
  */
 object SyncRepository {
 
@@ -35,7 +37,6 @@ object SyncRepository {
                     postnom = current.chefPostnom.ifBlank { null },
                     prenom = current.chefPrenom.ifBlank { null },
                     dateNaissance = current.chefDateNaissance.ifBlank { null },
-                    lieuNaissance = current.chefLieuNaissance.ifBlank { null },
                     sexe = current.chefSexe,
                     relation = null,
                 ),
@@ -45,17 +46,19 @@ object SyncRepository {
                         postnom = it.postnom.ifBlank { null },
                         prenom = it.prenom.ifBlank { null },
                         dateNaissance = it.dateNaissance.ifBlank { null },
-                        lieuNaissance = it.lieuNaissance.ifBlank { null },
                         sexe = it.sexe,
                         relation = it.relation.ifBlank { null },
                     )
                 },
-                address = AddressDto(current.ville, current.commune, current.quartier, current.rue, current.numero, current.immeuble),
+                address = AddressDto(
+                    current.ville, current.commune, current.quartier, current.rue,
+                    current.numero, current.immeuble, current.etage,
+                ),
                 location = if (current.latitude != null && current.longitude != null) {
                     GeoLocationDto(current.latitude, current.longitude, current.locationPrecision, false)
                 } else null,
                 meta = FormMetaDto(null, null, null, null, null),
-                status = "complet",
+                status = if (current.isComplete) "complet" else "brouillon",
                 createdAt = current.createdAt,
                 updatedAt = current.updatedAt,
             )
@@ -70,13 +73,15 @@ object SyncRepository {
             }
         }
 
-        val photoPath = current.photoPath
-        if (photoPath != null && current.photoSyncedAt == null) {
-            val file = File(photoPath)
-            if (file.exists()) {
+        if (current.photoPaths.isNotEmpty() && current.photoSyncedAt == null) {
+            val parts = current.photoPaths.mapNotNull { path ->
+                val file = File(path)
+                if (!file.exists()) return@mapNotNull null
                 val body = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                val part = MultipartBody.Part.createFormData("file", file.name, body)
-                api.households.uploadPhoto(current.id, part)
+                MultipartBody.Part.createFormData("files", file.name, body)
+            }
+            if (parts.isNotEmpty()) {
+                api.households.uploadPhotos(current.id, parts)
                 current = current.copy(photoSyncedAt = Instant.now().toString())
                 AppContainer.captureStore.upsert(current)
             }

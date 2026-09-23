@@ -1,15 +1,22 @@
 package com.onip.facm01.agent;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 public class AgentService {
 
     private static final long MAX_PHOTO_SIZE = 2 * 1024 * 1024; // 2 Mo
+
+    // Format simple mais suffisant pour rejeter les noms d'utilisateur qui ne ressemblent pas
+    // à une adresse mail (le nom d'utilisateur EST l'adresse mail de l'agent, pas un pseudo).
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final AgentRepository agentRepository;
     private final PasswordEncoder passwordEncoder;
@@ -20,6 +27,9 @@ public class AgentService {
     }
 
     public Agent createAgent(String username, String rawPassword, String fullName, AgentRole role) {
+        if (!EMAIL_PATTERN.matcher(username).matches()) {
+            throw new IllegalArgumentException("Le nom d'utilisateur doit être une adresse mail valide");
+        }
         if (agentRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Un agent avec ce nom d'utilisateur existe déjà");
         }
@@ -29,6 +39,10 @@ public class AgentService {
 
     public List<Agent> listAgents() {
         return agentRepository.findAll();
+    }
+
+    public Page<Agent> listAgents(Pageable pageable) {
+        return agentRepository.findAll(pageable);
     }
 
     public void ensureAgentExists(String username, String rawPassword, String fullName, AgentRole role) {

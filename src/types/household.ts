@@ -26,7 +26,6 @@ export interface Person {
   postnom: string
   prenom: string
   dateNaissance: string // format JJ/MM/AAAA
-  lieuNaissance: string
   sexe: Sexe | null
   relation: Relation // vide pour le chef ; lien avec le chef pour un membre
 }
@@ -78,7 +77,6 @@ export function createEmptyPerson(): Person {
     postnom: '',
     prenom: '',
     dateNaissance: '',
-    lieuNaissance: '',
     sexe: null,
     relation: '',
   }

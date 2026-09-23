@@ -63,15 +63,26 @@ public class Household {
     @Column(name = "synced_at")
     private Instant syncedAt;
 
-    // Juste un indicateur bon marché ("une photo existe-t-elle ?"), toujours chargé avec le
-    // reste de la ligne sans coût. Les octets eux-mêmes vivent dans HouseholdPhoto (table à
-    // part) pour ne jamais alourdir les requêtes de liste/recherche avec un BLOB — ils ne sont
-    // chargés que sur demande explicite (endpoint dédié).
+    // Juste un compteur bon marché (0 à 4 photos), toujours chargé avec le reste de la ligne sans
+    // coût. Les octets eux-mêmes vivent dans HouseholdPhoto (table à part, une ligne par photo)
+    // pour ne jamais alourdir les requêtes de liste/recherche avec des BLOB — ils ne sont chargés
+    // que sur demande explicite (endpoint dédié par position).
     // columnDefinition avec DEFAULT : sans ça, la migration auto (ddl-auto=update) d'une colonne
     // NOT NULL sur une table qui a déjà des lignes échoue (rejeté silencieusement par H2 — juste
     // un WARN dans les logs, la colonne n'est alors jamais créée).
-    @Column(name = "has_photo", nullable = false, columnDefinition = "boolean default false")
-    private boolean hasPhoto = false;
+    @Column(name = "photo_count", nullable = false, columnDefinition = "integer default 0")
+    private int photoCount = 0;
+
+    // Un ménage ne peut jamais être supprimé depuis le tableau de bord (perte de données de
+    // recensement irréversible) — seulement archivé. Colonne à part plutôt qu'une valeur
+    // supplémentaire dans HouseholdStatus : le statut décrit l'avancement de la saisie côté
+    // agent (brouillon/complet/à vérifier) et est synchronisé tel quel par les apps terrain ;
+    // l'archivage est une notion purement côté admin, indépendante de ce cycle.
+    @Column(name = "archived", nullable = false, columnDefinition = "boolean default false")
+    private boolean archived = false;
+
+    @Column(name = "archived_at")
+    private Instant archivedAt;
 
     protected Household() {
     }
@@ -176,11 +187,27 @@ public class Household {
         this.syncedAt = syncedAt;
     }
 
-    public boolean isHasPhoto() {
-        return hasPhoto;
+    public int getPhotoCount() {
+        return photoCount;
     }
 
-    public void setHasPhoto(boolean hasPhoto) {
-        this.hasPhoto = hasPhoto;
+    public void setPhotoCount(int photoCount) {
+        this.photoCount = photoCount;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
+    }
+
+    public Instant getArchivedAt() {
+        return archivedAt;
+    }
+
+    public void setArchivedAt(Instant archivedAt) {
+        this.archivedAt = archivedAt;
     }
 }

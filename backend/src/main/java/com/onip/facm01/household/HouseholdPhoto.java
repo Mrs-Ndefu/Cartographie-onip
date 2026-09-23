@@ -2,22 +2,34 @@ package com.onip.facm01.household;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.util.UUID;
 
-// Table séparée de Household exprès : ses octets ne doivent être chargés que sur demande
-// explicite (un ménage à la fois), jamais entraînés par une requête de liste/recherche portant
-// sur Household. Voir le commentaire sur Household.hasPhoto.
+// Une ligne par photo (jusqu'à 4 par ménage, cf. HouseholdService.MAX_PHOTOS) — ses octets ne
+// doivent être chargés que sur demande explicite (une photo à la fois), jamais entraînés par une
+// requête de liste/recherche portant sur Household. Voir le commentaire sur Household.photoCount.
 @Entity
 @Table(name = "household_photos")
 public class HouseholdPhoto {
 
     @Id
-    @Column(name = "household_id")
-    private UUID householdId;
+    @GeneratedValue
+    private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "household_id", nullable = false)
+    private Household household;
+
+    // Ordre d'affichage dans la galerie (0 à 3) — pas de sens métier au-delà de ça.
+    @Column(name = "position", nullable = false)
+    private int position;
 
     @Lob
     @Column(name = "photo", nullable = false)
@@ -29,14 +41,23 @@ public class HouseholdPhoto {
     protected HouseholdPhoto() {
     }
 
-    public HouseholdPhoto(UUID householdId, byte[] photo, String photoContentType) {
-        this.householdId = householdId;
+    public HouseholdPhoto(Household household, int position, byte[] photo, String photoContentType) {
+        this.household = household;
+        this.position = position;
         this.photo = photo;
         this.photoContentType = photoContentType;
     }
 
-    public UUID getHouseholdId() {
-        return householdId;
+    public UUID getId() {
+        return id;
+    }
+
+    public Household getHousehold() {
+        return household;
+    }
+
+    public int getPosition() {
+        return position;
     }
 
     public byte[] getPhoto() {
@@ -45,10 +66,5 @@ public class HouseholdPhoto {
 
     public String getPhotoContentType() {
         return photoContentType;
-    }
-
-    public void update(byte[] photo, String photoContentType) {
-        this.photo = photo;
-        this.photoContentType = photoContentType;
     }
 }

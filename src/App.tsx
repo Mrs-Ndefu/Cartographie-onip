@@ -107,7 +107,7 @@ function App() {
         <>
           <header className="app-toolbar">
             <img src="/onip-logo.png" alt="ONIP" className="app-toolbar-logo" />
-            <h1>Carto-Onip-RDC</h1>
+            <h1>Adressage de Ménages</h1>
             <div className="app-toolbar-actions">
               {view === 'map' && (
                 <button type="button" className="add-member-btn" onClick={startNewHousehold}>

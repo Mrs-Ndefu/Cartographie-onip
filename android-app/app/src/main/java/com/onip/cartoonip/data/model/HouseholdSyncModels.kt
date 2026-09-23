@@ -26,7 +26,6 @@ data class PersonDto(
     val postnom: String?,
     val prenom: String?,
     val dateNaissance: String?,
-    val lieuNaissance: String?,
     val sexe: String?,
     val relation: String?,
 )
@@ -38,6 +37,7 @@ data class AddressDto(
     val rue: String?,
     val numero: String?,
     val immeuble: String?,
+    val etage: String?,
 )
 
 data class GeoLocationDto(

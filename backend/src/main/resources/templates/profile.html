@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mon profil — Carto-Onip-RDC</title>
+  <title>Mon profil — Adressage de Ménages</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,9 +14,10 @@
 <body>
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>Carto-Onip-RDC — Mon profil</h1>
+    <h1>Adressage de Ménages — Mon profil</h1>
     <nav class="topbar-nav">
-      <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
+      <a th:if="${agent.role.isAdminTier()}" th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
+      <a th:if="${agent.role.name() == 'SUPERVISEUR'}" th:href="@{/dashboard/agents}" class="link-btn">← Gestion des agents</a>
       <form th:action="@{/logout}" method="post">
         <button type="submit" class="logout-btn">Se déconnecter</button>
       </form>

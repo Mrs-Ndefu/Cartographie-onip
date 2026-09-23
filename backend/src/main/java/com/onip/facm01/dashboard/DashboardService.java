@@ -2,16 +2,15 @@ package com.onip.facm01.dashboard;
 
 import com.onip.facm01.household.HouseholdMemberRepository;
 import com.onip.facm01.household.HouseholdRepository;
-import com.onip.facm01.household.Sexe;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
 @Service
 public class DashboardService {
 
-    private static final ZoneId ZONE = ZoneId.of("Africa/Kinshasa");
+    public static final ZoneId ZONE = ZoneId.of("Africa/Kinshasa");
     private static final DateTimeFormatter MONTH_LABEL = DateTimeFormatter.ofPattern("MM/yyyy");
 
     private final HouseholdRepository householdRepository;
@@ -44,12 +43,20 @@ public class DashboardService {
         return new RegistrationCounts(today, thisMonth, thisYear);
     }
 
-    public Map<String, Long> sexDistribution() {
-        List<Sexe> values = householdMemberRepository.findAllSexe();
-        Map<String, Long> counts = new LinkedHashMap<>();
-        counts.put("M", values.stream().filter(s -> s == Sexe.M).count());
-        counts.put("F", values.stream().filter(s -> s == Sexe.F).count());
-        return counts;
+    // Volontairement tous ménages confondus (archivés ou non) : ce compteur ne doit pas bouger
+    // quand un ménage est archivé/restauré, seul le compteur "Archivés" reflète ce mouvement.
+    public long populationTotal() {
+        return householdMemberRepository.count();
+    }
+
+    // Bornes [début de journée, fin de journée] dans le fuseau du projet, pour convertir un
+    // filtre de date (saisi par l'admin comme un simple LocalDate) en Instant pour la requête.
+    public static Instant startOfDay(LocalDate date) {
+        return date.atStartOfDay(ZONE).toInstant();
+    }
+
+    public static Instant endOfDay(LocalDate date) {
+        return date.plusDays(1).atStartOfDay(ZONE).toInstant().minusNanos(1);
     }
 
     public List<MonthlyCount> monthlyRegistrations(int monthsBack) {

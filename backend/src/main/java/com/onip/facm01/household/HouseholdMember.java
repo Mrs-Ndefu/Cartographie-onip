@@ -38,9 +38,6 @@ public class HouseholdMember {
     @Column(name = "date_naissance")
     private String dateNaissance;
 
-    @Column(name = "lieu_naissance")
-    private String lieuNaissance;
-
     @Enumerated(EnumType.STRING)
     private Sexe sexe;
 
@@ -51,7 +48,7 @@ public class HouseholdMember {
     }
 
     public HouseholdMember(UUID id, Household household, boolean chef, int position,
-                            String nom, String postnom, String prenom, String dateNaissance, String lieuNaissance,
+                            String nom, String postnom, String prenom, String dateNaissance,
                             Sexe sexe, String relation) {
         this.id = id;
         this.household = household;
@@ -61,7 +58,6 @@ public class HouseholdMember {
         this.postnom = postnom;
         this.prenom = prenom;
         this.dateNaissance = dateNaissance;
-        this.lieuNaissance = lieuNaissance;
         this.sexe = sexe;
         this.relation = relation;
     }
@@ -100,10 +96,6 @@ public class HouseholdMember {
 
     public String getDateNaissance() {
         return dateNaissance;
-    }
-
-    public String getLieuNaissance() {
-        return lieuNaissance;
     }
 
     public Sexe getSexe() {

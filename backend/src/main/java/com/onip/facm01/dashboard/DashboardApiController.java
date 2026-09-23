@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dashboard")
@@ -26,22 +25,20 @@ public class DashboardApiController {
     @GetMapping("/stats")
     public DashboardStatsDto stats() {
         return new DashboardStatsDto(
-                householdRepository.count(),
-                householdRepository.countByStatus(HouseholdStatus.COMPLET),
-                householdRepository.countByStatus(HouseholdStatus.BROUILLON),
-                householdRepository.countByStatus(HouseholdStatus.A_VERIFIER),
+                householdRepository.countByArchivedFalse(),
+                householdRepository.countByStatusAndArchivedFalse(HouseholdStatus.COMPLET),
+                householdRepository.countByArchivedFalse() - householdRepository.countByStatusAndArchivedFalse(HouseholdStatus.COMPLET),
+                dashboardService.populationTotal(),
                 dashboardService.registrationCounts(),
-                dashboardService.sexDistribution(),
                 dashboardService.monthlyRegistrations(12));
     }
 
     public record DashboardStatsDto(
             long total,
             long countComplet,
-            long countBrouillon,
-            long countAVerifier,
+            long countIncomplet,
+            long population,
             DashboardService.RegistrationCounts registrationCounts,
-            Map<String, Long> sexDistribution,
             List<DashboardService.MonthlyCount> monthlyRegistrations) {
     }
 }

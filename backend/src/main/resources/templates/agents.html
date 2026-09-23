@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Agents — Carto-Onip-RDC</title>
+  <title>Agents — Adressage de Ménages</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,9 +14,9 @@
 <body>
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>Carto-Onip-RDC — Gestion des agents</h1>
+    <h1>Adressage de Ménages — Gestion des agents</h1>
     <nav class="topbar-nav">
-      <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
+      <a th:if="${hasFullDashboard}" th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
              th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
@@ -37,8 +37,8 @@
         <h2 class="h6 text-uppercase text-secondary mb-3">Créer un agent</h2>
         <form th:action="@{/dashboard/agents}" method="post" class="row g-3 align-items-end">
           <div class="col-sm-6 col-md-3">
-            <label class="form-label small fw-semibold">Nom d'utilisateur</label>
-            <input type="text" name="username" class="form-control" required>
+            <label class="form-label small fw-semibold">Adresse mail (nom d'utilisateur)</label>
+            <input type="email" name="username" class="form-control" placeholder="agent@onip.local" required>
           </div>
           <div class="col-sm-6 col-md-3">
             <label class="form-label small fw-semibold">Mot de passe</label>
@@ -88,7 +88,7 @@
               </td>
               <td th:text="${a.createdAt}">-</td>
               <td>
-                <div class="d-flex flex-column gap-2">
+                <div class="d-flex flex-column gap-2" th:if="${a.role.canBeManagedBy(actorRole)}">
                   <form th:action="@{/dashboard/agents/{id}/active(id=${a.id})}" method="post">
                     <input type="hidden" name="active" th:value="${!a.active}">
                     <button type="submit" class="btn btn-sm w-100"
@@ -109,6 +109,9 @@
                     <button type="submit" class="btn btn-outline-secondary">OK</button>
                   </form>
                 </div>
+                <span th:unless="${a.role.canBeManagedBy(actorRole)}" class="text-secondary small">
+                  Vous n'avez pas les droits pour gérer ce compte
+                </span>
               </td>
             </tr>
             <tr th:if="${agents.isEmpty()}">
@@ -117,6 +120,24 @@
           </tbody>
         </table>
       </div>
+
+      <nav th:if="${page.totalPages > 1}" aria-label="Pagination des agents" class="table-card-footer">
+        <ul class="pagination pagination-sm mb-1">
+          <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+            <a class="page-link" th:href="@{/dashboard/agents(page=${page.number - 1})}">Précédent</a>
+          </li>
+          <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
+            <a class="page-link" th:href="@{/dashboard/agents(page=${i})}" th:text="${i + 1}">1</a>
+          </li>
+          <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+            <a class="page-link" th:href="@{/dashboard/agents(page=${page.number + 1})}">Suivant</a>
+          </li>
+        </ul>
+        <p class="text-secondary small mb-0">
+          Page <span th:text="${page.number + 1}">1</span> / <span th:text="${page.totalPages}">1</span>
+          — <span th:text="${page.totalElements}">0</span> agent(s) au total
+        </p>
+      </nav>
     </div>
   </div>
 

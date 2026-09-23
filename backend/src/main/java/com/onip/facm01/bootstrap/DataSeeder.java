@@ -34,9 +34,9 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        agentService.ensureAgentExists(bootstrapAdminUsername, bootstrapAdminPassword, "Administrateur", AgentRole.ADMIN);
+        agentService.ensureAgentExists(bootstrapAdminUsername, bootstrapAdminPassword, "Administrateur", AgentRole.SUPER_ADMIN);
         agentService.ensureAgentExists(bootstrapAgentUsername, bootstrapAgentPassword, "Agent de test", AgentRole.AGENT);
-        log.info("Comptes de test disponibles : {} / *** (ADMIN, tableau de bord) et {} / *** (AGENT, app terrain) — changez ces mots de passe en production",
+        log.info("Comptes de test disponibles : {} / *** (SUPER_ADMIN, tableau de bord) et {} / *** (AGENT, app terrain) — changez ces mots de passe en production",
                 bootstrapAdminUsername, bootstrapAgentUsername);
     }
 }

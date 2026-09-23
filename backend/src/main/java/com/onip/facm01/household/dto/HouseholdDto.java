@@ -23,7 +23,9 @@ public record HouseholdDto(
         Instant createdAt,
         Instant updatedAt,
         Instant syncedAt,
-        boolean hasPhoto) {
+        int photoCount,
+        boolean archived,
+        Instant archivedAt) {
 
     public static HouseholdDto from(Household household) {
         PersonDto chef = household.getMembers().stream()
@@ -40,7 +42,7 @@ public record HouseholdDto(
         var address = household.getAddress();
         AddressDto addressDto = address == null ? null
                 : new AddressDto(address.getVille(), address.getCommune(), address.getQuartier(),
-                        address.getRue(), address.getNumero(), address.getImmeuble());
+                        address.getRue(), address.getNumero(), address.getImmeuble(), address.getEtage());
 
         var location = household.getLocation();
         GeoLocationDto locationDto = (location == null || !location.isPresent()) ? null
@@ -66,11 +68,13 @@ public record HouseholdDto(
                 household.getCreatedAt(),
                 household.getUpdatedAt(),
                 household.getSyncedAt(),
-                household.isHasPhoto());
+                household.getPhotoCount(),
+                household.isArchived(),
+                household.getArchivedAt());
     }
 
     private static PersonDto toPersonDto(HouseholdMember member) {
         return new PersonDto(member.getNom(), member.getPostnom(), member.getPrenom(),
-                member.getDateNaissance(), member.getLieuNaissance(), member.getSexe(), member.getRelation());
+                member.getDateNaissance(), member.getSexe(), member.getRelation());
     }
 }

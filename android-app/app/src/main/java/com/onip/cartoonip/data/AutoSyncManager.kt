@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.os.Build
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -33,9 +34,15 @@ object AutoSyncManager {
 
         val connectivityManager = context.applicationContext
             .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        // NET_CAPABILITY_VALIDATED n'existe qu'à partir de l'API 23 — sur la tablette terrain
+        // (API 21) on se contente de NET_CAPABILITY_INTERNET, sans attendre la validation réseau.
         val request = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            .apply {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                }
+            }
             .build()
 
         connectivityManager.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {

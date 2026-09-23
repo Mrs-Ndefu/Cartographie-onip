@@ -20,8 +20,8 @@ premier démarrage :
 
 | Rôle | Usage | Utilisateur | Mot de passe |
 |---|---|---|---|
-| ADMIN | Tableau de bord (`/dashboard`) | `admin` | `admin123` |
-| AGENT | Connexion dans l'app terrain (React) pour tester la synchronisation | `agent1` | `agent123` |
+| ADMIN | Tableau de bord (`/dashboard`) | `admin@onip.local` | `admin123` |
+| AGENT | Connexion dans l'app terrain (React) pour tester la synchronisation | `agent1@onip.local` | `agent123` |
 
 **Change ces mots de passe en production** (variables d'environnement `BOOTSTRAP_ADMIN_USERNAME`
 / `BOOTSTRAP_ADMIN_PASSWORD` / `BOOTSTRAP_AGENT_USERNAME` / `BOOTSTRAP_AGENT_PASSWORD`, voir
@@ -53,8 +53,8 @@ Toutes les routes `/api/**` sont protégées par JWT (sauf `/api/auth/login`).
 | `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` | localhost / 5432 / carto_onip_rdc / facm01 / facm01 | Connexion PostgreSQL |
 | `JWT_SECRET` | valeur de dev, **à changer** | Clé de signature des tokens (HS256, ≥32 caractères) |
 | `JWT_EXPIRATION_MINUTES` | 10080 (7 jours) | Durée de validité du token — volontairement longue pour couvrir les périodes hors connexion sur le terrain |
-| `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` | admin / admin123 | Compte admin créé au premier démarrage s'il n'existe pas déjà |
-| `BOOTSTRAP_AGENT_USERNAME` / `BOOTSTRAP_AGENT_PASSWORD` | agent1 / agent123 | Compte agent de test créé au premier démarrage s'il n'existe pas déjà |
+| `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` | admin@onip.local / admin123 | Compte admin créé au premier démarrage s'il n'existe pas déjà |
+| `BOOTSTRAP_AGENT_USERNAME` / `BOOTSTRAP_AGENT_PASSWORD` | agent1@onip.local / agent123 | Compte agent de test créé au premier démarrage s'il n'existe pas déjà |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Origines autorisées (séparées par des virgules) pour les appels depuis l'app React |
 
 ## Schéma de données

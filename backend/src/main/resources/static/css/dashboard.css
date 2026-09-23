@@ -191,6 +191,25 @@ h1, h2, h3 {
   gap: 1rem;
 }
 
+.agent-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  line-height: 1.1;
+}
+
+.agent-role-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand);
+  background: var(--brand-light);
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+}
+
 .link-btn {
   color: var(--brand);
   text-decoration: none;
@@ -252,10 +271,104 @@ h1, h2, h3 {
   font-weight: 700;
 }
 
+/* ---------- Compteurs hero (total ménages, population — au-dessus de tout) ---------- */
+
+.hero-row {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 1.75rem 0;
+  flex-wrap: wrap;
+}
+
+.population-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 1.75rem 1.75rem 1.5rem;
+  flex: 1 1 220px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  color: #ffffff;
+  opacity: 0;
+  animation: hero-pop 0.5s ease-out forwards;
+}
+
+.population-hero:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+@keyframes hero-pop {
+  0% { opacity: 0; transform: translateY(14px) scale(0.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Halo qui pulse pendant que le chiffre compte, appliqué/retiré en JS */
+.population-hero.is-counting {
+  animation: hero-pop 0.5s ease-out forwards, hero-halo 0.9s ease-in-out infinite;
+}
+
+@keyframes hero-halo {
+  0% { box-shadow: var(--shadow-md), 0 0 0 0 rgba(255, 255, 255, 0.45); }
+  70% { box-shadow: var(--shadow-md), 0 0 0 16px rgba(255, 255, 255, 0); }
+  100% { box-shadow: var(--shadow-md), 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.population-hero-value.is-counting {
+  animation: hero-glow 0.6s ease-in-out infinite;
+}
+
+@keyframes hero-glow {
+  0%, 100% { text-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+  50% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.9); }
+}
+
+.population-hero-value {
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.population-hero-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+
 /* ---------- Agents ---------- */
 
 .agents-messages {
-  padding: 0 1.75rem;
+  position: fixed;
+  top: 1.25rem;
+  right: 1.75rem;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(360px, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.agents-messages .alert {
+  pointer-events: auto;
+  box-shadow: var(--shadow-md);
+  animation: toast-in 0.25s ease-out;
+}
+
+.agents-messages .alert.alert-fade-out {
+  opacity: 0;
+  transform: translateX(12px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .agent-form-card {
@@ -352,12 +465,12 @@ h1, h2, h3 {
   border-left-color: var(--success);
 }
 
-.stat-card.brouillon {
+.stat-card.incomplet {
   border-left-color: var(--warning);
 }
 
-.stat-card.averifier {
-  border-left-color: var(--danger);
+.stat-card.archive {
+  border-left-color: var(--ink-muted);
 }
 
 .stat-value {
@@ -389,6 +502,96 @@ h1, h2, h3 {
   gap: 1rem;
   padding: 1.5rem 1.75rem;
   flex-wrap: wrap;
+}
+
+/* ---------- Aperçu : cartes de stats + graphique côte à côte ---------- */
+
+.overview-row {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem 0.5rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.overview-row .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 1rem;
+  flex: 1 1 0;
+  align-content: flex-start;
+}
+
+.overview-row .chart-card {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.overview-row .chart-card canvas {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---------- Filtres du tableau (recherche, commune, dates) ---------- */
+
+.table-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.filter-select,
+.filter-date {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6rem;
+  font-size: 0.83rem;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.filter-date {
+  color: var(--ink-muted);
+}
+
+/* ---------- Filtres par colonne (dropdown à côté du libellé, dans l'en-tête) ---------- */
+
+.th-with-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.filter-select-column {
+  min-width: 90px;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.th-with-filter-stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.filter-date-group {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.filter-date-column {
+  width: 6.4rem;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .chart-card {
@@ -495,8 +698,8 @@ h1, h2, h3 {
 .households-table th,
 .households-table td {
   text-align: left;
-  padding: 0.65rem 1.1rem;
-  font-size: 0.86rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.76rem;
   white-space: nowrap;
 }
 
@@ -506,12 +709,12 @@ h1, h2, h3 {
   background: #f8f9fb;
   color: var(--ink-muted);
   text-transform: uppercase;
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border);
-  padding-top: 0.7rem;
-  padding-bottom: 0.7rem;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
 }
 
 .households-table tbody tr {
@@ -546,6 +749,21 @@ h1, h2, h3 {
   text-align: right;
 }
 
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 .table-empty {
   text-align: center;
   color: var(--ink-muted);
@@ -562,9 +780,9 @@ h1, h2, h3 {
 .status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.22rem 0.65rem;
+  padding: 0.18rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 600;
   color: white;
   letter-spacing: 0.02em;
@@ -574,10 +792,254 @@ h1, h2, h3 {
   background: var(--success);
 }
 
-.status-brouillon {
+.status-incomplet {
   background: var(--warning);
 }
 
-.status-a_verifier {
-  background: var(--danger);
+/* ---------- Détail du ménage (fiche professionnelle) ---------- */
+
+.detail-page {
+  padding: 1.5rem 1.75rem 2.5rem;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.detail-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-hero-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--brand-light);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.detail-hero-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-hero-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0 0 0.3rem;
+}
+
+.detail-hero-code {
+  color: var(--brand);
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.detail-hero-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.65rem 0;
+}
+
+.detail-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+}
+
+.detail-hero-meta strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.detail-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.detail-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: #f8f9fb;
+}
+
+.detail-card-header svg {
+  width: 15px;
+  height: 15px;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.detail-card-header h2 {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+
+.detail-card-body {
+  padding: 1.1rem 1.25rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.detail-field-label {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+  margin-bottom: 0.2rem;
+}
+
+.detail-field-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.detail-empty {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.detail-photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
+}
+
+.detail-photo-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.detail-members-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-members-table th,
+.detail-members-table td {
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.detail-members-table thead th {
+  background: #f8f9fb;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-members-table tbody tr:nth-child(even) {
+  background: #fbfcfd;
+}
+
+.detail-members-table tbody tr:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+/* ---------- Modale de confirmation stylée (remplace window.confirm) ---------- */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 32, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: confirm-overlay-in 0.15s ease-out;
+}
+
+.confirm-box {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem 1.75rem;
+  width: min(360px, calc(100vw - 2rem));
+  animation: confirm-box-in 0.2s ease-out;
+}
+
+.confirm-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+
+.confirm-message {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin: 0 0 1.25rem;
+}
+
+.confirm-message:empty {
+  display: none;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+@keyframes confirm-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes confirm-box-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }

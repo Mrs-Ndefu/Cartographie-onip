@@ -116,23 +116,6 @@ export function PersonFields({
         />
       </div>
 
-      <div className="field-row">
-        <label className="field-label">5. Lieu de naissance</label>
-        <Controller
-          control={control}
-          name={path('lieuNaissance')}
-          render={({ field }) => (
-            <input
-              type="text"
-              className="text-input"
-              value={(field.value as string) ?? ''}
-              onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-              aria-label={`${title} - Lieu de naissance`}
-            />
-          )}
-        />
-      </div>
-
       {showRelation && (
         <div className="field-row">
           <label className="field-label">Lien de parenté avec le chef</label>

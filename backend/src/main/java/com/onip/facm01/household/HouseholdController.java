@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -63,21 +64,29 @@ public class HouseholdController {
         householdService.delete(id, currentAgent(httpRequest));
     }
 
-    @PostMapping("/{id}/photo")
-    public HouseholdDto uploadPhoto(
-            @PathVariable UUID id, @RequestParam("file") MultipartFile file, HttpServletRequest httpRequest) {
+    // Remplace l'intégralité des photos du ménage (jusqu'à 4) en un seul envoi multipart —
+    // cf. HouseholdService.replacePhotos pour le pourquoi du "remplace tout" plutôt qu'un ajout.
+    @PostMapping("/{id}/photos")
+    public HouseholdDto uploadPhotos(
+            @PathVariable UUID id, @RequestParam("files") List<MultipartFile> files, HttpServletRequest httpRequest) {
         Agent agent = currentAgent(httpRequest);
-        try {
-            householdService.attachPhoto(id, file.getBytes(), file.getContentType(), agent);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Impossible de lire le fichier envoyé", e);
-        }
+        List<PhotoUpload> uploads = files.stream()
+                .map(f -> {
+                    try {
+                        return new PhotoUpload(f.getBytes(), f.getContentType());
+                    } catch (IOException e) {
+                        throw new UncheckedIOException("Impossible de lire le fichier envoyé", e);
+                    }
+                })
+                .toList();
+        householdService.replacePhotos(id, uploads, agent);
         return householdService.get(id, agent);
     }
 
-    @GetMapping("/{id}/photo")
-    public ResponseEntity<byte[]> getPhoto(@PathVariable UUID id, HttpServletRequest httpRequest) {
-        HouseholdPhoto photo = householdService.getPhoto(id, currentAgent(httpRequest));
+    @GetMapping("/{id}/photos/{position}")
+    public ResponseEntity<byte[]> getPhoto(
+            @PathVariable UUID id, @PathVariable int position, HttpServletRequest httpRequest) {
+        HouseholdPhoto photo = householdService.getPhoto(id, position, currentAgent(httpRequest));
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(photo.getPhotoContentType()))
                 .body(photo.getPhoto());
