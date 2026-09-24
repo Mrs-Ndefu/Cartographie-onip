@@ -1,23 +1,57 @@
 package com.onip.cartoonip.ui.profile
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onip.cartoonip.data.AppContainer
 import com.onip.cartoonip.data.model.AgentDto
 import com.onip.cartoonip.data.model.ChangePasswordRequest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 
 private const val MAX_PHOTO_BYTES = 2 * 1024 * 1024
+private const val MAX_PHOTO_DIMENSION = 800
+
+// Les photos d'un appareil photo moderne dépassent souvent la limite de 2 Mo du serveur : on
+// réduit à MAX_PHOTO_DIMENSION px (largement suffisant pour un avatar) et on ré-encode en JPEG.
+private fun downscaleToJpeg(context: Context, uri: Uri): ByteArray? {
+    val resolver = context.contentResolver
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) } ?: return null
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+    var sampleSize = 1
+    while (maxOf(bounds.outWidth, bounds.outHeight) / (sampleSize * 2) >= MAX_PHOTO_DIMENSION) {
+        sampleSize *= 2
+    }
+    val decoded = resolver.openInputStream(uri)?.use {
+        BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sampleSize })
+    } ?: return null
+
+    val scale = MAX_PHOTO_DIMENSION.toFloat() / maxOf(decoded.width, decoded.height)
+    val bitmap = if (scale < 1f) {
+        Bitmap.createScaledBitmap(decoded, (decoded.width * scale).toInt(), (decoded.height * scale).toInt(), true)
+    } else {
+        decoded
+    }
+    return ByteArrayOutputStream().use { out ->
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+        out.toByteArray()
+    }
+}
 
 data class ProfileUiState(
     val isLoading: Boolean = true,
@@ -112,7 +146,7 @@ class ProfileViewModel : ViewModel() {
                     return@launch
                 }
 
-                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                val bytes = withContext(Dispatchers.IO) { downscaleToJpeg(context, uri) }
                 if (bytes == null) {
                     _uiState.value = _uiState.value.copy(photoUploading = false, photoError = "Impossible de lire le fichier.")
                     return@launch
@@ -125,7 +159,7 @@ class ProfileViewModel : ViewModel() {
                     return@launch
                 }
 
-                val body = bytes.toRequestBody(contentType.toMediaTypeOrNull())
+                val body = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
                 val part = MultipartBody.Part.createFormData("file", "profile.jpg", body)
                 val agent = AppContainer.api().agent.uploadPhoto(part)
                 _uiState.value = _uiState.value.copy(photoUploading = false, agent = agent)
