@@ -48,6 +48,7 @@ export interface FormMeta {
 }
 
 export interface Address {
+  province: string
   ville: string
   commune: string
   quartier: string
@@ -94,6 +95,7 @@ export function createEmptyFormMeta(): FormMeta {
 
 export function createEmptyAddress(): Address {
   return {
+    province: '',
     ville: '',
     commune: '',
     quartier: '',

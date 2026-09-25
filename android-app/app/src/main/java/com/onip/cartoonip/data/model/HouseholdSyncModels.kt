@@ -31,6 +31,7 @@ data class PersonDto(
 )
 
 data class AddressDto(
+    val province: String?,
     val ville: String?,
     val commune: String?,
     val quartier: String?,

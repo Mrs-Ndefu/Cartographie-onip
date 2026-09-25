@@ -5,6 +5,7 @@ import com.onip.facm01.security.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -82,24 +83,39 @@ public class SecurityConfig {
     public SecurityFilterChain dashboardFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/dashboard/**", "/login")
+                // Droits par rôle (cf. AgentRole) :
+                // - SUPER_ADMIN : voit tout, ne pose aucune action sur les ménages ; garde la
+                //   gestion des comptes.
+                // - ADMIN : tout, dont retirer/restaurer un ménage et définir les zones.
+                // - SUPERVISEUR : voit, modifie et restaure les ménages ; gère les agents qui
+                //   lui sont affectés et leurs zones.
+                // - DIRECTION_GENERALE : uniquement la page de statistiques.
+                // - AGENT : pas d'accès au tableau de bord web (app terrain uniquement).
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").permitAll()
-                        // Le SUPERVISEUR n'a accès qu'à la gestion des agents (et son propre
-                        // profil) — pas au tableau de bord des ménages, réservé à ADMIN/SUPER_ADMIN
-                        // (qui reçoivent tous deux ROLE_ADMIN, cf. AgentUserDetailsService).
-                        .requestMatchers("/dashboard/agents", "/dashboard/agents/**",
-                                "/dashboard/profile", "/dashboard/profile/**")
+                        .requestMatchers("/dashboard/stats", "/dashboard/profile", "/dashboard/profile/**")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR", "DIRECTION_GENERALE")
+                        .requestMatchers(HttpMethod.POST, "/dashboard/households/*/archive")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/dashboard/households/*/restore")
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
-                        .anyRequest().hasRole("ADMIN"))
+                        .requestMatchers("/dashboard/households/*/edit", "/dashboard/households/*/edit-form")
+                        .hasAnyRole("ADMIN", "SUPERVISEUR")
+                        .requestMatchers(HttpMethod.POST, "/dashboard/zones", "/dashboard/zones/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers("/dashboard/agents", "/dashboard/agents/**")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR")
+                        .requestMatchers(HttpMethod.GET, "/dashboard", "/dashboard/**")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR")
+                        .anyRequest().denyAll())
                 .formLogin(form -> form
                         .loginPage("/login")
-                        // Redirection après connexion selon le rôle : un SUPERVISEUR n'a pas accès
-                        // à /dashboard (cf. règles ci-dessus), donc defaultSuccessUrl("/dashboard")
-                        // pour tous le renverrait vers une page interdite.
+                        // Page d'accueil selon le rôle : la DIRECTION_GENERALE n'a accès qu'aux
+                        // statistiques, les autres rôles arrivent sur le tableau de bord.
                         .successHandler((request, response, authentication) -> {
-                            boolean hasFullDashboard = authentication.getAuthorities().stream()
-                                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-                            response.sendRedirect(hasFullDashboard ? "/dashboard" : "/dashboard/agents");
+                            boolean statsOnly = authentication.getAuthorities().stream()
+                                    .anyMatch(a -> a.getAuthority().equals("ROLE_DIRECTION_GENERALE"));
+                            response.sendRedirect(statsOnly ? "/dashboard/stats" : "/dashboard");
                         })
                         .permitAll())
                 .logout(logout -> logout
@@ -127,7 +143,9 @@ public class SecurityConfig {
     public SecurityFilterChain defaultFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/css/**", "/js/**", "/img/**", "/favicon.ico").permitAll()
+                        // /error : page vers laquelle Spring renvoie en cas d'erreur serveur. Interdite,
+                        // elle transformait n'importe quelle erreur en "403 accès refusé".
+                        .requestMatchers("/", "/css/**", "/js/**", "/img/**", "/favicon.ico", "/error").permitAll()
                         .anyRequest().denyAll())
                 .csrf(csrf -> csrf.disable());
         return http.build();

@@ -5,6 +5,7 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class AddressEmbeddable {
 
+    private String province;
     private String ville;
     private String commune;
     private String quartier;
@@ -17,7 +18,9 @@ public class AddressEmbeddable {
     }
 
     public AddressEmbeddable(
-            String ville, String commune, String quartier, String rue, String numero, String immeuble, String etage) {
+            String province, String ville, String commune, String quartier, String rue, String numero,
+            String immeuble, String etage) {
+        this.province = province;
         this.ville = ville;
         this.commune = commune;
         this.quartier = quartier;
@@ -25,6 +28,14 @@ public class AddressEmbeddable {
         this.numero = numero;
         this.immeuble = immeuble;
         this.etage = etage;
+    }
+
+    public String getProvince() {
+        return province;
+    }
+
+    public void setProvince(String province) {
+        this.province = province;
     }
 
     public String getVille() {

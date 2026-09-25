@@ -14,6 +14,7 @@ import { MAX_MEMBRES, createEmptyAddress } from '../../types/household'
 import type { Household, GeoLocation } from '../../types/household'
 import { useHouseholds } from '../../hooks/useHouseholds'
 import { generateCodeMenage } from '../../utils/idGenerator'
+import { provinceForVille } from '../../data/drcLocations'
 import './HouseholdForm.css'
 
 interface HouseholdFormProps {
@@ -52,7 +53,11 @@ function toFormValues(household: Household): HouseholdFormValues {
     nombreMembres: String(household.nombreMembres),
     chef: household.chef,
     membres: household.membres,
-    address: household.address ?? createEmptyAddress(),
+    address: {
+      ...createEmptyAddress(),
+      ...household.address,
+      province: household.address?.province || provinceForVille(household.address?.ville ?? ''),
+    },
     faitA: household.meta.faitA,
     dateEncodage: household.meta.dateEncodage,
     nombreFiches: household.meta.nombreFiches,

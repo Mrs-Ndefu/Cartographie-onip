@@ -16,8 +16,8 @@
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
     <h1>Adressage de Ménages — Mon profil</h1>
     <nav class="topbar-nav">
-      <a th:if="${agent.role.isAdminTier()}" th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
-      <a th:if="${agent.role.name() == 'SUPERVISEUR'}" th:href="@{/dashboard/agents}" class="link-btn">← Gestion des agents</a>
+      <a th:if="${agent.role.canViewHouseholds()}" th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
+      <a th:if="${agent.role.name() == 'DIRECTION_GENERALE'}" th:href="@{/dashboard/stats}" class="link-btn">← Statistiques</a>
       <form th:action="@{/logout}" method="post">
         <button type="submit" class="logout-btn">Se déconnecter</button>
       </form>

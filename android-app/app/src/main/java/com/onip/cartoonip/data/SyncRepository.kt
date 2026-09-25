@@ -51,7 +51,7 @@ object SyncRepository {
                     )
                 },
                 address = AddressDto(
-                    current.ville, current.commune, current.quartier, current.rue,
+                    current.province.ifBlank { null }, current.ville, current.commune, current.quartier, current.rue,
                     current.numero, current.immeuble, current.etage,
                 ),
                 location = if (current.latitude != null && current.longitude != null) {

@@ -73,3 +73,16 @@ export const AUTRE_VILLE = 'AUTRE'
 export function communesForVille(ville: string): string[] {
   return DRC_VILLES.find((v) => v.name.toUpperCase() === ville.toUpperCase())?.communes ?? []
 }
+
+// Les 26 provinces de la RDC — champ "Province" du formulaire, placé avant la ville.
+export const DRC_PROVINCES: string[] = [
+  'Bas-Uele', 'Équateur', 'Haut-Katanga', 'Haut-Lomami', 'Haut-Uele', 'Ituri', 'Kasaï',
+  'Kasaï-Central', 'Kasaï-Oriental', 'Kinshasa', 'Kongo-Central', 'Kwango', 'Kwilu', 'Lomami',
+  'Lualaba', 'Mai-Ndombe', 'Maniema', 'Mongala', 'Nord-Kivu', 'Nord-Ubangi', 'Sankuru',
+  'Sud-Kivu', 'Sud-Ubangi', 'Tanganyika', 'Tshopo', 'Tshuapa',
+]
+
+/** Province (en majuscules, comme le reste de la saisie) d'une ville de la liste, ou '' pour une ville saisie librement. */
+export function provinceForVille(ville: string): string {
+  return DRC_VILLES.find((v) => v.name.toUpperCase() === ville.toUpperCase())?.province.toUpperCase() ?? ''
+}

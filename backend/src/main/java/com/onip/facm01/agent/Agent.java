@@ -1,11 +1,15 @@
 package com.onip.facm01.agent;
 
+import com.onip.facm01.zone.Zone;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
@@ -43,6 +47,18 @@ public class Agent {
 
     @Column(name = "photo_content_type")
     private String photoContentType;
+
+    // Zone d'affectation (pertinente pour le rôle AGENT) — définie par l'ADMIN, attribuée par un
+    // SUPERVISEUR/ADMIN depuis la gestion des agents. Chargée d'office : une seule petite ligne.
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "zone_id")
+    private Zone zone;
+
+    // Superviseur responsable (pour un compte AGENT) — affecté par l'ADMIN. Le superviseur ne
+    // voit et ne gère que les agents qui lui sont affectés.
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "superviseur_id")
+    private Agent superviseur;
 
     protected Agent() {
     }
@@ -112,5 +128,21 @@ public class Agent {
     public void setPhoto(byte[] photo, String photoContentType) {
         this.photo = photo;
         this.photoContentType = photoContentType;
+    }
+
+    public Zone getZone() {
+        return zone;
+    }
+
+    public void setZone(Zone zone) {
+        this.zone = zone;
+    }
+
+    public Agent getSuperviseur() {
+        return superviseur;
+    }
+
+    public void setSuperviseur(Agent superviseur) {
+        this.superviseur = superviseur;
     }
 }

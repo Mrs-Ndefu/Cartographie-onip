@@ -16,7 +16,8 @@
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
     <h1>Adressage de Ménages — Gestion des agents</h1>
     <nav class="topbar-nav">
-      <a th:if="${hasFullDashboard}" th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
+      <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}" th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
+      <a th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
              th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
@@ -72,6 +73,8 @@
               <th>Utilisateur</th>
               <th>Nom complet</th>
               <th>Rôle</th>
+              <th>Zone</th>
+              <th>Superviseur</th>
               <th>Statut</th>
               <th>Créé le</th>
               <th style="min-width: 280px;">Actions</th>
@@ -82,6 +85,32 @@
               <td class="fw-semibold" th:text="${a.username}">-</td>
               <td th:text="${a.fullName}">-</td>
               <td><span class="badge text-bg-secondary" th:text="${a.role}">-</span></td>
+              <td>
+                <form th:if="${a.role.name() == 'AGENT' and a.role.canBeManagedBy(actorRole)}"
+                      th:action="@{/dashboard/agents/{id}/zone(id=${a.id})}" method="post" class="d-flex gap-1">
+                  <select name="zoneId" class="form-select form-select-sm" style="min-width: 200px;">
+                    <option value="">— Aucune zone —</option>
+                    <option th:each="z : ${zones}" th:value="${z.id}" th:text="${z.label}"
+                            th:selected="${a.zoneId != null and z.id == a.zoneId}">Zone</option>
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-outline-primary">OK</button>
+                </form>
+                <span th:unless="${a.role.name() == 'AGENT' and a.role.canBeManagedBy(actorRole)}"
+                      class="text-secondary small" th:text="${a.zoneLabel ?: '—'}">—</span>
+              </td>
+              <td>
+                <form th:if="${a.role.name() == 'AGENT' and actorRole.canAssignSupervisors()}"
+                      th:action="@{/dashboard/agents/{id}/superviseur(id=${a.id})}" method="post" class="d-flex gap-1">
+                  <select name="superviseurId" class="form-select form-select-sm" style="min-width: 180px;">
+                    <option value="">— Aucun —</option>
+                    <option th:each="s : ${supervisors}" th:value="${s.id}" th:text="${s.fullName + ' (' + s.username + ')'}"
+                            th:selected="${a.superviseurId != null and s.id == a.superviseurId}">Superviseur</option>
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-outline-primary">OK</button>
+                </form>
+                <span th:unless="${a.role.name() == 'AGENT' and actorRole.canAssignSupervisors()}"
+                      class="text-secondary small" th:text="${a.superviseurName ?: '—'}">—</span>
+              </td>
               <td>
                 <span th:text="${a.active} ? 'Actif' : 'Désactivé'"
                       th:class="${a.active} ? 'badge text-bg-success' : 'badge text-bg-danger'">-</span>
@@ -115,7 +144,8 @@
               </td>
             </tr>
             <tr th:if="${agents.isEmpty()}">
-              <td colspan="6" class="text-center text-secondary py-3">Aucun agent.</td>
+              <td colspan="8" class="text-center text-secondary py-3"
+                  th:text="${actorRole.name() == 'SUPERVISEUR'} ? 'Aucun agent ne vous est encore affecté.' : 'Aucun agent.'">Aucun agent.</td>
             </tr>
           </tbody>
         </table>

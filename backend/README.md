@@ -32,7 +32,20 @@ n'est pas restreint par rôle) — seul `/dashboard` et `/api/agents` exigent le
 
 `http://localhost:8080/dashboard` (connexion avec le compte admin ci-dessus). Affiche le
 nombre total de ménages, la répartition par statut, une carte des ménages géolocalisés et un
-tableau détaillé.
+tableau détaillé, filtrable par province, ville, commune, zone, statut et dates. Dès qu'un
+filtre de lieu est choisi, la carte zoome sur les ménages trouvés.
+
+Droits par rôle :
+
+| Rôle | Tableau de bord |
+|---|---|
+| SUPER_ADMIN | Voit tout (ménages, détails, retirés, zones), sans action sur les ménages. Gère tous les comptes. |
+| ADMIN | Tout : modifier, retirer/restaurer un ménage, définir les zones, gérer les comptes (sauf ADMIN/SUPER_ADMIN). |
+| SUPERVISEUR | Voit et modifie les ménages ; gère les comptes AGENT et les affecte à une zone. |
+| DIRECTION_GENERALE | Uniquement `/dashboard/stats` : statistiques d'enregistrement et population totale. |
+| AGENT | Pas d'accès au tableau de bord (apps de saisie uniquement). Affecté à une zone définie par l'ADMIN. |
+
+Une zone = province + ville + commune, et éventuellement un quartier (sinon toute la commune).
 
 ## API
 

@@ -71,8 +71,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onip.cartoonip.data.AppContainer
+import com.onip.cartoonip.data.DRC_PROVINCES
 import com.onip.cartoonip.data.DRC_VILLES
 import com.onip.cartoonip.data.communesForVille
+import com.onip.cartoonip.data.villesForProvince
 import com.onip.cartoonip.data.model.MAX_HOUSEHOLD_PHOTOS
 import com.onip.cartoonip.ui.navigation.Routes
 import com.onip.cartoonip.ui.theme.OnipBlue
@@ -160,6 +162,23 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
             }
 
             item {
+                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors()) {
+                    Column(Modifier.padding(16.dp)) {
+                        OutlinedTextField(
+                            value = uiState.declaredMembersText,
+                            onValueChange = viewModel::onDeclaredMembersChange,
+                            label = { Text("Nombre de membres du ménage*") },
+                            supportingText = { Text("Chef compris — les fiches membres s'ajustent à ce nombre.") },
+                            isError = uiState.declaredMembers == null,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+            }
+
+            item {
                 StepCard(number = 2, title = "Chef de ménage") {
                     OutlinedTextField(
                         value = uiState.chefNom, onValueChange = viewModel::onChefNomChange,
@@ -193,8 +212,10 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
             item {
                 StepCard(number = 3, title = "Adresse complète") {
                     VilleCommuneFields(
+                        province = uiState.province,
                         ville = uiState.ville,
                         commune = uiState.commune,
+                        onProvinceChange = viewModel::onProvinceChange,
                         onVilleChange = viewModel::onVilleChange,
                         onCommuneChange = viewModel::onCommuneChange,
                     )
@@ -309,9 +330,9 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                 uiState.saveError?.let {
                     Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp))
                 }
-                if (!uiState.canSubmit) {
+                if (!uiState.canSubmit && uiState.missingForSubmit.isNotEmpty()) {
                     Text(
-                        "Le GPS est obligatoire pour enregistrer.",
+                        "Pour enregistrer, renseignez : ${uiState.missingForSubmit.joinToString(", ")}.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),
@@ -363,13 +384,41 @@ private fun SexeSelector(value: String?, onChange: (String) -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun VilleCommuneFields(
+    province: String,
     ville: String,
     commune: String,
+    onProvinceChange: (String) -> Unit,
     onVilleChange: (String) -> Unit,
     onCommuneChange: (String) -> Unit,
 ) {
-    val villeNames = remember { DRC_VILLES.map { it.name } }
-    var villeOther by remember { mutableStateOf(ville.isNotBlank() && villeNames.none { it.equals(ville, ignoreCase = true) }) }
+    val allVilleNames = remember { DRC_VILLES.map { it.name } }
+    val villeNames = remember(province) { villesForProvince(province).map { it.name } }
+    var villeOther by remember { mutableStateOf(ville.isNotBlank() && allVilleNames.none { it.equals(ville, ignoreCase = true) }) }
+    var provinceExpanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = provinceExpanded, onExpandedChange = { provinceExpanded = it },
+        modifier = Modifier.padding(bottom = 8.dp),
+    ) {
+        OutlinedTextField(
+            value = DRC_PROVINCES.firstOrNull { it.equals(province, ignoreCase = true) } ?: province,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Province") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = provinceExpanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+        )
+        ExposedDropdownMenu(expanded = provinceExpanded, onDismissRequest = { provinceExpanded = false }) {
+            DRC_PROVINCES.forEach { name ->
+                DropdownMenuItem(text = { Text(name) }, onClick = {
+                    villeOther = false
+                    onProvinceChange(name)
+                    provinceExpanded = false
+                })
+            }
+        }
+    }
+
     val communeOptions = if (villeOther) emptyList() else communesForVille(ville)
     var communeOther by remember(ville) {
         mutableStateOf(commune.isNotBlank() && communeOptions.none { it.equals(commune, ignoreCase = true) })
@@ -494,9 +543,9 @@ private fun MembersSection(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Membres du ménage (facultatif)", style = MaterialTheme.typography.titleMedium)
-                    // Chef + fiches membres — recalculé tout seul à chaque ajout/retrait, jamais
-                    // saisi à la main.
+                    Text("Membres du ménage", style = MaterialTheme.typography.titleMedium)
+                    // Chef + fiches membres — synchronisé avec le nombre déclaré en haut du
+                    // formulaire.
                     Text(
                         "Nombre de membres : $totalMembers",
                         style = MaterialTheme.typography.bodyMedium,

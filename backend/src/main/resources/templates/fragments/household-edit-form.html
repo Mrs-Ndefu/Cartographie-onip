@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Formulaire de modification d'un ménage, partagé entre la page de modification et la fenêtre
+     ouverte depuis le tableau des ménages. Motif obligatoire, puis confirmation avant envoi
+     (js-confirm-form, cf. app.js). Le nombre de membres déclaré et les fiches membres restent
+     synchronisés (cf. app.js, .js-household-edit-form). -->
+<form th:fragment="form" class="js-confirm-form js-household-edit-form"
+      th:action="@{/dashboard/households/{id}/edit(id=${household.id})}" th:object="${form}" method="post"
+      data-confirm-title="Êtes-vous sûr(e) de vouloir enregistrer ces modifications ?"
+      data-confirm-label="Enregistrer"
+      data-confirm-variant="success"
+      th:data-confirm-detail="'Ménage ' + ${household.codeMenage ?: '(sans code)'}"
+      th:data-max-membres="${maxMembres}"
+      th:data-cancel-url="${returnTo != null ? returnTo : '/dashboard/households/' + household.id}">
+  <input type="hidden" name="returnTo" th:if="${returnTo != null}" th:value="${returnTo}">
+
+  <p class="text-secondary small mb-3">
+    Le code ménage, les coordonnées GPS et l'agent qui a enregistré le ménage ne sont pas modifiables.
+    Le texte est enregistré en majuscules, comme sur les apps de saisie.
+  </p>
+
+  <div class="detail-columns">
+    <div>
+      <div class="detail-card">
+        <div class="detail-card-header"><h2>Nombre de membres du ménage</h2></div>
+        <div class="detail-card-body">
+          <label class="form-label small fw-semibold" for="nombreMembres">Nombre de membres (chef compris) *</label>
+          <input type="number" class="form-control js-nombre-membres" th:field="*{nombreMembres}"
+                 min="1" th:max="${maxMembres}" required>
+          <p class="text-secondary small mt-1 mb-0">
+            Les fiches membres s'ajustent à ce nombre. Toutes les fiches doivent être renseignées pour enregistrer.
+          </p>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-header"><h2>Chef de ménage</h2></div>
+        <div class="detail-card-body">
+          <div class="row g-3">
+            <div class="col-sm-4">
+              <label class="form-label small fw-semibold" for="chefNom">Nom *</label>
+              <input type="text" class="form-control" th:field="*{chefNom}" required>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label small fw-semibold" for="chefPostnom">Postnom</label>
+              <input type="text" class="form-control" th:field="*{chefPostnom}">
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label small fw-semibold" for="chefPrenom">Prénom</label>
+              <input type="text" class="form-control" th:field="*{chefPrenom}">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold" for="chefDateNaissance">Date de naissance (JJ/MM/AAAA)</label>
+              <input type="text" class="form-control" th:field="*{chefDateNaissance}" placeholder="JJ/MM/AAAA">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold" for="chefSexe">Sexe</label>
+              <select class="form-select" th:field="*{chefSexe}">
+                <option value="">—</option>
+                <option th:each="sx : ${sexes}" th:value="${sx}" th:text="${sx.name() == 'M'} ? 'Masculin' : 'Féminin'">Sexe</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-header"><h2>Adresse</h2></div>
+        <div class="detail-card-body">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold" for="province">Province</label>
+              <select class="form-select" th:field="*{province}">
+                <option value="">— Déduite de la ville —</option>
+                <option th:each="pr : ${provinces}" th:value="${pr}" th:text="${pr}">Province</option>
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold" for="ville">Ville</label>
+              <input type="text" class="form-control" th:field="*{ville}">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold" for="commune">Commune *</label>
+              <input type="text" class="form-control" th:field="*{commune}" required>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold" for="quartier">Quartier *</label>
+              <input type="text" class="form-control" th:field="*{quartier}" required>
+            </div>
+            <div class="col-sm-8">
+              <label class="form-label small fw-semibold" for="rue">Rue</label>
+              <input type="text" class="form-control" th:field="*{rue}">
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label small fw-semibold" for="numero">N°</label>
+              <input type="text" class="form-control" th:field="*{numero}">
+            </div>
+            <div class="col-sm-8">
+              <label class="form-label small fw-semibold" for="immeuble">Immeuble ou appartement</label>
+              <input type="text" class="form-control" th:field="*{immeuble}">
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label small fw-semibold" for="etage">Étage</label>
+              <input type="text" class="form-control" th:field="*{etage}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-header"><h2>Statut</h2></div>
+        <div class="detail-card-body">
+          <select class="form-select" th:field="*{status}">
+            <option th:each="st : ${statuses}" th:value="${st}"
+                    th:text="${st.name() == 'COMPLET'} ? 'Complet' : (${st.name() == 'BROUILLON'} ? 'Brouillon' : 'À vérifier')">Statut</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="detail-card">
+        <div class="detail-card-header"><h2>Membres du ménage (hors chef)</h2></div>
+        <div class="table-scroll">
+          <table class="detail-members-table js-members-table">
+            <thead>
+              <tr>
+                <th>Nom *</th>
+                <th>Postnom</th>
+                <th>Prénom</th>
+                <th>Date de naissance</th>
+                <th>Sexe</th>
+                <th>Lien avec le chef</th>
+                <th>Retirer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="m, stat : *{membres}">
+                <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].nom}" required></td>
+                <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].postnom}"></td>
+                <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].prenom}"></td>
+                <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].dateNaissance}" placeholder="JJ/MM/AAAA"></td>
+                <td>
+                  <select class="form-select form-select-sm" th:field="*{membres[__${stat.index}__].sexe}">
+                    <option value="">—</option>
+                    <option th:each="sx : ${sexes}" th:value="${sx}" th:text="${sx}">M</option>
+                  </select>
+                </td>
+                <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].relation}"></td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-sm btn-outline-danger js-remove-member" title="Retirer ce membre" aria-label="Retirer ce membre">✕</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="detail-card-body">
+          <button type="button" class="btn btn-sm btn-outline-primary js-add-member">+ Ajouter un membre</button>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-header"><h2>Motif de la modification *</h2></div>
+        <div class="detail-card-body">
+          <textarea class="form-control" th:field="*{motif}" rows="3" required maxlength="1000"
+                    placeholder="Ex. : correction du nom du chef après vérification sur la fiche papier"></textarea>
+          <p class="text-secondary small mt-1 mb-0">Visible dans le détail du ménage.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end mb-2">
+    <button type="button" class="btn btn-outline-secondary js-cancel-edit">Annuler</button>
+    <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+  </div>
+
+  <!-- Ligne vide ajoutée par "+ Ajouter un membre" ; __INDEX__ est remplacé par le rang du membre. -->
+  <template class="js-member-row-template">
+    <tr>
+      <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].nom" required></td>
+      <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].postnom"></td>
+      <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].prenom"></td>
+      <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].dateNaissance" placeholder="JJ/MM/AAAA"></td>
+      <td>
+        <select class="form-select form-select-sm" name="membres[__INDEX__].sexe">
+          <option value="">—</option>
+          <option value="M">M</option>
+          <option value="F">F</option>
+        </select>
+      </td>
+      <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].relation"></td>
+      <td class="text-center">
+        <button type="button" class="btn btn-sm btn-outline-danger js-remove-member" title="Retirer ce membre" aria-label="Retirer ce membre">✕</button>
+      </td>
+    </tr>
+  </template>
+</form>
+</body>
+</html>

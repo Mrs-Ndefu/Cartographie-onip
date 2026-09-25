@@ -41,7 +41,7 @@ public record HouseholdDto(
 
         var address = household.getAddress();
         AddressDto addressDto = address == null ? null
-                : new AddressDto(address.getVille(), address.getCommune(), address.getQuartier(),
+                : new AddressDto(address.getProvince(), address.getVille(), address.getCommune(), address.getQuartier(),
                         address.getRue(), address.getNumero(), address.getImmeuble(), address.getEtage());
 
         var location = household.getLocation();

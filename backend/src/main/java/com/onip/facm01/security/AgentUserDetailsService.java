@@ -33,14 +33,12 @@ public class AgentUserDetailsService implements UserDetailsService {
                 .build();
     }
 
-    // Un SUPER_ADMIN reçoit aussi ROLE_ADMIN : il doit accéder à tout ce qu'un ADMIN peut
-    // (tableau de bord, endpoints @PreAuthorize("hasRole('ADMIN')")) en plus de ses droits propres.
+    // Un rôle = une autorité. Le SUPER_ADMIN ne reçoit plus ROLE_ADMIN : il voit tout mais ne
+    // pose pas d'action sur les ménages, donc les règles d'accès le nomment explicitement là où
+    // il est autorisé (cf. SecurityConfig).
     private List<String> authorities(AgentRole role) {
         List<String> authorities = new ArrayList<>();
         authorities.add("ROLE_" + role.name());
-        if (role == AgentRole.SUPER_ADMIN) {
-            authorities.add("ROLE_ADMIN");
-        }
         return authorities;
     }
 }

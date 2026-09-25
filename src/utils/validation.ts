@@ -42,6 +42,7 @@ const dateField = z
   .refine((v) => v === '' || isValidCalendarDate(v), 'Date invalide (JJ/MM/AAAA)')
 
 const addressSchema: z.ZodType<AddressFormValues> = z.object({
+  province: z.string(),
   ville: z.string(),
   commune: z.string(),
   quartier: z.string(),

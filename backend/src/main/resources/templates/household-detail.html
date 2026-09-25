@@ -17,6 +17,8 @@
     <h1>Ménage <span th:text="${household.codeMenage ?: '(sans code)'}"></span></h1>
     <nav class="topbar-nav">
       <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
+      <a th:if="${currentAgent != null and currentAgent.role.canEditHouseholds()}"
+         th:href="@{/dashboard/households/{id}/edit(id=${household.id})}" class="link-btn">Modifier le ménage</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
              th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
@@ -26,7 +28,17 @@
     </nav>
   </header>
 
+  <section class="agents-messages">
+    <div th:if="${success}" class="alert alert-success py-2" th:text="${success}">-</div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}">-</div>
+  </section>
+
   <div class="detail-page">
+    <div class="modification-banner" th:if="${modifications.?[bySuperviseur].size() > 0}">
+      ⚠ Ce ménage a été modifié par un superviseur
+      (<span th:text="${modifications.?[bySuperviseur].size()}">1</span> modification(s)) — voir l'historique ci-dessous.
+    </div>
+
     <div class="detail-hero">
       <div class="detail-hero-avatar"
            th:text="${household.chef != null ? #strings.substring(household.chef.prenom ?: household.chef.nom ?: '?', 0, 1) : '?'}">?</div>
@@ -37,7 +49,7 @@
         <div class="detail-hero-badges">
           <span th:if="${household.status.value == 'complet'}" class="status-badge status-complet">Complet</span>
           <span th:unless="${household.status.value == 'complet'}" class="status-badge status-incomplet">Incomplet</span>
-          <span th:if="${household.archived}" class="status-badge status-incomplet">Archivé</span>
+          <span th:if="${household.archived}" class="status-badge status-incomplet">Retiré</span>
         </div>
         <div class="detail-hero-meta">
           <span>Agent : <strong th:text="${household.agentUsername ?: '—'}">-</strong></span>
@@ -79,6 +91,7 @@
           </div>
           <div class="detail-card-body">
             <div class="detail-grid" th:if="${household.address != null}">
+              <div><span class="detail-field-label">Province</span><span class="detail-field-value" th:text="${household.address.province ?: '-'}">-</span></div>
               <div><span class="detail-field-label">Ville</span><span class="detail-field-value" th:text="${household.address.ville ?: '-'}">-</span></div>
               <div><span class="detail-field-label">Commune</span><span class="detail-field-value" th:text="${household.address.commune ?: '-'}">-</span></div>
               <div><span class="detail-field-label">Quartier</span><span class="detail-field-value" th:text="${household.address.quartier ?: '-'}">-</span></div>
@@ -125,6 +138,30 @@
               <div><span class="detail-field-label">Renseignant</span><span class="detail-field-value" th:text="${household.meta.renseignant ?: '-'}">-</span></div>
               <div><span class="detail-field-label">Membres déclarés</span><span class="detail-field-value" th:text="${household.nombreMembres ?: '-'}">-</span></div>
             </div>
+          </div>
+        </div>
+
+        <div class="detail-card" th:if="${!modifications.isEmpty()}">
+          <div class="detail-card-header">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            </svg>
+            <h2>Historique des modifications <span th:text="'(' + ${modifications.size()} + ')'"></span></h2>
+          </div>
+          <div class="detail-card-body">
+            <ul class="modification-list">
+              <li th:each="change : ${modifications}">
+                <div>
+                  <strong th:text="${change.authorFullName ?: change.authorUsername}">Nom</strong>
+                  <span class="status-badge"
+                        th:classappend="${change.bySuperviseur} ? 'status-incomplet' : 'status-complet'"
+                        th:text="${change.authorRole}">ROLE</span>
+                </div>
+                <div class="modification-meta"
+                     th:text="'Le ' + ${#temporals.format(change.modifiedAt, 'dd/MM/yyyy HH:mm')} + ' — ' + ${change.authorUsername}">-</div>
+                <div><span class="detail-field-label">Motif</span> <span th:text="${change.motif}">-</span></div>
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -189,5 +226,6 @@
       </div>
     </div>
   </div>
+  <script th:src="@{/js/app.js}"></script>
 </body>
 </html>

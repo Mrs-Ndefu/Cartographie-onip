@@ -6,7 +6,7 @@
   <meta name="_csrf" th:content="${_csrf.token}">
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <meta name="_csrf_parameter" th:content="${_csrf.parameterName}">
-  <title>Archives — Adressage de Ménages</title>
+  <title>Ménages retirés — Adressage de Ménages</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,7 @@
 <body>
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>Adressage de Ménages — Archives</h1>
+    <h1>Adressage de Ménages — Ménages retirés</h1>
     <nav class="topbar-nav">
       <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
@@ -38,7 +38,7 @@
     <div class="table-card">
       <div class="table-card-header">
         <div>
-          <h2>Ménages archivés</h2>
+          <h2>Ménages retirés</h2>
           <span class="table-card-count" th:text="${page.totalElements} + ' au total'">0 au total</span>
         </div>
         <form th:action="@{/dashboard/archives}" method="get" class="table-search-form" role="search">
@@ -59,7 +59,7 @@
               <th>Chef</th>
               <th>Ville</th>
               <th>Commune</th>
-              <th>Archivé le</th>
+              <th>Retiré le</th>
               <th class="col-actions">Actions</th>
             </tr>
           </thead>
@@ -79,7 +79,8 @@
                       <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
                     </svg>
                   </a>
-                  <form th:action="@{/dashboard/households/{id}/restore(id=${h.id})}" method="post"
+                  <form th:if="${currentAgent != null and currentAgent.role.canRestoreHouseholds()}"
+                        th:action="@{/dashboard/households/{id}/restore(id=${h.id})}" method="post"
                         class="js-confirm-form"
                         data-confirm-title="Voulez-vous restaurer ce ménage ?"
                         data-confirm-label="Restaurer"
@@ -96,13 +97,13 @@
               </td>
             </tr>
             <tr th:if="${households.isEmpty()}">
-              <td colspan="6" class="table-empty">Aucun ménage archivé pour l'instant.</td>
+              <td colspan="6" class="table-empty">Aucun ménage retiré pour l'instant.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <nav th:if="${page.totalPages > 1}" aria-label="Pagination des archives" class="table-card-footer">
+      <nav th:if="${page.totalPages > 1}" aria-label="Pagination des ménages retirés" class="table-card-footer">
         <ul class="pagination pagination-sm mb-1">
           <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
             <a class="page-link" th:href="@{/dashboard/archives(page=${page.number - 1}, search=${search})}">Précédent</a>
@@ -124,11 +125,11 @@
 
   <div id="confirm-modal" class="confirm-overlay" hidden>
     <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
-      <h3 id="confirm-title" class="confirm-title">Voulez-vous archiver ce ménage ?</h3>
+      <h3 id="confirm-title" class="confirm-title">Voulez-vous retirer ce ménage ?</h3>
       <p class="confirm-message"></p>
       <div class="confirm-actions">
         <button type="button" class="btn btn-sm btn-outline-secondary confirm-cancel">Annuler</button>
-        <button type="button" class="btn btn-sm btn-danger confirm-ok">Archiver</button>
+        <button type="button" class="btn btn-sm btn-danger confirm-ok">Retirer</button>
       </div>
     </div>
   </div>

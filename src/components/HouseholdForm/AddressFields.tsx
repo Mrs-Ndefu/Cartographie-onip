@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Controller, useWatch } from 'react-hook-form'
 import type { Control, UseFormSetValue } from 'react-hook-form'
 import { CharacterGridInput } from './CharacterGridInput'
-import { DRC_VILLES, AUTRE_VILLE, communesForVille } from '../../data/drcLocations'
+import { DRC_VILLES, DRC_PROVINCES, AUTRE_VILLE, communesForVille, provinceForVille } from '../../data/drcLocations'
 import type { HouseholdFormValues } from '../../utils/validation'
 
 interface AddressFieldsProps {
@@ -18,9 +18,14 @@ const IMMEUBLE_LENGTH = 15
 const SORTED_VILLES = [...DRC_VILLES].sort((a, b) => a.name.localeCompare(b.name))
 
 export function AddressFields({ control, setValue }: AddressFieldsProps) {
+  const province = useWatch({ control, name: 'address.province' }) ?? ''
   const ville = useWatch({ control, name: 'address.ville' }) ?? ''
   const commune = useWatch({ control, name: 'address.commune' }) ?? ''
   const [villeIsOther, setVilleIsOther] = useState(ville !== '' && !SORTED_VILLES.some((v) => v.name === ville))
+  // Villes de la province choisie (toutes tant qu'aucune province n'est choisie).
+  const villeOptions = province
+    ? SORTED_VILLES.filter((v) => v.province.toUpperCase() === province)
+    : SORTED_VILLES
   const communeOptions = villeIsOther ? [] : communesForVille(ville)
   const [communeIsOther, setCommuneIsOther] = useState(
     commune !== '' && !communeOptions.some((c) => c === commune),
@@ -30,6 +35,36 @@ export function AddressFields({ control, setValue }: AddressFieldsProps) {
     <section className="form-section">
       <h2>Adresse</h2>
       <div className="address-grid">
+        <div className="field-row">
+          <label className="field-label">Province</label>
+          <Controller
+            control={control}
+            name="address.province"
+            render={({ field }) => (
+              <select
+                className="text-input"
+                value={field.value ?? ''}
+                onChange={(e) => {
+                  // Changer de province vide la ville et la commune (elles appartenaient à
+                  // l'ancienne province).
+                  field.onChange(e.target.value)
+                  setVilleIsOther(false)
+                  setCommuneIsOther(false)
+                  setValue('address.ville', '')
+                  setValue('address.commune', '')
+                }}
+              >
+                <option value="">—</option>
+                {DRC_PROVINCES.map((p) => (
+                  <option key={p} value={p.toUpperCase()}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+        </div>
+
         <div className="field-row">
           <label className="field-label">Ville</label>
           <Controller
@@ -48,13 +83,16 @@ export function AddressFields({ control, setValue }: AddressFieldsProps) {
                     } else {
                       setVilleIsOther(false)
                       field.onChange(value)
+                      // Une ville de la liste impose sa province.
+                      const villeProvince = provinceForVille(value)
+                      if (villeProvince) setValue('address.province', villeProvince)
                     }
                     setCommuneIsOther(false)
                     setValue('address.commune', '')
                   }}
                 >
                   <option value="">—</option>
-                  {SORTED_VILLES.map((v) => (
+                  {villeOptions.map((v) => (
                     <option key={v.name} value={v.name}>
                       {v.name}
                     </option>

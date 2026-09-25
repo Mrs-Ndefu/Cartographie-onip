@@ -8,6 +8,7 @@ import com.onip.cartoonip.data.LocationHelper
 import com.onip.cartoonip.data.PhotoFiles
 import com.onip.cartoonip.data.SyncRepository
 import com.onip.cartoonip.data.generateCodeMenage
+import com.onip.cartoonip.data.provinceForVille
 import com.onip.cartoonip.data.model.CapturedHousehold
 import com.onip.cartoonip.data.model.CapturedMember
 import com.onip.cartoonip.data.model.MAX_HOUSEHOLD_PHOTOS
@@ -43,15 +44,25 @@ data class MemberInput(
     val dateNaissance: String = "",
     val sexe: String? = null,
     val relation: String = "",
-)
+) {
+    fun isEmpty() = nom.isBlank() && postnom.isBlank() && prenom.isBlank() && dateNaissance.isBlank() &&
+        sexe == null && relation.isBlank()
+}
+
+// Chef + 14 membres au maximum, comme la fiche papier (même limite que l'app web).
+const val MAX_TOTAL_MEMBERS = 15
 
 data class CaptureUiState(
     val householdId: String = UUID.randomUUID().toString(),
+    // Nombre de membres déclaré (chef compris), saisi au-dessus du chef de ménage ; les fiches
+    // membres s'ajustent à ce nombre (cf. onDeclaredMembersChange).
+    val declaredMembersText: String = "1",
     val chefNom: String = "",
     val chefPostnom: String = "",
     val chefPrenom: String = "",
     val chefDateNaissance: String = "",
     val chefSexe: String? = null,
+    val province: String = "",
     val ville: String = "",
     val commune: String = "",
     val quartier: String = "",
@@ -87,9 +98,30 @@ data class CaptureUiState(
     // membre, jamais saisi à la main (cf. demande "synchronisé avec l'ajout de fiches").
     val totalMembers get() = 1 + members.size
 
+    val declaredMembers: Int? get() = declaredMembersText.toIntOrNull()?.takeIf { it in 1..MAX_TOTAL_MEMBERS }
+
+    // Le nombre déclaré doit correspondre aux fiches, et chaque fiche membre doit avoir un nom.
+    val membersConsistent: Boolean
+        get() = declaredMembers == totalMembers && members.all { it.nom.isNotBlank() }
+
     // Le GPS est obligatoire ; la photo de la fiche est recommandée mais pas bloquante (utile si
     // l'appareil photo est indisponible ou pour compléter plus tard).
-    val canSubmit get() = canGenerateCode && generatedCode != null && hasLocation
+    val canSubmit get() = canGenerateCode && generatedCode != null && hasLocation && membersConsistent
+
+    // Ce qui bloque encore l'enregistrement, pour l'indiquer à l'agent sous le bouton grisé.
+    val missingForSubmit: List<String>
+        get() = buildList {
+            if (!hasLocation) add("le GPS")
+            if (chefNom.isBlank()) add("le nom du chef de ménage")
+            if (commune.isBlank()) add("la commune")
+            if (quartier.isBlank()) add("le quartier")
+            val declared = declaredMembers
+            when {
+                declared == null -> add("le nombre de membres (1 à $MAX_TOTAL_MEMBERS)")
+                declared != totalMembers -> add("autant de fiches membres que le nombre déclaré ($declared)")
+                members.any { it.nom.isBlank() } -> add("le nom de chaque membre")
+            }
+        }
 }
 
 class CaptureViewModel : ViewModel() {
@@ -121,7 +153,18 @@ class CaptureViewModel : ViewModel() {
     fun onChefPrenomChange(v: String) = update { copy(chefPrenom = v.toFieldCase()) }
     fun onChefDateNaissanceChange(v: String) = update { copy(chefDateNaissance = formatDateDigits(v)) }
     fun onChefSexeChange(v: String) = update { copy(chefSexe = v) }
-    fun onVilleChange(v: String) = update { copy(ville = v.toFieldCase(), commune = "") }
+    // Changer de province vide la ville et la commune (elles appartenaient à l'ancienne province).
+    fun onProvinceChange(v: String) = update { copy(province = v.toFieldCase(), ville = "", commune = "") }
+
+    // Une ville de la liste impose sa province ; une ville saisie librement garde la province
+    // choisie à la main.
+    fun onVilleChange(v: String) = update {
+        copy(
+            ville = v.toFieldCase(),
+            commune = "",
+            province = provinceForVille(v)?.toFieldCase() ?: province,
+        )
+    }
     fun onCommuneChange(v: String) = update { copy(commune = v.toFieldCase()) }
     fun onQuartierChange(v: String) = update { copy(quartier = v.toFieldCase()) }
     fun onRueChange(v: String) = update { copy(rue = v.toFieldCase()) }
@@ -131,9 +174,29 @@ class CaptureViewModel : ViewModel() {
 
     fun toggleMembersExpanded() = update { copy(membersExpanded = !membersExpanded) }
 
-    fun addMember() = update { copy(members = members + MemberInput(), membersExpanded = true) }
+    // Ajouter/retirer une fiche met à jour le nombre déclaré, et inversement.
+    fun addMember() = update {
+        if (totalMembers >= MAX_TOTAL_MEMBERS) this
+        else copy(members = members + MemberInput(), membersExpanded = true, declaredMembersText = (totalMembers + 1).toString())
+    }
 
-    fun removeMember(key: String) = update { copy(members = members.filterNot { it.key == key }) }
+    // Saisir un nombre ajoute les fiches manquantes, ou retire les fiches vides en trop (une fiche
+    // déjà renseignée n'est jamais supprimée d'office : l'enregistrement reste alors bloqué tant
+    // que l'agent ne l'a pas retirée lui-même).
+    fun onDeclaredMembersChange(v: String) = update {
+        val text = v.filter { it.isDigit() }.take(2)
+        val wanted = text.toIntOrNull()?.takeIf { it in 1..MAX_TOTAL_MEMBERS }
+            ?: return@update copy(declaredMembersText = text)
+        var adjusted = members
+        while (adjusted.size < wanted - 1) adjusted = adjusted + MemberInput()
+        while (adjusted.size > wanted - 1 && adjusted.last().isEmpty()) adjusted = adjusted.dropLast(1)
+        copy(declaredMembersText = text, members = adjusted, membersExpanded = membersExpanded || adjusted.isNotEmpty())
+    }
+
+    fun removeMember(key: String) = update {
+        val remaining = members.filterNot { it.key == key }
+        copy(members = remaining, declaredMembersText = (1 + remaining.size).toString())
+    }
 
     fun onMemberNomChange(key: String, v: String) = updateMember(key) { copy(nom = v.toFieldCase()) }
     fun onMemberPostnomChange(key: String, v: String) = updateMember(key) { copy(postnom = v.toFieldCase()) }
@@ -176,6 +239,7 @@ class CaptureViewModel : ViewModel() {
             chefPrenom = h.chefPrenom,
             chefDateNaissance = h.chefDateNaissance,
             chefSexe = h.chefSexe,
+            province = h.province,
             ville = h.ville,
             commune = h.commune,
             quartier = h.quartier,
@@ -183,6 +247,7 @@ class CaptureViewModel : ViewModel() {
             numero = h.numero,
             immeuble = h.immeuble,
             etage = h.etage,
+            declaredMembersText = (1 + h.membres.size).toString(),
             members = h.membres.map {
                 MemberInput(
                     nom = it.nom, postnom = it.postnom, prenom = it.prenom,
@@ -272,6 +337,7 @@ class CaptureViewModel : ViewModel() {
                 chefPrenom = state.chefPrenom.trim(),
                 chefDateNaissance = state.chefDateNaissance.trim(),
                 chefSexe = state.chefSexe,
+                province = state.province.trim(),
                 ville = state.ville.trim(),
                 commune = state.commune.trim(),
                 quartier = state.quartier.trim(),

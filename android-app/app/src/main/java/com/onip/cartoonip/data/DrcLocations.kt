@@ -68,3 +68,20 @@ val DRC_VILLES: List<VilleEntry> = listOf(
 
 fun communesForVille(ville: String): List<String> =
     DRC_VILLES.find { it.name.equals(ville, ignoreCase = true) }?.communes ?: emptyList()
+
+// Les 26 provinces de la RDC — champ "Province" du formulaire, placé avant la ville.
+val DRC_PROVINCES: List<String> = listOf(
+    "Bas-Uele", "Équateur", "Haut-Katanga", "Haut-Lomami", "Haut-Uele", "Ituri", "Kasaï",
+    "Kasaï-Central", "Kasaï-Oriental", "Kinshasa", "Kongo-Central", "Kwango", "Kwilu", "Lomami",
+    "Lualaba", "Mai-Ndombe", "Maniema", "Mongala", "Nord-Kivu", "Nord-Ubangi", "Sankuru",
+    "Sud-Kivu", "Sud-Ubangi", "Tanganyika", "Tshopo", "Tshuapa",
+)
+
+/** Province d'une ville de la liste, ou null pour une ville saisie librement. */
+fun provinceForVille(ville: String): String? =
+    DRC_VILLES.find { it.name.equals(ville, ignoreCase = true) }?.province
+
+/** Villes proposées pour une province (toutes si aucune province n'est choisie). */
+fun villesForProvince(province: String): List<VilleEntry> =
+    if (province.isBlank()) DRC_VILLES
+    else DRC_VILLES.filter { it.province.equals(province, ignoreCase = true) }

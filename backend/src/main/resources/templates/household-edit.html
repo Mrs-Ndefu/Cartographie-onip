@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modifier le ménage — Adressage de Ménages</title>
+  <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+  <header class="topbar">
+    <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
+    <h1>Modifier le ménage <span th:text="${household.codeMenage ?: '(sans code)'}"></span></h1>
+    <nav class="topbar-nav">
+      <a th:href="${returnTo != null ? returnTo : '/dashboard/households/' + household.id}" class="link-btn">← Retour</a>
+      <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
+        <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
+             th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
+        <span th:unless="${currentAgent != null and currentAgent.photoDataUrl != null}" class="avatar-placeholder-lg"
+              th:text="${currentAgent != null ? #strings.substring(currentAgent.fullName,0,1) : '?'}">?</span>
+      </a>
+    </nav>
+  </header>
+
+  <section class="agents-messages">
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}">-</div>
+  </section>
+
+  <div class="detail-page">
+    <form th:replace="~{fragments/household-edit-form :: form}"></form>
+  </div>
+
+  <div id="confirm-modal" class="confirm-overlay" hidden>
+    <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+      <h3 id="confirm-title" class="confirm-title">Êtes-vous sûr(e) de vouloir enregistrer ces modifications ?</h3>
+      <p class="confirm-message"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary confirm-cancel">Annuler</button>
+        <button type="button" class="btn btn-sm btn-success confirm-ok">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

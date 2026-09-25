@@ -1,5 +1,6 @@
 package com.onip.facm01.agent;
 
+import com.onip.facm01.zone.Zone;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,6 +46,28 @@ public class AgentService {
         return agentRepository.findAll(pageable);
     }
 
+    // Agents affectés à un superviseur donné (la page "Gérer les agents" d'un SUPERVISEUR).
+    public Page<Agent> listAgentsOf(UUID superviseurId, Pageable pageable) {
+        return agentRepository.findBySuperviseur_Id(superviseurId, pageable);
+    }
+
+    public List<Agent> listSupervisors() {
+        return agentRepository.findByRoleAndActiveTrueOrderByFullNameAsc(AgentRole.SUPERVISEUR);
+    }
+
+    // superviseur == null retire l'affectation.
+    public Agent assignSupervisor(UUID id, Agent superviseur) {
+        Agent agent = getAgent(id);
+        if (agent.getRole() != AgentRole.AGENT) {
+            throw new IllegalArgumentException("Seul un compte AGENT peut être affecté à un superviseur");
+        }
+        if (superviseur != null && superviseur.getRole() != AgentRole.SUPERVISEUR) {
+            throw new IllegalArgumentException("Le compte choisi n'est pas un superviseur");
+        }
+        agent.setSuperviseur(superviseur);
+        return agentRepository.save(agent);
+    }
+
     public void ensureAgentExists(String username, String rawPassword, String fullName, AgentRole role) {
         if (!agentRepository.existsByUsername(username)) {
             createAgent(username, rawPassword, fullName, role);
@@ -64,7 +87,29 @@ public class AgentService {
 
     public Agent changeRole(UUID id, AgentRole role) {
         Agent agent = getAgent(id);
+        AgentRole previous = agent.getRole();
         agent.setRole(role);
+        if (role != AgentRole.AGENT) {
+            agent.setZone(null);
+            agent.setSuperviseur(null);
+        }
+        // Un superviseur qui change de rôle n'encadre plus personne.
+        if (previous == AgentRole.SUPERVISEUR && role != AgentRole.SUPERVISEUR) {
+            agentRepository.findBySuperviseur_Id(id).forEach(a -> {
+                a.setSuperviseur(null);
+                agentRepository.save(a);
+            });
+        }
+        return agentRepository.save(agent);
+    }
+
+    // Seul un compte AGENT est affecté à une zone de terrain ; zone == null retire l'affectation.
+    public Agent assignZone(UUID id, Zone zone) {
+        Agent agent = getAgent(id);
+        if (zone != null && agent.getRole() != AgentRole.AGENT) {
+            throw new IllegalArgumentException("Seul un compte AGENT peut être affecté à une zone");
+        }
+        agent.setZone(zone);
         return agentRepository.save(agent);
     }
 

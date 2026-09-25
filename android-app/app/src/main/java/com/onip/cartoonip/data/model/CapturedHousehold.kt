@@ -18,6 +18,7 @@ data class CapturedHousehold(
     val chefPrenom: String,
     val chefDateNaissance: String = "",
     val chefSexe: String? = null,
+    val province: String = "",
     val ville: String,
     val commune: String,
     val quartier: String,
@@ -47,7 +48,7 @@ data class CapturedHousehold(
     val isComplete: Boolean
         get() = chefNom.isNotBlank() && chefPostnom.isNotBlank() && chefPrenom.isNotBlank() &&
             chefDateNaissance.isNotBlank() && chefSexe != null &&
-            ville.isNotBlank() && commune.isNotBlank() && quartier.isNotBlank() &&
+            province.isNotBlank() && ville.isNotBlank() && commune.isNotBlank() && quartier.isNotBlank() &&
             rue.isNotBlank() && numero.isNotBlank() && immeuble.isNotBlank() && etage.isNotBlank() &&
             latitude != null && longitude != null &&
             photoPaths.isNotEmpty()
