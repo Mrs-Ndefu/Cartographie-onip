@@ -100,10 +100,9 @@ document.addEventListener('click', function (e) {
   }
 })();
 
-// Formulaire de modification d'un ménage : le nombre de membres déclaré (chef compris) et les
-// fiches membres restent synchronisés. Saisir un nombre ajoute les fiches manquantes ou retire
-// les fiches vides en trop ; ajouter/retirer une fiche met le nombre à jour. Une fiche déjà
-// renseignée n'est jamais supprimée automatiquement : le nombre est alors signalé invalide.
+// Formulaire de modification d'un ménage : le nombre de membres (chef compris, obligatoire)
+// limite les fiches membres qu'on peut ajouter à (nombre - 1). Au-delà, on demande de modifier
+// d'abord ce nombre. Les fiches ajoutées peuvent rester vides.
 (function () {
   function rows(form) {
     return Array.prototype.slice.call(form.querySelectorAll('.js-members-table tbody tr'));
@@ -120,12 +119,6 @@ document.addEventListener('click', function (e) {
     });
   }
 
-  function isEmptyRow(row) {
-    return Array.prototype.every.call(row.querySelectorAll('input[type="text"]'), function (input) {
-      return input.value.trim() === '';
-    });
-  }
-
   function addRow(form) {
     var template = form.querySelector('.js-member-row-template');
     var tbody = form.querySelector('.js-members-table tbody');
@@ -133,49 +126,40 @@ document.addEventListener('click', function (e) {
   }
 
   function maxMembres(form) {
-    return parseInt(form.dataset.maxMembres, 10) || 15;
+    return parseInt(form.dataset.maxMembres, 10) || 14;
   }
 
-  function updateCount(form) {
-    var input = form.querySelector('.js-nombre-membres');
-    if (!input) return;
-    input.value = String(1 + rows(form).length);
-    input.setCustomValidity('');
-    var addBtn = form.querySelector('.js-add-member');
-    if (addBtn) addBtn.disabled = rows(form).length + 1 >= maxMembres(form);
+  function showLimit(form, message) {
+    var el = form.querySelector('.js-member-limit');
+    if (!el) return;
+    el.textContent = message || '';
+    el.hidden = !message;
   }
 
-  function applyCount(form) {
-    var input = form.querySelector('.js-nombre-membres');
-    var wanted = parseInt(input.value, 10);
-    input.setCustomValidity('');
-    if (!(wanted >= 1)) return; // champ vide pendant la saisie : on attend
-    wanted = Math.min(wanted, maxMembres(form));
-    var needed = wanted - 1;
-    while (rows(form).length < needed) addRow(form);
-    var current = rows(form);
-    while (current.length > needed && isEmptyRow(current[current.length - 1])) {
-      current.pop().remove();
+  function tryAddMember(form) {
+    var total = parseInt(form.querySelector('.js-nombre-membres').value, 10);
+    if (!(total >= 1)) {
+      showLimit(form, 'Saisissez d\'abord le nombre de membres du ménage (chef compris).');
+      return;
     }
-    if (current.length > needed) {
-      input.setCustomValidity('Il y a ' + (current.length + 1) + ' membres renseignés : retirez d\'abord les fiches en trop.');
-      input.reportValidity();
+    if (1 + rows(form).length >= Math.min(total, maxMembres(form) + 1)) {
+      showLimit(form, 'Le ménage compte ' + total + ' membre(s), chef compris. Pour ajouter un autre membre, '
+        + 'modifiez d\'abord le nombre de membres.');
+      return;
     }
-    renumber(form);
-    var addBtn = form.querySelector('.js-add-member');
-    if (addBtn) addBtn.disabled = rows(form).length + 1 >= maxMembres(form);
+    showLimit(form, '');
+    addRow(form);
   }
 
   document.addEventListener('click', function (e) {
     var form = e.target.closest('.js-household-edit-form');
     if (!form) return;
     if (e.target.closest('.js-add-member')) {
-      if (rows(form).length + 1 < maxMembres(form)) addRow(form);
-      updateCount(form);
+      tryAddMember(form);
     } else if (e.target.closest('.js-remove-member')) {
       e.target.closest('tr').remove();
       renumber(form);
-      updateCount(form);
+      showLimit(form, '');
     } else if (e.target.closest('.js-cancel-edit')) {
       var modal = form.closest('.edit-modal');
       if (modal) {
@@ -187,9 +171,9 @@ document.addEventListener('click', function (e) {
     }
   });
 
-  document.addEventListener('change', function (e) {
+  document.addEventListener('input', function (e) {
     if (e.target.classList.contains('js-nombre-membres')) {
-      applyCount(e.target.closest('.js-household-edit-form'));
+      showLimit(e.target.closest('.js-household-edit-form'), '');
     }
   });
 })();
@@ -215,9 +199,16 @@ document.addEventListener('click', function (e) {
     fetch('/dashboard/households/' + btn.dataset.id + '/edit-form?returnTo=' + encodeURIComponent(returnTo))
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
+        // Modification refusée (ex. ménage complet pour un superviseur) : le serveur renvoie vers
+        // la liste avec un message, qu'on affiche en rechargeant la page.
+        if (res.redirected) {
+          window.location.href = res.url;
+          return null;
+        }
         return res.text();
       })
       .then(function (html) {
+        if (html === null) return;
         body.innerHTML = html;
         modal.hidden = false;
         body.scrollTop = 0;

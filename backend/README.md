@@ -45,7 +45,7 @@ Droits par rôle :
 | DIRECTION_GENERALE | Uniquement `/dashboard/stats` : statistiques d'enregistrement et population totale. |
 | AGENT | Pas d'accès au tableau de bord (apps de saisie uniquement). Affecté à une zone définie par l'ADMIN. |
 
-Une zone = province + ville + commune, et éventuellement un quartier (sinon toute la commune).
+Une zone = une province + une ville + une ou plusieurs communes de cette ville (pas de quartier).
 
 ## API
 

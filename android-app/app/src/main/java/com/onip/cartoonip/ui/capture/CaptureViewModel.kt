@@ -44,19 +44,18 @@ data class MemberInput(
     val dateNaissance: String = "",
     val sexe: String? = null,
     val relation: String = "",
-) {
-    fun isEmpty() = nom.isBlank() && postnom.isBlank() && prenom.isBlank() && dateNaissance.isBlank() &&
-        sexe == null && relation.isBlank()
-}
+)
 
 // Chef + 14 membres au maximum, comme la fiche papier (même limite que l'app web).
 const val MAX_TOTAL_MEMBERS = 15
 
 data class CaptureUiState(
     val householdId: String = UUID.randomUUID().toString(),
-    // Nombre de membres déclaré (chef compris), saisi au-dessus du chef de ménage ; les fiches
-    // membres s'ajustent à ce nombre (cf. onDeclaredMembersChange).
-    val declaredMembersText: String = "1",
+    // Nombre de membres du ménage, chef compris, saisi au-dessus du chef de ménage. Obligatoire :
+    // 1 = le chef vit seul ; sinon l'agent peut ajouter jusqu'à (nombre - 1) fiches membres.
+    val declaredMembersText: String = "",
+    // Message affiché quand l'agent tente d'ajouter une fiche au-delà du nombre déclaré.
+    val memberLimitMessage: String? = null,
     val chefNom: String = "",
     val chefPostnom: String = "",
     val chefPrenom: String = "",
@@ -98,11 +97,13 @@ data class CaptureUiState(
     // membre, jamais saisi à la main (cf. demande "synchronisé avec l'ajout de fiches").
     val totalMembers get() = 1 + members.size
 
+    // null = pas encore saisi, ou hors limites.
     val declaredMembers: Int? get() = declaredMembersText.toIntOrNull()?.takeIf { it in 1..MAX_TOTAL_MEMBERS }
 
-    // Le nombre déclaré doit correspondre aux fiches, et chaque fiche membre doit avoir un nom.
+    // Remplir les fiches membres n'est pas obligatoire ; il ne faut simplement pas plus de fiches
+    // que le nombre déclaré (cas où l'agent a baissé le nombre après avoir ajouté des fiches).
     val membersConsistent: Boolean
-        get() = declaredMembers == totalMembers && members.all { it.nom.isNotBlank() }
+        get() = declaredMembers != null && totalMembers <= declaredMembers!!
 
     // Le GPS est obligatoire ; la photo de la fiche est recommandée mais pas bloquante (utile si
     // l'appareil photo est indisponible ou pour compléter plus tard).
@@ -117,9 +118,8 @@ data class CaptureUiState(
             if (quartier.isBlank()) add("le quartier")
             val declared = declaredMembers
             when {
-                declared == null -> add("le nombre de membres (1 à $MAX_TOTAL_MEMBERS)")
-                declared != totalMembers -> add("autant de fiches membres que le nombre déclaré ($declared)")
-                members.any { it.nom.isBlank() } -> add("le nom de chaque membre")
+                declared == null -> add("le nombre de membres (chef compris, 1 à $MAX_TOTAL_MEMBERS)")
+                totalMembers > declared -> add("un nombre de membres d'au moins $totalMembers, ou retirez des fiches")
             }
         }
 }
@@ -174,29 +174,38 @@ class CaptureViewModel : ViewModel() {
 
     fun toggleMembersExpanded() = update { copy(membersExpanded = !membersExpanded) }
 
-    // Ajouter/retirer une fiche met à jour le nombre déclaré, et inversement.
-    fun addMember() = update {
-        if (totalMembers >= MAX_TOTAL_MEMBERS) this
-        else copy(members = members + MemberInput(), membersExpanded = true, declaredMembersText = (totalMembers + 1).toString())
-    }
-
-    // Saisir un nombre ajoute les fiches manquantes, ou retire les fiches vides en trop (une fiche
-    // déjà renseignée n'est jamais supprimée d'office : l'enregistrement reste alors bloqué tant
-    // que l'agent ne l'a pas retirée lui-même).
     fun onDeclaredMembersChange(v: String) = update {
         val text = v.filter { it.isDigit() }.take(2)
-        val wanted = text.toIntOrNull()?.takeIf { it in 1..MAX_TOTAL_MEMBERS }
-            ?: return@update copy(declaredMembersText = text)
-        var adjusted = members
-        while (adjusted.size < wanted - 1) adjusted = adjusted + MemberInput()
-        while (adjusted.size > wanted - 1 && adjusted.last().isEmpty()) adjusted = adjusted.dropLast(1)
-        copy(declaredMembersText = text, members = adjusted, membersExpanded = membersExpanded || adjusted.isNotEmpty())
+        copy(
+            declaredMembersText = text,
+            memberLimitMessage = null,
+            // Rubrique Membres dépliée dès qu'il y a des membres à ajouter.
+            membersExpanded = membersExpanded || (text.toIntOrNull() ?: 0) > 1,
+        )
+    }
+
+    // L'agent ajoute lui-même les fiches membres, jusqu'au nombre déclaré (chef compris) ;
+    // au-delà, il doit d'abord augmenter ce nombre.
+    fun addMember() = update {
+        val declared = declaredMembers
+        if (declared == null || totalMembers >= declared) {
+            copy(
+                memberLimitMessage = if (declared == null) {
+                    "Saisissez d'abord le nombre de membres du ménage (chef compris) en haut du formulaire."
+                } else {
+                    "Le ménage compte $declared membre(s), chef compris. Pour ajouter un autre membre, " +
+                        "modifiez d'abord le nombre de membres en haut du formulaire."
+                },
+            )
+        } else {
+            copy(members = members + MemberInput(), membersExpanded = true, memberLimitMessage = null)
+        }
     }
 
     fun removeMember(key: String) = update {
-        val remaining = members.filterNot { it.key == key }
-        copy(members = remaining, declaredMembersText = (1 + remaining.size).toString())
+        copy(members = members.filterNot { it.key == key }, memberLimitMessage = null)
     }
+
 
     fun onMemberNomChange(key: String, v: String) = updateMember(key) { copy(nom = v.toFieldCase()) }
     fun onMemberPostnomChange(key: String, v: String) = updateMember(key) { copy(postnom = v.toFieldCase()) }
@@ -247,7 +256,7 @@ class CaptureViewModel : ViewModel() {
             numero = h.numero,
             immeuble = h.immeuble,
             etage = h.etage,
-            declaredMembersText = (1 + h.membres.size).toString(),
+            declaredMembersText = (h.nombreMembres ?: (1 + h.membres.size)).toString(),
             members = h.membres.map {
                 MemberInput(
                     nom = it.nom, postnom = it.postnom, prenom = it.prenom,
@@ -345,6 +354,7 @@ class CaptureViewModel : ViewModel() {
                 numero = state.numero.trim(),
                 immeuble = state.immeuble.trim(),
                 etage = state.etage.trim(),
+                nombreMembres = state.declaredMembers,
                 membres = state.members
                     .filter { it.nom.isNotBlank() || it.postnom.isNotBlank() || it.prenom.isNotBlank() }
                     .map {

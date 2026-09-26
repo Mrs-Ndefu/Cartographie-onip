@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,7 +21,7 @@ public class ZoneService {
     }
 
     public List<Zone> list() {
-        return zoneRepository.findAllByOrderByProvinceAscVilleAscCommuneAscQuartierAsc();
+        return zoneRepository.findAllByOrderByProvinceAscVilleAsc();
     }
 
     public Optional<Zone> find(UUID id) {
@@ -34,18 +35,26 @@ public class ZoneService {
 
     // Saisies normalisées en majuscules, comme les adresses envoyées par les apps terrain, pour
     // que le filtre par zone du tableau de bord retrouve bien les ménages correspondants.
-    public Zone create(String province, String ville, String commune, String quartier) {
+    // Une zone = une province, une ville et au moins une commune (doublons et lignes vides
+    // ignorés).
+    public Zone create(String province, String ville, List<String> communes) {
         String p = normalize(province);
         String v = normalize(ville);
-        String c = normalize(commune);
-        String q = normalize(quartier);
-        if (p == null || v == null || c == null) {
-            throw new IllegalArgumentException("La province, la ville et la commune sont obligatoires");
+        List<String> c = communes == null ? List.of() : communes.stream()
+                .map(ZoneService::normalize)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
+        if (p == null || v == null || c.isEmpty()) {
+            throw new IllegalArgumentException("La province, la ville et au moins une commune sont obligatoires");
         }
-        if (zoneRepository.existsByProvinceAndVilleAndCommuneAndQuartier(p, v, c, q)) {
+        boolean exists = list().stream().anyMatch(z ->
+                z.getProvince().equals(p) && z.getVille().equals(v) && z.getCommunes().stream().sorted().toList().equals(c));
+        if (exists) {
             throw new IllegalArgumentException("Cette zone existe déjà");
         }
-        return zoneRepository.save(new Zone(UUID.randomUUID(), p, v, c, q));
+        return zoneRepository.save(new Zone(UUID.randomUUID(), p, v, c));
     }
 
     // Les agents affectés à la zone supprimée redeviennent "sans zone" plutôt que d'empêcher la

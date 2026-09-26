@@ -1,5 +1,7 @@
 package com.onip.facm01.agent;
 
+import com.onip.facm01.household.HouseholdStatus;
+
 import java.util.List;
 
 public enum AgentRole {
@@ -27,6 +29,11 @@ public enum AgentRole {
 
     public boolean canEditHouseholds() {
         return this == ADMIN || this == SUPERVISEUR;
+    }
+
+    // Le SUPERVISEUR ne modifie que les ménages incomplets ; l'ADMIN modifie tout ménage.
+    public boolean canEditHousehold(HouseholdStatus status) {
+        return this == ADMIN || (this == SUPERVISEUR && status != HouseholdStatus.COMPLET);
     }
 
     public boolean canRemoveHouseholds() {

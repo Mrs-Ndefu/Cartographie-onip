@@ -31,7 +31,7 @@ object SyncRepository {
             val item = HouseholdSyncItem(
                 id = current.id,
                 codeMenage = current.codeMenage,
-                nombreMembres = 1 + current.membres.size,
+                nombreMembres = current.nombreMembres ?: (1 + current.membres.size),
                 chef = PersonDto(
                     nom = current.chefNom.ifBlank { null },
                     postnom = current.chefPostnom.ifBlank { null },

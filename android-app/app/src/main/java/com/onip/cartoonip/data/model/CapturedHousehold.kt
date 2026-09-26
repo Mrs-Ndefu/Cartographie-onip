@@ -27,6 +27,9 @@ data class CapturedHousehold(
     val immeuble: String,
     val etage: String = "",
     val membres: List<CapturedMember> = emptyList(),
+    // Nombre de membres déclaré, chef compris. Null pour les ménages enregistrés avant ce champ
+    // (on retombe alors sur chef + fiches membres).
+    val nombreMembres: Int? = null,
     val latitude: Double?,
     val longitude: Double?,
     val locationPrecision: Double?,

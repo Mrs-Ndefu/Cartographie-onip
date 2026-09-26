@@ -40,8 +40,8 @@ import java.util.UUID;
 @Controller
 public class DashboardController {
 
-    // Chef + 14 membres, comme la fiche papier (même limite que MAX_MEMBRES côté web).
-    private static final int MAX_MEMBRES = 15;
+    // 14 membres en plus du chef, comme la fiche papier (même limite que MAX_MEMBRES côté web).
+    private static final int MAX_MEMBRES = 14;
 
     private final HouseholdRepository householdRepository;
     private final HouseholdService householdService;
@@ -157,6 +157,7 @@ public class DashboardController {
             Authentication authentication,
             Model model) {
         addCurrentAgent(authentication, model);
+        requireCanEdit(authentication, id);
         addEditModel(model, id, returnTo);
         return "household-edit";
     }
@@ -167,7 +168,9 @@ public class DashboardController {
     public String editHouseholdFragment(
             @PathVariable UUID id,
             @RequestParam(required = false) String returnTo,
+            Authentication authentication,
             Model model) {
+        requireCanEdit(authentication, id);
         addEditModel(model, id, returnTo);
         return "fragments/household-edit-form :: form";
     }
@@ -192,6 +195,15 @@ public class DashboardController {
             redirectAttributes.addFlashAttribute("form", form);
             redirectAttributes.addAttribute("returnTo", isDashboardPath(returnTo) ? returnTo : null);
             return "redirect:/dashboard/households/" + id + "/edit";
+        }
+    }
+
+    // Refus renvoyé vers la liste avec un message (cf. DashboardExceptionHandler).
+    private void requireCanEdit(Authentication authentication, UUID id) {
+        Agent actor = agentRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Compte introuvable"));
+        if (!actor.getRole().canEditHousehold(householdService.get(id).status())) {
+            throw new IllegalArgumentException("Le superviseur ne peut modifier que les ménages incomplets.");
         }
     }
 
@@ -282,22 +294,22 @@ public class DashboardController {
         return "redirect:/dashboard/archives";
     }
 
-    // Une zone choisie remplace les filtres province/ville/commune par les siens, et ajoute son
-    // quartier s'il en a un.
+    // Une zone choisie remplace les filtres province/ville/commune par les siens : le ménage doit
+    // être dans l'une des communes de la zone.
     private HouseholdFilter filter(
             String search, String province, String ville, String commune, String statut, UUID zoneId,
             LocalDate dateFrom, LocalDate dateTo) {
-        String quartier = null;
+        List<String> zoneCommunes = null;
         // Une zone supprimée entre-temps (lien ou page restés ouverts) est simplement ignorée.
         Zone zone = zoneId == null ? null : zoneService.find(zoneId).orElse(null);
         if (zone != null) {
             province = zone.getProvince();
             ville = zone.getVille();
-            commune = zone.getCommune();
-            quartier = zone.getQuartier();
+            commune = null;
+            zoneCommunes = zone.getCommunes();
         }
         return new HouseholdFilter(
-                search, province, ville, commune, quartier, statut, toStartOfDay(dateFrom), toEndOfDay(dateTo));
+                search, province, ville, commune, zoneCommunes, statut, toStartOfDay(dateFrom), toEndOfDay(dateTo));
     }
 
     private void addEditOptions(Model model, HouseholdDto household) {

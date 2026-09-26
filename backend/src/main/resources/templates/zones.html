@@ -49,15 +49,14 @@
             <label class="form-label small fw-semibold">Ville *</label>
             <input type="text" name="ville" class="form-control" required>
           </div>
+          <div class="col-sm-12 col-md-4">
+            <label class="form-label small fw-semibold">Communes * (une ou plusieurs)</label>
+            <div id="zone-communes" class="d-flex flex-column gap-1">
+              <input type="text" name="communes" class="form-control" required>
+            </div>
+            <button type="button" id="add-commune" class="btn btn-sm btn-outline-primary mt-1">+ Ajouter une commune</button>
+          </div>
           <div class="col-sm-6 col-md-2">
-            <label class="form-label small fw-semibold">Commune *</label>
-            <input type="text" name="commune" class="form-control" required>
-          </div>
-          <div class="col-sm-6 col-md-3">
-            <label class="form-label small fw-semibold">Quartier</label>
-            <input type="text" name="quartier" class="form-control" placeholder="Vide = toute la commune">
-          </div>
-          <div class="col-sm-6 col-md-1">
             <button type="submit" class="btn btn-primary w-100">Créer</button>
           </div>
         </form>
@@ -71,8 +70,7 @@
             <tr>
               <th>Province</th>
               <th>Ville</th>
-              <th>Commune</th>
-              <th>Quartier</th>
+              <th>Communes</th>
               <th>Agents affectés</th>
               <th th:if="${currentAgent != null and currentAgent.role.canManageZones()}">Actions</th>
             </tr>
@@ -81,8 +79,7 @@
             <tr th:each="z : ${zones}">
               <td th:text="${z.province}">-</td>
               <td th:text="${z.ville}">-</td>
-              <td th:text="${z.commune}">-</td>
-              <td th:text="${z.quartier ?: 'Toute la commune'}">-</td>
+              <td th:text="${#strings.listJoin(z.communes, ', ')}">-</td>
               <td th:text="${agentCounts[z.id]}">0</td>
               <td th:if="${currentAgent != null and currentAgent.role.canManageZones()}">
                 <form th:action="@{/dashboard/zones/{id}/delete(id=${z.id})}" method="post"
@@ -95,7 +92,7 @@
               </td>
             </tr>
             <tr th:if="${zones.isEmpty()}">
-              <td colspan="6" class="text-center text-secondary py-3">Aucune zone définie pour l'instant.</td>
+              <td colspan="5" class="text-center text-secondary py-3">Aucune zone définie pour l'instant.</td>
             </tr>
           </tbody>
         </table>
@@ -114,6 +111,21 @@
     </div>
   </div>
 
+  <script>
+    // Une zone couvre une ou plusieurs communes de la même ville : un champ par commune.
+    (function () {
+      var addBtn = document.getElementById('add-commune');
+      if (!addBtn) return;
+      addBtn.addEventListener('click', function () {
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.name = 'communes';
+        input.className = 'form-control';
+        document.getElementById('zone-communes').appendChild(input);
+        input.focus();
+      });
+    })();
+  </script>
   <script th:src="@{/js/app.js}"></script>
 </body>
 </html>

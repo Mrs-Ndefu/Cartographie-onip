@@ -1,17 +1,22 @@
 package com.onip.facm01.zone;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-// Zone d'affectation d'un agent, définie à l'avance par l'ADMIN : province + ville + commune,
-// et optionnellement un quartier (une zone sans quartier couvre toute la commune).
+// Zone d'affectation d'un agent, définie à l'avance par l'ADMIN : une province, une ville, et une
+// ou plusieurs communes de cette ville.
 @Entity
 @Table(name = "zones")
 public class Zone {
@@ -25,10 +30,12 @@ public class Zone {
     @Column(nullable = false)
     private String ville;
 
-    @Column(nullable = false)
-    private String commune;
-
-    private String quartier;
+    // Chargées d'office : une zone est toujours affichée avec ses communes, et la liste est courte.
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "zone_communes", joinColumns = @JoinColumn(name = "zone_id"))
+    @Column(name = "commune", nullable = false)
+    @OrderBy
+    private List<String> communes = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -36,12 +43,11 @@ public class Zone {
     protected Zone() {
     }
 
-    public Zone(UUID id, String province, String ville, String commune, String quartier) {
+    public Zone(UUID id, String province, String ville, List<String> communes) {
         this.id = id;
         this.province = province;
         this.ville = ville;
-        this.commune = commune;
-        this.quartier = quartier;
+        this.communes = new ArrayList<>(communes);
         this.createdAt = Instant.now();
     }
 
@@ -57,12 +63,8 @@ public class Zone {
         return ville;
     }
 
-    public String getCommune() {
-        return commune;
-    }
-
-    public String getQuartier() {
-        return quartier;
+    public List<String> getCommunes() {
+        return communes;
     }
 
     public Instant getCreatedAt() {
@@ -70,8 +72,6 @@ public class Zone {
     }
 
     public String getLabel() {
-        return Stream.of(province, ville, commune, quartier)
-                .filter(s -> s != null && !s.isBlank())
-                .collect(Collectors.joining(" / "));
+        return province + " / " + ville + " / " + String.join(", ", communes);
     }
 }

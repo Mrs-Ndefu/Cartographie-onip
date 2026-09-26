@@ -17,7 +17,7 @@
     <h1>Ménage <span th:text="${household.codeMenage ?: '(sans code)'}"></span></h1>
     <nav class="topbar-nav">
       <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
-      <a th:if="${currentAgent != null and currentAgent.role.canEditHouseholds()}"
+      <a th:if="${currentAgent != null and currentAgent.role.canEditHousehold(household.status)}"
          th:href="@{/dashboard/households/{id}/edit(id=${household.id})}" class="link-btn">Modifier le ménage</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"

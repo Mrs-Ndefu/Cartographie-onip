@@ -61,8 +61,9 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
     List<String> findDistinctCommunes(@Param("province") String province, @Param("ville") String ville);
 
     // Recherche unifiée du tableau de bord : nom du chef (nom/postnom/prénom) OU code ménage,
-    // filtres province/ville/commune/quartier sans tenir compte de la casse (d'anciens ménages
-    // ont été saisis en minuscules ; le quartier vient d'une zone choisie), statut
+    // filtres province/ville/commune sans tenir compte de la casse (d'anciens ménages ont été
+    // saisis en minuscules), communes d'une zone choisie (:anyZoneCommune = false quand aucune
+    // zone : la liste reçoit alors une valeur factice, IN () étant invalide en SQL), statut
     // ("complet", "incomplet" = tout sauf complet), plage de dates de création, et bascule
     // retirés/actifs. Les paramètres vides désactivent le filtre correspondant. Le service
     // (HouseholdService) remplace null par des valeurs neutres ("" / bornes de dates larges)
@@ -82,7 +83,7 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
               AND (:province = '' OR UPPER(h.address.province) = UPPER(:province))
               AND (:ville = '' OR UPPER(h.address.ville) = UPPER(:ville))
               AND (:commune = '' OR UPPER(h.address.commune) = UPPER(:commune))
-              AND (:quartier = '' OR UPPER(h.address.quartier) = UPPER(:quartier))
+              AND (:anyZoneCommune = false OR UPPER(h.address.commune) IN :zoneCommunes)
               AND (:statut = ''
                    OR (:statut = 'complet' AND h.status = com.onip.facm01.household.HouseholdStatus.COMPLET)
                    OR (:statut = 'incomplet' AND h.status <> com.onip.facm01.household.HouseholdStatus.COMPLET))
@@ -94,7 +95,8 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
             @Param("province") String province,
             @Param("ville") String ville,
             @Param("commune") String commune,
-            @Param("quartier") String quartier,
+            @Param("anyZoneCommune") boolean anyZoneCommune,
+            @Param("zoneCommunes") List<String> zoneCommunes,
             @Param("statut") String statut,
             @Param("dateFrom") Instant dateFrom,
             @Param("dateTo") Instant dateTo,

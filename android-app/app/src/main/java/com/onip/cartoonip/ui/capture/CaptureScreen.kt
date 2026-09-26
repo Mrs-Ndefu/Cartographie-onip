@@ -167,9 +167,9 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         OutlinedTextField(
                             value = uiState.declaredMembersText,
                             onValueChange = viewModel::onDeclaredMembersChange,
-                            label = { Text("Nombre de membres du ménage*") },
-                            supportingText = { Text("Chef compris — les fiches membres s'ajustent à ce nombre.") },
-                            isError = uiState.declaredMembers == null,
+                            label = { Text("Nombre de membres du ménage (chef compris)*") },
+                            supportingText = { Text("1 = le chef vit seul ; 5 = le chef + jusqu'à 4 membres à ajouter.") },
+                            isError = uiState.declaredMembersText.isNotBlank() && uiState.declaredMembers == null,
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth(),
@@ -254,7 +254,8 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
             item {
                 MembersSection(
                     members = uiState.members,
-                    totalMembers = uiState.totalMembers,
+                    declaredMembers = uiState.declaredMembers,
+                    limitMessage = uiState.memberLimitMessage,
                     expanded = uiState.membersExpanded,
                     onToggle = viewModel::toggleMembersExpanded,
                     onAdd = viewModel::addMember,
@@ -523,7 +524,8 @@ private fun RelationDropdown(value: String, onChange: (String) -> Unit) {
 @Composable
 private fun MembersSection(
     members: List<MemberInput>,
-    totalMembers: Int,
+    declaredMembers: Int?,
+    limitMessage: String?,
     expanded: Boolean,
     onToggle: () -> Unit,
     onAdd: () -> Unit,
@@ -543,11 +545,10 @@ private fun MembersSection(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Membres du ménage", style = MaterialTheme.typography.titleMedium)
-                    // Chef + fiches membres — synchronisé avec le nombre déclaré en haut du
-                    // formulaire.
+                    Text("Membres du ménage (facultatif)", style = MaterialTheme.typography.titleMedium)
+                    // Fiches ajoutées / membres possibles d'après le nombre saisi (chef non compté).
                     Text(
-                        "Nombre de membres : $totalMembers",
+                        "Membres ajoutés : ${members.size} / ${declaredMembers?.minus(1) ?: "?"}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = OnipBlue,
                         fontWeight = FontWeight.Bold,
@@ -593,6 +594,14 @@ private fun MembersSection(
                             Icon(Icons.Filled.Close, contentDescription = "Retirer ce membre")
                         }
                     }
+                }
+                limitMessage?.let {
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
                 }
                 OutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))

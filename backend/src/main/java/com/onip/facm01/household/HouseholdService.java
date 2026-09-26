@@ -134,7 +134,10 @@ public class HouseholdService {
                         orEmpty(filter.province()),
                         orEmpty(filter.ville()),
                         orEmpty(filter.commune()),
-                        orEmpty(filter.quartier()),
+                        filter.communes() != null && !filter.communes().isEmpty(),
+                        filter.communes() == null || filter.communes().isEmpty()
+                                ? List.of("")
+                                : filter.communes().stream().map(String::toUpperCase).toList(),
                         orEmpty(filter.statut()),
                         filter.dateFrom() == null ? EPOCH : filter.dateFrom(),
                         filter.dateTo() == null ? FAR_FUTURE : filter.dateTo(),
@@ -204,6 +207,9 @@ public class HouseholdService {
     public void updateFromDashboard(UUID id, HouseholdEditForm form, Agent author) {
         Household household = householdRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Ménage introuvable : " + id));
+        if (!author.getRole().canEditHousehold(household.getStatus())) {
+            throw new IllegalArgumentException("Le superviseur ne peut modifier que les ménages incomplets.");
+        }
         if (isBlank(form.getMotif())) {
             throw new IllegalArgumentException("Le motif de la modification est obligatoire");
         }
@@ -214,10 +220,14 @@ public class HouseholdService {
             throw new IllegalArgumentException("La commune et le quartier sont obligatoires");
         }
         long keptMembers = form.getMembres().stream().filter(m -> !m.isRemoved() && !m.isBlank()).count();
-        if (form.getNombreMembres() != null && form.getNombreMembres() != 1 + keptMembers) {
-            throw new IllegalArgumentException("Le nombre de membres déclaré (" + form.getNombreMembres()
-                    + ") ne correspond pas aux fiches : chef + " + keptMembers + " membre(s) renseigné(s) = "
-                    + (1 + keptMembers) + ". Complétez ou retirez des fiches membres.");
+        if (form.getNombreMembres() == null || form.getNombreMembres() < 1) {
+            throw new IllegalArgumentException("Le nombre de membres est obligatoire (1 = le chef vit seul)");
+        }
+        // Les fiches membres sont facultatives, mais pas plus nombreuses que le nombre déclaré.
+        if (1 + keptMembers > form.getNombreMembres()) {
+            throw new IllegalArgumentException("Le ménage compte " + form.getNombreMembres()
+                    + " membre(s), chef compris, mais " + (1 + keptMembers)
+                    + " sont renseignés. Augmentez le nombre de membres ou retirez des fiches.");
         }
 
         household.setAddress(new AddressEmbeddable(
@@ -244,7 +254,7 @@ public class HouseholdService {
                     trimToNull(membre.getDateNaissance()), membre.getSexe(), upper(membre.getRelation())));
         }
         household.replaceMembers(members);
-        household.setNombreMembresDeclare(members.size());
+        household.setNombreMembresDeclare(form.getNombreMembres());
         household.setUpdatedAt(Instant.now());
         householdRepository.save(household);
         householdModificationRepository.save(new HouseholdModification(

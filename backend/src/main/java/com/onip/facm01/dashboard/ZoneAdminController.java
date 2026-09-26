@@ -51,11 +51,10 @@ public class ZoneAdminController {
     public String create(
             @RequestParam String province,
             @RequestParam String ville,
-            @RequestParam String commune,
-            @RequestParam(required = false) String quartier,
+            @RequestParam(required = false) List<String> communes,
             RedirectAttributes redirectAttributes) {
         try {
-            Zone zone = zoneService.create(province, ville, commune, quartier);
+            Zone zone = zoneService.create(province, ville, communes);
             redirectAttributes.addFlashAttribute("success", "Zone créée : " + zone.getLabel());
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

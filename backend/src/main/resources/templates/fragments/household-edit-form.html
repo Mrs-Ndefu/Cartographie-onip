@@ -3,8 +3,8 @@
 <body>
 <!-- Formulaire de modification d'un ménage, partagé entre la page de modification et la fenêtre
      ouverte depuis le tableau des ménages. Motif obligatoire, puis confirmation avant envoi
-     (js-confirm-form, cf. app.js). Le nombre de membres déclaré et les fiches membres restent
-     synchronisés (cf. app.js, .js-household-edit-form). -->
+     (js-confirm-form, cf. app.js). On ajoute des fiches membres jusqu'au nombre de membres saisi
+     (chef compris), sans obligation de les remplir (cf. app.js, .js-household-edit-form). -->
 <form th:fragment="form" class="js-confirm-form js-household-edit-form"
       th:action="@{/dashboard/households/{id}/edit(id=${household.id})}" th:object="${form}" method="post"
       data-confirm-title="Êtes-vous sûr(e) de vouloir enregistrer ces modifications ?"
@@ -25,11 +25,11 @@
       <div class="detail-card">
         <div class="detail-card-header"><h2>Nombre de membres du ménage</h2></div>
         <div class="detail-card-body">
-          <label class="form-label small fw-semibold" for="nombreMembres">Nombre de membres (chef compris) *</label>
+          <label class="form-label small fw-semibold" for="nombreMembres">Nombre de membres du ménage (chef compris) *</label>
           <input type="number" class="form-control js-nombre-membres" th:field="*{nombreMembres}"
-                 min="1" th:max="${maxMembres}" required>
+                 min="1" th:max="${maxMembres + 1}" required>
           <p class="text-secondary small mt-1 mb-0">
-            Les fiches membres s'ajustent à ce nombre. Toutes les fiches doivent être renseignées pour enregistrer.
+            1 = le chef vit seul ; 5 = le chef + jusqu'à 4 membres à ajouter ci-contre.
           </p>
         </div>
       </div>
@@ -121,12 +121,12 @@
 
     <div>
       <div class="detail-card">
-        <div class="detail-card-header"><h2>Membres du ménage (hors chef)</h2></div>
+        <div class="detail-card-header"><h2>Membres du ménage (facultatif)</h2></div>
         <div class="table-scroll">
           <table class="detail-members-table js-members-table">
             <thead>
               <tr>
-                <th>Nom *</th>
+                <th>Nom</th>
                 <th>Postnom</th>
                 <th>Prénom</th>
                 <th>Date de naissance</th>
@@ -137,7 +137,7 @@
             </thead>
             <tbody>
               <tr th:each="m, stat : *{membres}">
-                <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].nom}" required></td>
+                <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].nom}"></td>
                 <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].postnom}"></td>
                 <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].prenom}"></td>
                 <td><input type="text" class="form-control form-control-sm" th:field="*{membres[__${stat.index}__].dateNaissance}" placeholder="JJ/MM/AAAA"></td>
@@ -151,11 +151,13 @@
                 <td class="text-center">
                   <button type="button" class="btn btn-sm btn-outline-danger js-remove-member" title="Retirer ce membre" aria-label="Retirer ce membre">✕</button>
                 </td>
+
               </tr>
             </tbody>
           </table>
         </div>
         <div class="detail-card-body">
+          <p class="text-danger small mb-2 js-member-limit" hidden></p>
           <button type="button" class="btn btn-sm btn-outline-primary js-add-member">+ Ajouter un membre</button>
         </div>
       </div>
@@ -179,7 +181,7 @@
   <!-- Ligne vide ajoutée par "+ Ajouter un membre" ; __INDEX__ est remplacé par le rang du membre. -->
   <template class="js-member-row-template">
     <tr>
-      <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].nom" required></td>
+      <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].nom"></td>
       <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].postnom"></td>
       <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].prenom"></td>
       <td><input type="text" class="form-control form-control-sm" name="membres[__INDEX__].dateNaissance" placeholder="JJ/MM/AAAA"></td>
@@ -194,6 +196,7 @@
       <td class="text-center">
         <button type="button" class="btn btn-sm btn-outline-danger js-remove-member" title="Retirer ce membre" aria-label="Retirer ce membre">✕</button>
       </td>
+
     </tr>
   </template>
 </form>

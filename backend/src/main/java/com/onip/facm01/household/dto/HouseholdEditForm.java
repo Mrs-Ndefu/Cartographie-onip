@@ -28,7 +28,8 @@ public class HouseholdEditForm {
 
     private HouseholdStatus status;
 
-    // Nombre de membres déclaré (chef compris) : doit correspondre aux fiches membres gardées.
+    // Nombre de membres du ménage, chef compris (1 = le chef vit seul). Obligatoire ; on peut
+    // ajouter jusqu'à (nombre - 1) fiches membres, sans obligation de les remplir.
     private Integer nombreMembres;
 
     // Motif obligatoire de la modification, conservé dans l'historique du ménage.
@@ -56,7 +57,9 @@ public class HouseholdEditForm {
             form.etage = household.address().etage();
         }
         form.status = household.status();
-        form.nombreMembres = 1 + household.membres().size();
+        form.nombreMembres = household.nombreMembres() != null
+                ? household.nombreMembres()
+                : 1 + household.membres().size();
         for (PersonDto membre : household.membres()) {
             MemberForm member = new MemberForm();
             member.setNom(membre.nom());
