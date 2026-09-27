@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" content="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7">
+  <meta name="_csrf_header" content="X-CSRF-TOKEN">
+  <meta name="_csrf_parameter" content="_csrf">
+  <title>Adressage de Ménages</title>
+  <link rel="icon" type="image/png" href="/img/onip-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <header class="topbar">
+    <img src="/img/onip-logo.png" alt="ONIP" class="topbar-logo">
+    <h1>ADRESSAGE DE MÉNAGES</h1>
+    <nav class="topbar-nav">
+      <a href="/dashboard/archives" class="link-btn">Archives</a>
+      <a href="/dashboard/agents" class="link-btn">Gérer les agents</a>
+      <div class="agent-summary">
+        <span class="agent-role-badge">SUPER_ADMIN</span>
+      </div>
+      <a href="/dashboard/profile" class="avatar-link" title="Mon profil">
+        
+        <span class="avatar-placeholder-lg">A</span>
+      </a>
+    </nav>
+  </header>
+
+  <section class="hero-row">
+    <div class="population-hero">
+      <span class="population-hero-value" data-target="24">24</span>
+      <span class="population-hero-label">Total ménages</span>
+    </div>
+    <div class="population-hero">
+      <span class="population-hero-value" data-target="32">32</span>
+      <span class="population-hero-label">Population totale</span>
+    </div>
+  </section>
+
+  <section class="agents-messages">
+    
+    
+  </section>
+
+  <section class="overview-row">
+    <div class="stat-grid">
+      <div class="stat-card complet">
+        <span class="stat-value">21</span>
+        <span class="stat-label">Complets</span>
+      </div>
+      <div class="stat-card incomplet">
+        <span class="stat-value">1</span>
+        <span class="stat-label">Incomplets</span>
+      </div>
+      <div class="stat-card archive">
+        <span class="stat-value">2</span>
+        <span class="stat-label">Archivés</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">1</span>
+        <span class="stat-label">Aujourd'hui</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">22</span>
+        <span class="stat-label">Ce mois-ci</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">22</span>
+        <span class="stat-label">Cette année</span>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h2>Enregistrements mensuels (12 derniers mois)</h2>
+      <canvas id="monthly-chart"></canvas>
+    </div>
+  </section>
+
+  <section>
+    <div id="dashboard-map"></div>
+  </section>
+
+  <section class="table-section">
+    <div class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2>Ménages enregistrés</h2>
+          <span class="table-card-count">22 au total</span>
+        </div>
+        <form id="hh-filters" action="/dashboard" method="get" class="table-filters" role="search">
+          <div class="table-search-form">
+            <svg class="table-search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <input type="search" name="search" class="table-search-input"
+                   placeholder="Chef de ménage ou code ménage…" value="">
+          </div>
+        </form>
+      </div>
+      <div class="table-scroll">
+        <table class="households-table">
+          <thead>
+            <tr>
+              <th>Code Ménage</th>
+              <th>Chef</th>
+              <th>
+                <div class="th-with-filter">
+                  <span>Ville</span>
+                  <select name="ville" form="hh-filters" id="ville-filter" class="filter-select filter-select-column">
+                    <option value="">Toutes</option>
+                    <option value="AYAYAYY">AYAYAYY</option>
+                    <option value="BANDUNDU">BANDUNDU</option>
+                    <option value="BENI">BENI</option>
+                    <option value="BUJUMBURA">BUJUMBURA</option>
+                    <option value="BUKAVU">BUKAVU</option>
+                    <option value="DDDD">DDDD</option>
+                    <option value="FFFFF">FFFFF</option>
+                    <option value="GGGGGGG">GGGGGGG</option>
+                    <option value="JDKSK">JDKSK</option>
+                    <option value="KINSHASA">KINSHASA</option>
+                    <option value="KINSHASA ">KINSHASA </option>
+                    <option value="Kinshasa">Kinshasa</option>
+                    <option value="MATADI">MATADI</option>
+                    <option value="RGHY">RGHY</option>
+                    <option value="gggs">gggs</option>
+                    <option value="zkzkk">zkzkk</option>
+                  </select>
+                </div>
+              </th>
+              <th>
+                <div class="th-with-filter">
+                  <span>Commune</span>
+                  <select name="commune" form="hh-filters" class="filter-select filter-select-column">
+                    <option value="">Toutes</option>
+                    <option value="BASOKO">BASOKO</option>
+                    <option value="BUNGULU">BUNGULU</option>
+                    <option value="EEE">EEE</option>
+                    <option value="FGH">FGH</option>
+                    <option value="GGGG">GGGG</option>
+                    <option value="GGGGAGG">GGGGAGG</option>
+                    <option value="GOMBE">GOMBE</option>
+                    <option value="Gombe">Gombe</option>
+                    <option value="IBANDA">IBANDA</option>
+                    <option value="KASA-VUBU">KASA-VUBU</option>
+                    <option value="KHHHH">KHHHH</option>
+                    <option value="KINSHASA">KINSHASA</option>
+                    <option value="KZKZ">KZKZ</option>
+                    <option value="LIMETE">LIMETE</option>
+                    <option value="MVUZI">MVUZI</option>
+                    <option value="OSOOS">OSOOS</option>
+                    <option value="SGGSG">SGGSG</option>
+                    <option value="SKDKD">SKDKD</option>
+                    <option value="TTTT">TTTT</option>
+                    <option value="kzkzk">kzkzk</option>
+                  </select>
+                </div>
+              </th>
+              <th>Statut</th>
+              <th>Agent</th>
+              <th>
+                <div class="th-with-filter th-with-filter-stacked">
+                  <span>Mis à jour</span>
+                  <div class="filter-date-group">
+                    <input type="date" name="dateFrom" form="hh-filters" class="filter-date filter-date-column"
+                           value="" title="Du" onchange="this.form.submit()">
+                    <input type="date" name="dateTo" form="hh-filters" class="filter-date filter-date-column"
+                           value="" title="Au" onchange="this.form.submit()">
+                  </div>
+                </div>
+              </th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cell-code">GRBJKIXJTKYZ9YYP51</td>
+              <td>null KABILA</td>
+              <td></td>
+              <td>LIMETE</td>
+              <td>
+                
+                <span class="status-badge status-incomplet">Incomplet</span>
+              </td>
+              <td>agent1@onip.local</td>
+              <td class="cell-date">23/09/2026 00:29</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/07da14d6-9f0a-4fa2-b11e-32b2588688cb" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/07da14d6-9f0a-4fa2-b11e-32b2588688cb/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="GRBJKIXJTKYZ9YYP51 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">3DH4HE80ZNJXQ6MDN5</td>
+              <td>FELIX TSHISEKEDI</td>
+              <td></td>
+              <td>GOMBE</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1@onip.local</td>
+              <td class="cell-date">22/09/2026 23:27</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/b8373dfa-30ed-4e1b-95f4-bd51921ce5b1" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/b8373dfa-30ed-4e1b-95f4-bd51921ce5b1/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="3DH4HE80ZNJXQ6MDN5 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">QW1HSP6J7TH54ZR81H</td>
+              <td>SERIE ILKEER</td>
+              <td>KINSHASA</td>
+              <td>KASA-VUBU</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1@onip.local</td>
+              <td class="cell-date">22/09/2026 23:11</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/79af31aa-2b9e-40a8-98c9-dcc5414f94d8" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/79af31aa-2b9e-40a8-98c9-dcc5414f94d8/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="QW1HSP6J7TH54ZR81H — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">R3QK9NCUMBAMFA7B24</td>
+              <td>null MWAMBA</td>
+              <td>BANDUNDU</td>
+              <td>BASOKO</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1@onip.local</td>
+              <td class="cell-date">22/09/2026 22:14</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/eb76d9bc-15fe-4d13-a530-dd19013c3ce8" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/eb76d9bc-15fe-4d13-a530-dd19013c3ce8/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="R3QK9NCUMBAMFA7B24 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">H7MN692CNOXMJK7UUA</td>
+              <td>null KABASELE</td>
+              <td>BUKAVU</td>
+              <td>IBANDA</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1@onip.local</td>
+              <td class="cell-date">22/09/2026 21:46</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/7f40f13f-edf9-477b-ac76-b95669eff862" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/7f40f13f-edf9-477b-ac76-b95669eff862/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="H7MN692CNOXMJK7UUA — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">RDT8DJJHTRB2J5N01B</td>
+              <td>KENNEDY MUKENDI</td>
+              <td>BENI</td>
+              <td>BUNGULU</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1@onip.local</td>
+              <td class="cell-date">22/09/2026 20:49</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/e7d8b24b-bc76-4d6d-81dc-a5b5c4c95818" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/e7d8b24b-bc76-4d6d-81dc-a5b5c4c95818/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="RDT8DJJHTRB2J5N01B — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">TESTETAGE01</td>
+              <td>Y TEST</td>
+              <td>KINSHASA</td>
+              <td>GOMBE</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1@onip.local</td>
+              <td class="cell-date">22/09/2026 11:00</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/11111111-1111-1111-1111-111111111111" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/11111111-1111-1111-1111-111111111111/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="TESTETAGE01 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">NQJAKKQ3OLX8LXLGAF</td>
+              <td>CHRIST BWABWA</td>
+              <td>MATADI</td>
+              <td>MVUZI</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>admin</td>
+              <td class="cell-date">21/09/2026 18:38</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/bbe6f44c-965b-4b04-9cd3-dda6095ada46" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/bbe6f44c-965b-4b04-9cd3-dda6095ada46/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="NQJAKKQ3OLX8LXLGAF — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">MC9YTZWDE6CNU8I4Y5</td>
+              <td>HSHHSH NANIKIAN</td>
+              <td>Kinshasa</td>
+              <td>Gombe</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">21/09/2026 11:45</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/658e37cb-cb32-4380-a4f5-5e44dbc1abc4" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/658e37cb-cb32-4380-a4f5-5e44dbc1abc4/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="MC9YTZWDE6CNU8I4Y5 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">W9N940521SC3ARM28I</td>
+              <td>ERICK BWABWA</td>
+              <td>KINSHASA</td>
+              <td>GOMBE</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>admin</td>
+              <td class="cell-date">21/09/2026 09:53</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/1ea97b6e-b9be-4af5-9a9c-f03dd7b72057" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/1ea97b6e-b9be-4af5-9a9c-f03dd7b72057/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="W9N940521SC3ARM28I — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">DTDVC2Y6B7VIS51JYO</td>
+              <td>MAYAZA MAZARINE</td>
+              <td>JDKSK</td>
+              <td>SKDKD</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>admin</td>
+              <td class="cell-date">19/09/2026 15:23</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/2ae1c04b-e22f-4c50-b99a-544f3e6ee57a" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/2ae1c04b-e22f-4c50-b99a-544f3e6ee57a/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="DTDVC2Y6B7VIS51JYO — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">A8L0GFSUS6X8QAVUAP</td>
+              <td>RRYU RTYYJJJ</td>
+              <td>RGHY</td>
+              <td>FGH</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>admin</td>
+              <td class="cell-date">18/09/2026 23:52</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/a0823c14-10ba-4b2d-91fe-001b0fa5314b" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/a0823c14-10ba-4b2d-91fe-001b0fa5314b/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="A8L0GFSUS6X8QAVUAP — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">RTRCFM53RW7HUMPDB4</td>
+              <td>GGGGGG FFFFFFFFFFFFFFF</td>
+              <td>AYAYAYY</td>
+              <td>GGGGAGG</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">18/09/2026 21:16</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/231ecb56-1e1f-4da0-9f06-23887b4e832d" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/231ecb56-1e1f-4da0-9f06-23887b4e832d/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="RTRCFM53RW7HUMPDB4 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">36KSP38GYXYMKFBGNG</td>
+              <td>BOLINO ERIC</td>
+              <td>gggs</td>
+              <td>SGGSG</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">18/09/2026 16:55</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/5ef4a633-8f65-42a9-8cb9-05478d3ad667" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/5ef4a633-8f65-42a9-8cb9-05478d3ad667/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="36KSP38GYXYMKFBGNG — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">VF8B2V3MKURDW8EEWA</td>
+              <td>MAELOKHALIS NDEFU</td>
+              <td>KINSHASA</td>
+              <td>KINSHASA</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">18/09/2026 15:14</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/09606506-c1b4-4e47-b8f8-1af6f18404a3" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/09606506-c1b4-4e47-b8f8-1af6f18404a3/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="VF8B2V3MKURDW8EEWA — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">Y1GPJNHE0MT9LZLBQW</td>
+              <td>AZEEEE AAAA</td>
+              <td>FFFFF</td>
+              <td>TTTT</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">18/09/2026 00:52</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/ec35229c-84a2-49b5-a678-85313abfde5a" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/ec35229c-84a2-49b5-a678-85313abfde5a/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="Y1GPJNHE0MT9LZLBQW — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">333333333333333333</td>
+              <td>YYYYYY AAAAAA</td>
+              <td>GGGGGGG</td>
+              <td>GGGG</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">17/09/2026 23:46</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/82e1f621-381f-43ba-b2be-58395a4bb82e" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/82e1f621-381f-43ba-b2be-58395a4bb82e/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="333333333333333333 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">8A3333333333333344</td>
+              <td>JZJJZJZ ZUUUUUUA</td>
+              <td>DDDD</td>
+              <td>OSOOS</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">17/09/2026 22:25</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/5295e86a-9d22-4b6e-95a4-70475b5d6594" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/5295e86a-9d22-4b6e-95a4-70475b5d6594/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="8A3333333333333344 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">444444444444444444</td>
+              <td>KANDOLO FORTUNA</td>
+              <td>DDDD</td>
+              <td>EEE</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">17/09/2026 22:04</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/e5e9f29f-9fd4-45ce-a050-9e6d903b5adb" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/e5e9f29f-9fd4-45ce-a050-9e6d903b5adb/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="444444444444444444 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">111111111111111111</td>
+              <td>KZKZKKZ OZOOZO</td>
+              <td>KINSHASA </td>
+              <td>KZKZ</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">17/09/2026 22:03</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/4b2f9ed1-f3fb-4736-a7f2-c997e96209b8" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/4b2f9ed1-f3fb-4736-a7f2-c997e96209b8/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="111111111111111111 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">122222222222222227</td>
+              <td>MAZARINE MAKUNGU</td>
+              <td>BUJUMBURA</td>
+              <td>KHHHH</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">17/09/2026 08:54</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/5e96d3c4-a85e-479b-a8d0-3987d156e7d2" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/5e96d3c4-a85e-479b-a8d0-3987d156e7d2/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="122222222222222227 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-code">123456789098762622</td>
+              <td>MAZARINE MAKUNGU</td>
+              <td>zkzkk</td>
+              <td>kzkzk</td>
+              <td>
+                <span class="status-badge status-complet">Complet</span>
+                
+              </td>
+              <td>agent1</td>
+              <td class="cell-date">17/09/2026 00:08</td>
+              <td class="col-actions">
+                <div class="d-flex gap-1">
+                  <a href="/dashboard/households/4a0e2363-e7d9-4909-acfe-e6b5a8881d9d" class="btn btn-sm btn-outline-secondary btn-icon"
+                     title="Détail" aria-label="Détail">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                      <circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/>
+                    </svg>
+                  </a>
+                  <form action="/dashboard/households/4a0e2363-e7d9-4909-acfe-e6b5a8881d9d/archive" method="post"
+                        class="js-confirm-form"
+                        data-confirm-detail="123456789098762622 — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives."><input type="hidden" name="_csrf" value="SSCKIjYESJvuTboy19W0SaLLMyyb2dymyJBXVlMfyxHjj85fKha6Rw83Kq7DeNwA5PiAKMf-Hk6iu-iL-6FuZzEp_ymH6fw7"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+
+      
+    </div>
+  </section>
+
+  <div id="confirm-modal" class="confirm-overlay" hidden>
+    <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+      <h3 id="confirm-title" class="confirm-title">Voulez-vous archiver ce ménage ?</h3>
+      <p class="confirm-message"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary confirm-cancel">Annuler</button>
+        <button type="button" class="btn btn-sm btn-danger confirm-ok">Archiver</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/chart.js@4/dist/chart.umd.js"></script>
+  <script>
+    /*<![CDATA[*/
+    // Compteurs animés (total ménages, population) : partent de 0 et montent jusqu'à la valeur
+    // réelle au chargement de la page (purement visuel — la valeur cible reste celle calculée
+    // côté serveur).
+    (function () {
+      function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+      }
+
+      document.querySelectorAll('.population-hero-value').forEach(function (el) {
+        var card = el.closest('.population-hero');
+        var target = parseInt(el.getAttribute('data-target'), 10) || 0;
+        var duration = 1200;
+        var start = null;
+
+        el.classList.add('is-counting');
+        if (card) card.classList.add('is-counting');
+
+        function step(timestamp) {
+          if (start === null) start = timestamp;
+          var progress = Math.min((timestamp - start) / duration, 1);
+          var value = Math.round(easeOutCubic(progress) * target);
+          el.textContent = value.toLocaleString('fr-FR');
+          if (progress < 1) {
+            requestAnimationFrame(step);
+          }
+          // is-counting reste en place une fois la cible atteinte : le halo/glow continue de
+          // clignoter en continu (animation CSS "infinite"), ça ne se limite pas au comptage.
+        }
+
+        requestAnimationFrame(step);
+      });
+    })();
+
+    const monthlyRegistrations = [{"label":"10\/2025","count":0},{"label":"11\/2025","count":0},{"label":"12\/2025","count":0},{"label":"01\/2026","count":0},{"label":"02\/2026","count":0},{"label":"03\/2026","count":0},{"label":"04\/2026","count":0},{"label":"05\/2026","count":0},{"label":"06\/2026","count":0},{"label":"07\/2026","count":0},{"label":"08\/2026","count":0},{"label":"09\/2026","count":22}];
+
+    new Chart(document.getElementById('monthly-chart'), {
+      type: 'bar',
+      data: {
+        labels: monthlyRegistrations.map(function (m) { return m.label; }),
+        datasets: [{
+          label: 'Ménages enregistrés',
+          data: monthlyRegistrations.map(function (m) { return m.count; }),
+          backgroundColor: '#178a17'
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+
+    const households = [{"id":"07da14d6-9f0a-4fa2-b11e-32b2588688cb","codeMenage":"GRBJKIXJTKYZ9YYP51","nombreMembres":1,"chef":{"nom":"KABILA","postnom":null,"prenom":null,"dateNaissance":"15\/04\/2001","sexe":null,"relation":null},"membres":[],"address":{"ville":"","commune":"LIMETE","quartier":"MBOMA","rue":"","numero":"","immeuble":"","etage":""},"location":{"latitude":-4.3256076,"longitude":15.3093991,"precision":20.0,"saisieManuelle":false},"meta":null,"status":"brouillon","agentUsername":"agent1@onip.local","createdAt":"2026-09-22T23:29:19.402Z","updatedAt":"2026-09-22T23:29:19.402Z","syncedAt":"2026-09-22T23:58:25.247026Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"b8373dfa-30ed-4e1b-95f4-bd51921ce5b1","codeMenage":"3DH4HE80ZNJXQ6MDN5","nombreMembres":1,"chef":{"nom":"TSHISEKEDI","postnom":"TSHILOMBO","prenom":"FELIX","dateNaissance":null,"sexe":null,"relation":null},"membres":[],"address":{"ville":"","commune":"GOMBE","quartier":"KINTAMBO","rue":"","numero":"","immeuble":"","etage":""},"location":{"latitude":-4.325774999999999,"longitude":15.309745000000001,"precision":124.5999984741211,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"agent1@onip.local","createdAt":"2026-09-22T21:56:47.972Z","updatedAt":"2026-09-22T22:27:25.277Z","syncedAt":"2026-09-22T22:27:26.865816Z","photoCount":1,"archived":false,"archivedAt":null},{"id":"79af31aa-2b9e-40a8-98c9-dcc5414f94d8","codeMenage":"QW1HSP6J7TH54ZR81H","nombreMembres":1,"chef":{"nom":"ILKEER","postnom":"TURQUIE","prenom":"SERIE","dateNaissance":"12\/05\/1982","sexe":"F","relation":null},"membres":[],"address":{"ville":"KINSHASA","commune":"KASA-VUBU","quartier":"POPOLO","rue":"TUUU","numero":"122","immeuble":"TRUE","etage":"12"},"location":{"latitude":-4.325751666666666,"longitude":15.309411666666666,"precision":11.899999618530273,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"agent1@onip.local","createdAt":"2026-09-22T22:11:38.831Z","updatedAt":"2026-09-22T22:11:38.831Z","syncedAt":"2026-09-22T22:11:40.400102Z","photoCount":1,"archived":false,"archivedAt":null},{"id":"eb76d9bc-15fe-4d13-a530-dd19013c3ce8","codeMenage":"R3QK9NCUMBAMFA7B24","nombreMembres":1,"chef":{"nom":"MWAMBA","postnom":null,"prenom":null,"dateNaissance":null,"sexe":null,"relation":null},"membres":[],"address":{"ville":"BANDUNDU","commune":"BASOKO","quartier":"EEDE","rue":"FFGG","numero":"","immeuble":"T","etage":""},"location":{"latitude":-4.3257216666666665,"longitude":15.309316666666666,"precision":152.60000610351562,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"agent1@onip.local","createdAt":"2026-09-22T21:14:23.621Z","updatedAt":"2026-09-22T21:14:23.621Z","syncedAt":"2026-09-22T21:14:25.225823Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"7f40f13f-edf9-477b-ac76-b95669eff862","codeMenage":"H7MN692CNOXMJK7UUA","nombreMembres":1,"chef":{"nom":"KABASELE","postnom":null,"prenom":null,"dateNaissance":null,"sexe":null,"relation":null},"membres":[],"address":{"ville":"BUKAVU","commune":"IBANDA","quartier":"FUMU","rue":"RAIL","numero":"234","immeuble":"ROLF","etage":"1"},"location":{"latitude":-4.3255884,"longitude":15.3094137,"precision":20.0,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"agent1@onip.local","createdAt":"2026-09-22T20:46:05.774Z","updatedAt":"2026-09-22T20:46:05.774Z","syncedAt":"2026-09-22T20:46:07.335941Z","photoCount":1,"archived":false,"archivedAt":null},{"id":"e7d8b24b-bc76-4d6d-81dc-a5b5c4c95818","codeMenage":"RDT8DJJHTRB2J5N01B","nombreMembres":3,"chef":{"nom":"MUKENDI","postnom":"POLO","prenom":"KENNEDY","dateNaissance":"12\/01\/1985","sexe":"M","relation":null},"membres":[{"nom":"MUTOMBO","postnom":"IGRID","prenom":"IGRID","dateNaissance":"04\/04\/1999","sexe":"F","relation":"\u00C9poux\/\u00C9pouse"},{"nom":"MAELYSIA","postnom":"KOLO","prenom":"MYRIAM","dateNaissance":"20\/02\/2021","sexe":"F","relation":"Fils\/Fille"}],"address":{"ville":"BENI","commune":"BUNGULU","quartier":"BENI","rue":"BENI","numero":"23","immeuble":"SEMOIS","etage":"2"},"location":{"latitude":-4.3256099,"longitude":15.3093963,"precision":100.0,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"agent1@onip.local","createdAt":"2026-09-22T19:49:38.740Z","updatedAt":"2026-09-22T19:49:38.740Z","syncedAt":"2026-09-22T19:49:40.250094Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"11111111-1111-1111-1111-111111111111","codeMenage":"TESTETAGE01","nombreMembres":1,"chef":{"nom":"TEST","postnom":"X","prenom":"Y","dateNaissance":"01\/01\/2000","sexe":"M","relation":null},"membres":[],"address":{"ville":"KINSHASA","commune":"GOMBE","quartier":"CENTRE","rue":"RUE A","numero":"12","immeuble":"TOUR B","etage":"3EME"},"location":{"latitude":-4.32,"longitude":15.31,"precision":5.0,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"agent1@onip.local","createdAt":"2026-09-22T10:00:00Z","updatedAt":"2026-09-22T10:00:00Z","syncedAt":"2026-09-22T11:05:49.255529Z","photoCount":2,"archived":false,"archivedAt":null},{"id":"bbe6f44c-965b-4b04-9cd3-dda6095ada46","codeMenage":"NQJAKKQ3OLX8LXLGAF","nombreMembres":1,"chef":{"nom":"BWABWA","postnom":"BEYA","prenom":"CHRIST","dateNaissance":"12\/03\/1992","sexe":"M","relation":null},"membres":[],"address":{"ville":"MATADI","commune":"MVUZI","quartier":"JDJDJ","rue":"DJDKD","numero":"12","immeuble":"JEJE","etage":null},"location":{"latitude":-4.316298333333333,"longitude":15.285055,"precision":12.300000190734863,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"admin","createdAt":"2026-09-21T11:06:50.761440Z","updatedAt":"2026-09-21T17:38:25.245816Z","syncedAt":"2026-09-22T01:11:39.900435Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"658e37cb-cb32-4380-a4f5-5e44dbc1abc4","codeMenage":"MC9YTZWDE6CNU8I4Y5","nombreMembres":1,"chef":{"nom":"NANIKIAN","postnom":"LEJITE","prenom":"HSHHSH","dateNaissance":"12\/09\/1980","sexe":"M","relation":""},"membres":[],"address":{"ville":"Kinshasa","commune":"Gombe","quartier":"DAAAAA","rue":"GGG","numero":"12A","immeuble":"TOWZE","etage":null},"location":{"latitude":-4.3167620337283505,"longitude":15.285002383773929,"precision":111.0,"saisieManuelle":false},"meta":{"faitA":"","dateEncodage":"","nombreFiches":"1\/1","agentCarthographe":"","renseignant":""},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-21T10:45:36.727Z","updatedAt":"2026-09-21T10:45:36.727Z","syncedAt":"2026-09-21T10:48:43.160099Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"1ea97b6e-b9be-4af5-9a9c-f03dd7b72057","codeMenage":"W9N940521SC3ARM28I","nombreMembres":1,"chef":{"nom":"BWABWA","postnom":"ERICK","prenom":"ERICK","dateNaissance":"11\/02\/2026","sexe":"M","relation":null},"membres":[],"address":{"ville":"KINSHASA","commune":"GOMBE","quartier":"HAUT-COMMANDEMENT","rue":"HAUT-COMMANDEMENT","numero":"12","immeuble":"SEMOIS","etage":null},"location":{"latitude":-4.315975,"longitude":15.285449999999999,"precision":8.0,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"admin","createdAt":"2026-09-21T08:53:09.047265Z","updatedAt":"2026-09-21T08:53:09.047265Z","syncedAt":"2026-09-21T11:23:52.158849Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"2ae1c04b-e22f-4c50-b99a-544f3e6ee57a","codeMenage":"DTDVC2Y6B7VIS51JYO","nombreMembres":2,"chef":{"nom":"MAZARINE","postnom":"MAYAZA","prenom":"MAYAZA","dateNaissance":"16\/07\/1996","sexe":"F","relation":null},"membres":[{"nom":"FEEDDY","postnom":"JSKS","prenom":"JJD","dateNaissance":"13\/01\/200","sexe":"M","relation":"Fils\/Fille"}],"address":{"ville":"JDKSK","commune":"SKDKD","quartier":"KSKSK","rue":"SKSKS","numero":"AJA","immeuble":"JSKKSFR","etage":null},"location":{"latitude":-4.3257650000000005,"longitude":15.309606666666665,"precision":10.5,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"admin","createdAt":"2026-09-19T14:23:16.250456Z","updatedAt":"2026-09-19T14:23:16.250456Z","syncedAt":"2026-09-19T16:54:26.932616Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"a0823c14-10ba-4b2d-91fe-001b0fa5314b","codeMenage":"A8L0GFSUS6X8QAVUAP","nombreMembres":1,"chef":{"nom":"RTYYJJJ","postnom":"RTTYU","prenom":"RRYU","dateNaissance":"16\/07\/991","sexe":"F","relation":null},"membres":[],"address":{"ville":"RGHY","commune":"FGH","quartier":"RGH","rue":"FTY","numero":"DE","immeuble":"TYU","etage":null},"location":{"latitude":-4.3256049,"longitude":15.3093997,"precision":100.0,"saisieManuelle":false},"meta":null,"status":"complet","agentUsername":"admin","createdAt":"2026-09-18T22:52:53.792866Z","updatedAt":"2026-09-18T22:52:53.792866Z","syncedAt":"2026-09-18T22:52:55.591698Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"231ecb56-1e1f-4da0-9f06-23887b4e832d","codeMenage":"RTRCFM53RW7HUMPDB4","nombreMembres":1,"chef":{"nom":"FFFFFFFFFFFFFFF","postnom":"GGGGGGGGGGG","prenom":"GGGGGG","dateNaissance":"11\/11\/1990","sexe":"F","relation":""},"membres":[],"address":{"ville":"AYAYAYY","commune":"GGGGAGG","quartier":"GGAGGA","rue":"GGG","numero":"177","immeuble":"HHH","etage":null},"location":{"latitude":-4.33912080905285,"longitude":15.251725329776395,"precision":null,"saisieManuelle":true},"meta":{"faitA":"GGGGGGGGG","dateEncodage":"13\/07\/2026","nombreFiches":"1\/1","agentCarthographe":"FFRR","renseignant":"HHH"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-18T20:16:21.935Z","updatedAt":"2026-09-18T20:16:21.935Z","syncedAt":"2026-09-18T20:19:31.086587Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"5ef4a633-8f65-42a9-8cb9-05478d3ad667","codeMenage":"36KSP38GYXYMKFBGNG","nombreMembres":2,"chef":{"nom":"ERIC","postnom":"KATANGA","prenom":"BOLINO","dateNaissance":"30\/01\/1989","sexe":"M","relation":""},"membres":[{"nom":"SGGSG","postnom":"SGGSG","prenom":"SGGSGS","dateNaissance":"12\/03\/1995","sexe":"F","relation":"\u00C9poux\/\u00C9pouse"}],"address":{"ville":"gggs","commune":"SGGSG","quartier":"GSGS","rue":"GSGGS","numero":"12","immeuble":"Q1","etage":null},"location":{"latitude":-4.471534101011998,"longitude":16.173825746876435,"precision":null,"saisieManuelle":true},"meta":{"faitA":"SHHSHS","dateEncodage":"05\/06\/2026","nombreFiches":"1\/1","agentCarthographe":"BSBB","renseignant":"BBXBX"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-18T00:04:18.398Z","updatedAt":"2026-09-18T15:55:02.491Z","syncedAt":"2026-09-18T19:16:30.667286Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"09606506-c1b4-4e47-b8f8-1af6f18404a3","codeMenage":"VF8B2V3MKURDW8EEWA","nombreMembres":2,"chef":{"nom":"NDEFU","postnom":"ATANDEL","prenom":"MAELOKHALIS","dateNaissance":"07\/08\/1994","sexe":"M","relation":""},"membres":[{"nom":"MBUNGU","postnom":"MYRIAM","prenom":"","dateNaissance":"12\/06\/2000","sexe":"F","relation":"\u00C9poux\/\u00C9pouse"}],"address":{"ville":"KINSHASA","commune":"KINSHASA","quartier":"DJALO","rue":"KABINDA","numero":"142","immeuble":"WANGATA","etage":null},"location":{"latitude":-4.472966121410219,"longitude":15.30231722376051,"precision":null,"saisieManuelle":true},"meta":{"faitA":"KINSHASA","dateEncodage":"18\/09\/2026","nombreFiches":"1\/1","agentCarthographe":"SKKSKKS","renseignant":"HHH"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-18T14:14:16.310Z","updatedAt":"2026-09-18T14:14:16.310Z","syncedAt":"2026-09-18T14:14:16.598587Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"ec35229c-84a2-49b5-a678-85313abfde5a","codeMenage":"Y1GPJNHE0MT9LZLBQW","nombreMembres":2,"chef":{"nom":"AAAA","postnom":"EEEEEE","prenom":"AZEEEE","dateNaissance":"12\/03\/2000","sexe":"M","relation":null},"membres":[{"nom":"FFFFFFF","postnom":"RRRR","prenom":"RRRRRR","dateNaissance":"12\/12\/2003","sexe":"F","relation":null}],"address":{"ville":"FFFFF","commune":"TTTT","quartier":"FFFFF","rue":"FFFF","numero":"12","immeuble":"FFF","etage":null},"location":{"latitude":-4.613957651975369,"longitude":15.20449322548818,"precision":null,"saisieManuelle":true},"meta":{"faitA":"YYTGGGGG","dateEncodage":"09\/09\/2020","nombreFiches":"1\/1","agentCarthographe":"YYYYY","renseignant":"YYYYY"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-17T23:52:16.022Z","updatedAt":"2026-09-17T23:52:16.022Z","syncedAt":"2026-09-18T19:16:30.668297Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"82e1f621-381f-43ba-b2be-58395a4bb82e","codeMenage":"333333333333333333","nombreMembres":1,"chef":{"nom":"AAAAAA","postnom":"EZZZ","prenom":"YYYYYY","dateNaissance":"16\/07\/1996","sexe":"F","relation":null},"membres":[],"address":{"ville":"GGGGGGG","commune":"GGGG","quartier":"HHHHH","rue":"TTT","numero":"23","immeuble":"TT","etage":null},"location":{"latitude":-4.38316711135464,"longitude":15.397178699106027,"precision":null,"saisieManuelle":true},"meta":{"faitA":"TTTT","dateEncodage":"05\/06\/2012","nombreFiches":"1\/1","agentCarthographe":"HHHH","renseignant":"YTY"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-17T22:46:18.111Z","updatedAt":"2026-09-17T22:46:18.111Z","syncedAt":"2026-09-18T19:16:30.667286Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"5295e86a-9d22-4b6e-95a4-70475b5d6594","codeMenage":"8A3333333333333344","nombreMembres":1,"chef":{"nom":"ZUUUUUUA","postnom":"JZZZ","prenom":"JZJJZJZ","dateNaissance":"12\/01\/1999","sexe":"M","relation":null},"membres":[],"address":{"ville":"DDDD","commune":"OSOOS","quartier":"SOSOS","rue":"OZOOZO","numero":"2","immeuble":"OO","etage":null},"location":{"latitude":-4.464716516253564,"longitude":15.291213987236747,"precision":null,"saisieManuelle":true},"meta":{"faitA":"SKKK","dateEncodage":"30\/01\/2016","nombreFiches":"1\/1","agentCarthographe":"UUUUU","renseignant":"UUUUU"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-17T21:25:14.250Z","updatedAt":"2026-09-17T21:25:14.250Z","syncedAt":"2026-09-18T19:16:30.664557Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"e5e9f29f-9fd4-45ce-a050-9e6d903b5adb","codeMenage":"444444444444444444","nombreMembres":1,"chef":{"nom":"FORTUNA","postnom":"NDEFU","prenom":"KANDOLO","dateNaissance":"12\/12\/1989","sexe":"M","relation":null},"membres":[],"address":{"ville":"DDDD","commune":"EEE","quartier":"EE","rue":"EEEE","numero":"2","immeuble":"B","etage":null},"location":{"latitude":-4.325663527064107,"longitude":15.30949003867996,"precision":149.0,"saisieManuelle":false},"meta":{"faitA":"DDDDDDDDDDDDFFFFFF","dateEncodage":"12\/09\/2026","nombreFiches":"1\/1","agentCarthographe":"FFRR","renseignant":"TTTTT"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-17T08:12:49.194Z","updatedAt":"2026-09-17T21:04:42.473Z","syncedAt":"2026-09-18T19:16:30.668297Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"4b2f9ed1-f3fb-4736-a7f2-c997e96209b8","codeMenage":"111111111111111111","nombreMembres":2,"chef":{"nom":"OZOOZO","postnom":"KEKEK","prenom":"KZKZKKZ","dateNaissance":"12\/12\/1998","sexe":"M","relation":null},"membres":[{"nom":"KDKKDKKZKKZ","postnom":"KSKKSKKS","prenom":"KSKKSKKSK","dateNaissance":"03\/09\/2002","sexe":"M","relation":null}],"address":{"ville":"KINSHASA ","commune":"KZKZ","quartier":"KZKKZ","rue":"KZZK2","numero":"33","immeuble":"AB","etage":null},"location":{"latitude":-4.325681774022604,"longitude":15.309501943200567,"precision":132.0,"saisieManuelle":false},"meta":{"faitA":"KINSHASA","dateEncodage":"12\/12\/2026","nombreFiches":"1\/1","agentCarthographe":"SKKSKKS","renseignant":"KKDKD"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-17T21:03:39.634Z","updatedAt":"2026-09-17T21:03:39.634Z","syncedAt":"2026-09-18T19:16:30.663561Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"5e96d3c4-a85e-479b-a8d0-3987d156e7d2","codeMenage":"122222222222222227","nombreMembres":2,"chef":{"nom":"MAKUNGU","postnom":"MYAZA","prenom":"MAZARINE","dateNaissance":"15\/04\/1992","sexe":"M","relation":null},"membres":[{"nom":"RRRRRR","postnom":"YYYUUUUU","prenom":"GHHHHHHH","dateNaissance":"12\/03\/2002","sexe":"F","relation":null}],"address":{"ville":"BUJUMBURA","commune":"KHHHH","quartier":"GGGGG","rue":"HHH","numero":"1","immeuble":"HHH","etage":null},"location":{"latitude":-4.325625124173918,"longitude":15.309492807653143,"precision":151.0,"saisieManuelle":false},"meta":{"faitA":"KINSHASA","dateEncodage":"23\/03\/2021","nombreFiches":"1\/1","agentCarthographe":"FFF","renseignant":"HHH"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-17T07:54:24.393Z","updatedAt":"2026-09-17T07:54:24.393Z","syncedAt":"2026-09-18T19:16:30.666066Z","photoCount":0,"archived":false,"archivedAt":null},{"id":"4a0e2363-e7d9-4909-acfe-e6b5a8881d9d","codeMenage":"123456789098762622","nombreMembres":1,"chef":{"nom":"MAKUNGU","postnom":"MAYAZA","prenom":"MAZARINE","dateNaissance":"16\/07\/1996","sexe":"F","relation":null},"membres":[],"address":{"ville":"zkzkk","commune":"kzkzk","quartier":"kkskskkkdk","rue":"jjdjjdjjdj","numero":"12","immeuble":"uzuuzuuzuuzuz","etage":null},"location":{"latitude":-4.325663527064107,"longitude":15.30949003867996,"precision":149.0,"saisieManuelle":false},"meta":{"faitA":"KINSHASA","dateEncodage":"17\/09\/2026","nombreFiches":"1\/1","agentCarthographe":"jjdjjdj","renseignant":"ssiisis"},"status":"complet","agentUsername":"agent1","createdAt":"2026-09-16T23:08:38.299Z","updatedAt":"2026-09-16T23:08:38.299Z","syncedAt":"2026-09-18T19:16:30.661525Z","photoCount":0,"archived":false,"archivedAt":null}];
+    const map = L.map('dashboard-map').setView([-4.4419, 15.2663], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    households.forEach(function (h) {
+      if (h.location && h.location.latitude && h.location.longitude) {
+        L.marker([h.location.latitude, h.location.longitude])
+          .addTo(map)
+          .bindPopup((h.codeMenage || '(sans code)') + '<br>' + (h.chef ? h.chef.prenom + ' ' + h.chef.nom : ''));
+      }
+    });
+
+    // Recherche en direct : filtre dès la première lettre tapée (nom du chef ou code ménage),
+    // sans recharger la page — reprend aussi la commune/plage de dates actuellement sélectionnées
+    // pour que le total affiché reste cohérent avec l'ensemble des filtres actifs.
+    (function () {
+      var csrfToken = document.querySelector('meta[name="_csrf"]').content;
+      var csrfParam = document.querySelector('meta[name="_csrf_parameter"]').content;
+
+      var filtersForm = document.querySelector('.table-filters');
+      var searchInput = document.querySelector('.table-search-input');
+      var villeSelect = document.querySelector('select[name="ville"]');
+      var communeSelect = document.querySelector('select[name="commune"]');
+      var dateInputs = document.querySelectorAll('.filter-date');
+      var tbody = document.querySelector('.households-table tbody');
+      var countEl = document.querySelector('.table-card-count');
+      var paginationNav = document.querySelector('.table-card-footer');
+      if (!filtersForm || !searchInput || !tbody) return;
+
+      // Changer de ville réinitialise la commune sélectionnée : la liste des communes proposées
+      // dépend de la ville (cf. DashboardController), donc une commune choisie pour une autre
+      // ville n'a plus de sens et donnerait 0 résultat si on la gardait telle quelle.
+      if (villeSelect) {
+        villeSelect.addEventListener('change', function () {
+          if (communeSelect) communeSelect.value = '';
+          villeSelect.form.submit();
+        });
+      }
+      if (communeSelect) {
+        communeSelect.addEventListener('change', function () {
+          communeSelect.form.submit();
+        });
+      }
+
+      filtersForm.addEventListener('submit', function (e) {
+        // Les filtres commune/dates sont volontairement soumis en rechargement classique
+        // (formulaire GET) — seule la frappe dans le champ recherche est interceptée ci-dessous.
+      });
+
+      function escapeHtml(value) {
+        var div = document.createElement('div');
+        div.textContent = value == null ? '' : String(value);
+        return div.innerHTML;
+      }
+
+      function formatDate(iso) {
+        var d = new Date(iso);
+        var pad = function (n) { return String(n).padStart(2, '0'); };
+        return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear()
+          + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      }
+
+      function renderRow(h) {
+        var chef = h.chef ? [h.chef.prenom, h.chef.nom].filter(Boolean).join(' ') : '-';
+        var ville = h.address && h.address.ville ? h.address.ville : '-';
+        var addr = h.address && h.address.commune ? h.address.commune : '-';
+        var code = h.codeMenage || '';
+        var statusClass = h.status === 'complet' ? 'status-complet' : 'status-incomplet';
+        var statusLabel = h.status === 'complet' ? 'Complet' : 'Incomplet';
+        return '<tr>'
+          + '<td class="cell-code">' + escapeHtml(code || '-') + '</td>'
+          + '<td>' + escapeHtml(chef) + '</td>'
+          + '<td>' + escapeHtml(ville) + '</td>'
+          + '<td>' + escapeHtml(addr) + '</td>'
+          + '<td><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></td>'
+          + '<td>' + escapeHtml(h.agentUsername || '—') + '</td>'
+          + '<td class="cell-date">' + formatDate(h.updatedAt) + '</td>'
+          + '<td class="col-actions">'
+          +   '<div class="d-flex gap-1">'
+          +   '<a href="/dashboard/households/' + h.id + '" class="btn btn-sm btn-outline-secondary btn-icon" title="Détail" aria-label="Détail">'
+          +     '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6S1.5 10 1.5 10Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="10" cy="10" r="2.3" stroke="currentColor" stroke-width="1.4"/></svg>'
+          +   '</a>'
+          +   '<form method="post" action="/dashboard/households/' + h.id + '/archive" class="js-confirm-form"'
+          +     ' data-confirm-detail="' + escapeHtml(code).replace(/"/g, '&quot;') + ' — il ne sera plus visible dans la liste principale, mais reste consultable dans les archives.">'
+          +     '<input type="hidden" name="' + csrfParam + '" value="' + csrfToken + '">'
+          +     '<button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Archiver" aria-label="Archiver">'
+          +       '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'
+          +     '</button>'
+          +   '</form>'
+          +   '</div>'
+          + '</td>'
+          + '</tr>';
+      }
+
+      var debounceTimer;
+      searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        var term = searchInput.value.trim();
+        var ville = villeSelect ? villeSelect.value : '';
+        var commune = communeSelect ? communeSelect.value : '';
+        var dateFrom = dateInputs[0] ? dateInputs[0].value : '';
+        var dateTo = dateInputs[1] ? dateInputs[1].value : '';
+
+        if (!term && !ville && !commune && !dateFrom && !dateTo) {
+          window.location.href = '/dashboard';
+          return;
+        }
+
+        debounceTimer = setTimeout(function () {
+          var params = new URLSearchParams();
+          if (term) params.set('q', term);
+          if (ville) params.set('ville', ville);
+          if (commune) params.set('commune', commune);
+          if (dateFrom) params.set('dateFrom', dateFrom);
+          if (dateTo) params.set('dateTo', dateTo);
+
+          fetch('/dashboard/households/search?' + params.toString())
+            .then(function (res) { return res.json(); })
+            .then(function (results) {
+              if (paginationNav) paginationNav.style.display = 'none';
+              if (countEl) {
+                countEl.textContent = results.length + ' résultat' + (results.length !== 1 ? 's' : '');
+              }
+              tbody.innerHTML = results.length
+                ? results.map(renderRow).join('')
+                : '<tr><td colspan="8" class="table-empty">Aucun ménage ne correspond à cette recherche.</td></tr>';
+            })
+            .catch(function () {
+              // Recherche live indisponible — la touche Entrée / le rechargement de page reste utilisable.
+            });
+        }, 200);
+      });
+    })();
+    /*]]>*/
+  </script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
