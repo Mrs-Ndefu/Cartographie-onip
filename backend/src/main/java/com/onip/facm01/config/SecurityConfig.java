@@ -88,7 +88,7 @@ public class SecurityConfig {
                 //   gestion des comptes.
                 // - ADMIN : tout, dont retirer/restaurer un ménage et définir les zones.
                 // - SUPERVISEUR : voit, modifie et restaure les ménages ; gère les agents qui
-                //   lui sont affectés et leurs zones.
+                //   lui sont affectés et leurs zones ; seul à voir l'historique de ses agents.
                 // - DIRECTION_GENERALE : uniquement la page de statistiques.
                 // - AGENT : pas d'accès au tableau de bord web (app terrain uniquement).
                 .authorizeHttpRequests(auth -> auth
@@ -103,6 +103,8 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .requestMatchers(HttpMethod.POST, "/dashboard/zones", "/dashboard/zones/**")
                         .hasRole("ADMIN")
+                        .requestMatchers("/dashboard/historique")
+                        .hasRole("SUPERVISEUR")
                         .requestMatchers("/dashboard/agents", "/dashboard/agents/**")
                         .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR")
                         .requestMatchers(HttpMethod.GET, "/dashboard", "/dashboard/**")

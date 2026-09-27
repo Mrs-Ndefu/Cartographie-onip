@@ -68,6 +68,7 @@ data class CaptureUiState(
     val rue: String = "",
     val numero: String = "",
     val immeuble: String = "",
+    val appartement: String = "",
     val etage: String = "",
     val members: List<MemberInput> = emptyList(),
     val membersExpanded: Boolean = false,
@@ -86,7 +87,8 @@ data class CaptureUiState(
 ) {
     val hasLocation get() = latitude != null && longitude != null
     val chefFilled get() = chefNom.isNotBlank()
-    val addressFilled get() = commune.isNotBlank() && quartier.isNotBlank()
+    // Adresse : province, ville et commune obligatoires ; le reste est facultatif.
+    val addressFilled get() = province.isNotBlank() && ville.isNotBlank() && commune.isNotBlank()
     // Le code étant dérivé du GPS + chef + adresse (cf. CodeGenerator), le GPS est désormais une
     // condition de génération, pas seulement de soumission.
     val canGenerateCode get() = hasLocation && chefFilled && addressFilled
@@ -114,8 +116,9 @@ data class CaptureUiState(
         get() = buildList {
             if (!hasLocation) add("le GPS")
             if (chefNom.isBlank()) add("le nom du chef de ménage")
+            if (province.isBlank()) add("la province")
+            if (ville.isBlank()) add("la ville")
             if (commune.isBlank()) add("la commune")
-            if (quartier.isBlank()) add("le quartier")
             val declared = declaredMembers
             when {
                 declared == null -> add("le nombre de membres (chef compris, 1 à $MAX_TOTAL_MEMBERS)")
@@ -170,6 +173,7 @@ class CaptureViewModel : ViewModel() {
     fun onRueChange(v: String) = update { copy(rue = v.toFieldCase()) }
     fun onNumeroChange(v: String) = update { copy(numero = v.toFieldCase()) }
     fun onImmeubleChange(v: String) = update { copy(immeuble = v.toFieldCase()) }
+    fun onAppartementChange(v: String) = update { copy(appartement = v.toFieldCase()) }
     fun onEtageChange(v: String) = update { copy(etage = v.toFieldCase()) }
 
     fun toggleMembersExpanded() = update { copy(membersExpanded = !membersExpanded) }
@@ -255,6 +259,7 @@ class CaptureViewModel : ViewModel() {
             rue = h.rue,
             numero = h.numero,
             immeuble = h.immeuble,
+            appartement = h.appartement,
             etage = h.etage,
             declaredMembersText = (h.nombreMembres ?: (1 + h.membres.size)).toString(),
             members = h.membres.map {
@@ -353,6 +358,7 @@ class CaptureViewModel : ViewModel() {
                 rue = state.rue.trim(),
                 numero = state.numero.trim(),
                 immeuble = state.immeuble.trim(),
+                appartement = state.appartement.trim(),
                 etage = state.etage.trim(),
                 nombreMembres = state.declaredMembers,
                 membres = state.members

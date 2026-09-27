@@ -2,7 +2,6 @@ package com.onip.facm01.dashboard;
 
 import com.onip.facm01.agent.AgentRepository;
 import com.onip.facm01.agent.dto.AgentDto;
-import com.onip.facm01.household.DrcProvinces;
 import com.onip.facm01.zone.Zone;
 import com.onip.facm01.zone.ZoneService;
 import org.springframework.security.core.Authentication;
@@ -41,7 +40,6 @@ public class ZoneAdminController {
                 .collect(Collectors.toMap(Zone::getId, zone -> zoneService.agentCount(zone.getId())));
         model.addAttribute("zones", zones);
         model.addAttribute("agentCounts", agentCounts);
-        model.addAttribute("provinces", DrcProvinces.PROVINCES);
         agentRepository.findByUsername(authentication.getName())
                 .ifPresent(agent -> model.addAttribute("currentAgent", AgentDto.from(agent)));
         return "zones";

@@ -118,42 +118,53 @@ export function AddressFields({ control, setValue }: AddressFieldsProps) {
           <Controller
             control={control}
             name="address.commune"
-            render={({ field }) => (
-              <>
-                <select
+            render={({ field }) =>
+              // Ville sans commune connue (ou ville saisie librement) : saisie directe, sans passer
+              // par "Autre". Sinon, liste des communes de la ville + "Autre (saisie libre)".
+              communeOptions.length === 0 ? (
+                <input
+                  type="text"
                   className="text-input"
-                  value={communeIsOther ? AUTRE_VILLE : field.value}
-                  disabled={ville === '' && !villeIsOther}
-                  onChange={(e) => {
-                    const value = e.target.value
-                    if (value === AUTRE_VILLE) {
-                      setCommuneIsOther(true)
-                      field.onChange('')
-                    } else {
-                      setCommuneIsOther(false)
-                      field.onChange(value)
-                    }
-                  }}
-                >
-                  <option value="">—</option>
-                  {communeOptions.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                  <option value={AUTRE_VILLE}>Autre (saisie libre)</option>
-                </select>
-                {communeIsOther && (
-                  <input
-                    type="text"
+                  placeholder="Commune / secteur / chefferie"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                />
+              ) : (
+                <>
+                  <select
                     className="text-input"
-                    placeholder="Commune"
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                  />
-                )}
-              </>
-            )}
+                    value={communeIsOther ? AUTRE_VILLE : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === AUTRE_VILLE) {
+                        setCommuneIsOther(true)
+                        field.onChange('')
+                      } else {
+                        setCommuneIsOther(false)
+                        field.onChange(value)
+                      }
+                    }}
+                  >
+                    <option value="">—</option>
+                    {communeOptions.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                    <option value={AUTRE_VILLE}>Autre (saisie libre)</option>
+                  </select>
+                  {communeIsOther && (
+                    <input
+                      type="text"
+                      className="text-input"
+                      placeholder="Commune"
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                    />
+                  )}
+                </>
+              )
+            }
           />
         </div>
 

@@ -1116,3 +1116,201 @@ h1, h2, h3 {
   font-size: 0.85rem;
   color: var(--muted, #6b7280);
 }
+
+/* Communes choisies pour une zone : étiquettes retirables. */
+.geo-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #e8f1fb;
+  color: #0b4f86;
+  border-radius: 999px;
+  padding: 0.15rem 0.35rem 0.15rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.geo-tag-remove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.25rem;
+  cursor: pointer;
+}
+
+/* Historique du superviseur : enregistrement fait hors de la zone de l'agent. */
+.households-table tr.row-out-of-zone td {
+  background: #fff4e5;
+}
+
+/* Badge neutre (ex. "Agent sans zone") et compte désactivé. */
+.status-neutral {
+  background: #8a94a0;
+}
+
+.status-desactive {
+  background: var(--danger);
+}
+
+/* ---------- Gestion des agents ---------- */
+
+.agents-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+.agents-create-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.9rem 1rem;
+  align-items: end;
+  padding: 1rem 1.4rem 1.2rem;
+}
+
+.agents-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.agents-field > span:first-child {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.agents-create-btn {
+  height: 31px;
+}
+
+.agents-table td {
+  vertical-align: middle;
+}
+
+.agent-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.agent-initial {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--brand-light);
+  color: var(--brand);
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agent-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.agent-email {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.agent-muted {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+}
+
+.agents-inline-form {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.agents-inline-form .form-select {
+  min-width: 190px;
+  font-size: 0.75rem;
+}
+
+.agents-table tr.agent-inactive td {
+  opacity: 0.6;
+}
+
+/* Actions secondaires (rôle, mot de passe, activation) repliées derrière "Gérer". */
+.agent-manage summary {
+  list-style: none;
+}
+
+.agent-manage summary::-webkit-details-marker {
+  display: none;
+}
+
+.agent-manage[open] summary {
+  background: var(--brand-light);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.agent-manage-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  white-space: normal;
+}
+
+/* ---------- Zones ---------- */
+
+.zones-create-form {
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(260px, 1.6fr) auto;
+  align-items: start;
+}
+
+.zones-create-form .agents-create-btn {
+  margin-top: 1.35rem;
+}
+
+.zones-chosen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+
+.zones-communes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  white-space: normal;
+}
+
+.geo-tag-static {
+  padding-right: 0.65rem;
+  font-size: 0.7rem;
+}
+
+@media (max-width: 900px) {
+  .zones-create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .zones-create-form .agents-create-btn {
+    margin-top: 0;
+  }
+}

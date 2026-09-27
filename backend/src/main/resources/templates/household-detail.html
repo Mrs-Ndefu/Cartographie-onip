@@ -91,13 +91,14 @@
           </div>
           <div class="detail-card-body">
             <div class="detail-grid" th:if="${household.address != null}">
-              <div><span class="detail-field-label">Province</span><span class="detail-field-value" th:text="${household.address.province ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Ville</span><span class="detail-field-value" th:text="${household.address.ville ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Commune</span><span class="detail-field-value" th:text="${household.address.commune ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Quartier</span><span class="detail-field-value" th:text="${household.address.quartier ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Rue</span><span class="detail-field-value" th:text="${household.address.rue ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">Province/Région</span><span class="detail-field-value" th:text="${household.address.province ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">Ville/Territoire</span><span class="detail-field-value" th:text="${household.address.ville ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">Commune/Secteur/Chefferie</span><span class="detail-field-value" th:text="${household.address.commune ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">Quartier/Groupement</span><span class="detail-field-value" th:text="${household.address.quartier ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">Rue/Avenue/Village</span><span class="detail-field-value" th:text="${household.address.rue ?: '-'}">-</span></div>
               <div><span class="detail-field-label">Numéro</span><span class="detail-field-value" th:text="${household.address.numero ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Immeuble ou appartement</span><span class="detail-field-value" th:text="${household.address.immeuble ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">Immeuble</span><span class="detail-field-value" th:text="${household.address.immeuble ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">Appartement</span><span class="detail-field-value" th:text="${household.address.appartement ?: '-'}">-</span></div>
               <div><span class="detail-field-label">Étage</span><span class="detail-field-value" th:text="${household.address.etage ?: '-'}">-</span></div>
             </div>
           </div>

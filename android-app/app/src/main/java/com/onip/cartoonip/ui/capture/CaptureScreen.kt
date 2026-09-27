@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,12 +40,12 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -63,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -167,7 +169,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         OutlinedTextField(
                             value = uiState.declaredMembersText,
                             onValueChange = viewModel::onDeclaredMembersChange,
-                            label = { Text("Nombre de membres du ménage (chef compris)*") },
+                            label = { Text("Nombre de membres*") },
                             supportingText = { Text("1 = le chef vit seul ; 5 = le chef + jusqu'à 4 membres à ajouter.") },
                             isError = uiState.declaredMembersText.isNotBlank() && uiState.declaredMembers == null,
                             singleLine = true,
@@ -221,13 +223,13 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                     )
                     OutlinedTextField(
                         value = uiState.quartier, onValueChange = viewModel::onQuartierChange,
-                        label = { Text("Quartier*") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
+                        label = { Text("Quartier/Groupement") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = uiState.rue, onValueChange = viewModel::onRueChange,
-                            label = { Text("Rue") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
+                            label = { Text("Rue/Avenue/Village") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
                             modifier = Modifier.weight(2f),
                         )
                         OutlinedTextField(
@@ -239,15 +241,20 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
                         OutlinedTextField(
                             value = uiState.immeuble, onValueChange = viewModel::onImmeubleChange,
-                            label = { Text("Immeuble ou appartement") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
-                            modifier = Modifier.weight(2f),
+                            label = { Text("Immeuble") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
+                            modifier = Modifier.weight(1f),
                         )
                         OutlinedTextField(
-                            value = uiState.etage, onValueChange = viewModel::onEtageChange,
-                            label = { Text("Étage") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
+                            value = uiState.appartement, onValueChange = viewModel::onAppartementChange,
+                            label = { Text("Appartement") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
                             modifier = Modifier.weight(1f),
                         )
                     }
+                    OutlinedTextField(
+                        value = uiState.etage, onValueChange = viewModel::onEtageChange,
+                        label = { Text("Étage") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    )
                 }
             }
 
@@ -285,7 +292,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         )
                     } else {
                         Text(
-                            "Le code est généré automatiquement à partir du GPS, du chef de ménage et de l'adresse (commune et quartier) dès qu'ils sont renseignés.",
+                            "Le code est généré automatiquement dès que le GPS, le chef de ménage et l'adresse (province, ville, commune) sont renseignés.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -376,9 +383,20 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
 
 @Composable
 private fun SexeSelector(value: String?, onChange: (String) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 4.dp)) {
-        FilterChip(selected = value == "M", onClick = { onChange("M") }, label = { Text("Masculin") })
-        FilterChip(selected = value == "F", onClick = { onChange("F") }, label = { Text("Féminin") })
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 4.dp)) {
+        Text("Sexe :", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 4.dp))
+        listOf("M" to "Masculin", "F" to "Féminin").forEach { (code, label) ->
+            // Toute la ligne (bouton + libellé) est cliquable, pas seulement le rond.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .selectable(selected = value == code, onClick = { onChange(code) }, role = Role.RadioButton)
+                    .padding(end = 12.dp),
+            ) {
+                RadioButton(selected = value == code, onClick = null)
+                Text(label, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
     }
 }
 
@@ -405,7 +423,7 @@ private fun VilleCommuneFields(
             value = DRC_PROVINCES.firstOrNull { it.equals(province, ignoreCase = true) } ?: province,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Province") },
+            label = { Text("Province/Région*") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = provinceExpanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
         )
@@ -435,7 +453,7 @@ private fun VilleCommuneFields(
             value = if (villeOther) "Autre (saisie libre)" else ville,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Ville") },
+            label = { Text("Ville/Territoire*") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = villeExpanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
         )
@@ -459,9 +477,20 @@ private fun VilleCommuneFields(
     if (villeOther) {
         OutlinedTextField(
             value = ville, onValueChange = { onVilleChange(it.uppercase()) },
-            label = { Text("Ville / territoire") }, singleLine = true,
+            label = { Text("Ville/Territoire*") }, singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         )
+    }
+
+    // Ville sans commune connue (ou ville saisie librement) : saisie directe de la commune, sans
+    // passer par "Autre". Sinon, liste des communes de la ville + "Autre (saisie libre)".
+    if (communeOptions.isEmpty()) {
+        OutlinedTextField(
+            value = commune, onValueChange = { onCommuneChange(it.uppercase()) },
+            label = { Text("Commune/Secteur/Chefferie*") }, singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        )
+        return
     }
 
     ExposedDropdownMenuBox(
@@ -472,7 +501,7 @@ private fun VilleCommuneFields(
             value = if (communeOther) "Autre (saisie libre)" else commune,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Commune*") },
+            label = { Text("Commune/Secteur/Chefferie*") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = communeExpanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
         )
@@ -494,7 +523,7 @@ private fun VilleCommuneFields(
     if (communeOther) {
         OutlinedTextField(
             value = commune, onValueChange = { onCommuneChange(it.uppercase()) },
-            label = { Text("Commune") }, singleLine = true,
+            label = { Text("Commune/Secteur/Chefferie*") }, singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         )
     }

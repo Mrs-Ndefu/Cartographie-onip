@@ -28,77 +28,97 @@
     </nav>
   </header>
 
-  <div class="container-fluid px-4">
-    <div class="mt-3 agents-messages">
-      <div th:if="${success}" class="alert alert-success py-2" th:text="${success}">-</div>
-      <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}">-</div>
-    </div>
+  <section class="agents-messages">
+    <div th:if="${success}" class="alert alert-success py-2" th:text="${success}">-</div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}">-</div>
+  </section>
 
-    <div class="card my-3" th:if="${currentAgent != null and currentAgent.role.canManageZones()}">
-      <div class="card-body">
-        <h2 class="h6 text-uppercase text-secondary mb-3">Définir une zone</h2>
-        <form th:action="@{/dashboard/zones}" method="post" class="row g-3 align-items-end">
-          <div class="col-sm-6 col-md-3">
-            <label class="form-label small fw-semibold">Province *</label>
-            <select name="province" class="form-select" required>
-              <option value="">—</option>
-              <option th:each="pr : ${provinces}" th:value="${pr}" th:text="${pr}">Province</option>
-            </select>
-          </div>
-          <div class="col-sm-6 col-md-3">
-            <label class="form-label small fw-semibold">Ville *</label>
-            <input type="text" name="ville" class="form-control" required>
-          </div>
-          <div class="col-sm-12 col-md-4">
-            <label class="form-label small fw-semibold">Communes * (une ou plusieurs)</label>
-            <div id="zone-communes" class="d-flex flex-column gap-1">
-              <input type="text" name="communes" class="form-control" required>
-            </div>
-            <button type="button" id="add-commune" class="btn btn-sm btn-outline-primary mt-1">+ Ajouter une commune</button>
-          </div>
-          <div class="col-sm-6 col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Créer</button>
-          </div>
-        </form>
+  <section class="table-section agents-page">
+    <div class="table-card" th:if="${currentAgent != null and currentAgent.role.canManageZones()}">
+      <div class="table-card-header">
+        <div>
+          <h2>Définir une zone</h2>
+          <span class="table-card-count">Une province, une ville, et une ou plusieurs communes de cette ville.</span>
+        </div>
       </div>
+      <!-- Province, ville et communes : listes enchaînées (cf. app.js, .js-geo). -->
+      <form th:action="@{/dashboard/zones}" method="post" class="agents-create-form zones-create-form js-geo">
+        <label class="agents-field">
+          <span>Province/Région *</span>
+          <input type="hidden" name="province" class="js-geo-province-value" value="">
+          <select class="form-select form-select-sm js-geo-province" required></select>
+        </label>
+        <label class="agents-field">
+          <span>Ville/Territoire *</span>
+          <input type="hidden" name="ville" class="js-geo-ville-value" value="">
+          <select class="form-select form-select-sm js-geo-ville" required></select>
+          <input type="text" class="form-control form-control-sm js-geo-ville-other" placeholder="Ville ou territoire" hidden>
+        </label>
+        <div class="agents-field zones-communes-field js-geo-multi">
+          <span>Communes/Secteurs/Chefferies *</span>
+          <div class="agents-inline-form">
+            <select class="form-select form-select-sm js-geo-commune-pick" aria-label="Commune à ajouter"></select>
+            <button type="button" class="btn btn-sm btn-outline-primary js-geo-commune-add">Ajouter</button>
+          </div>
+          <input type="text" class="form-control form-control-sm js-geo-commune-pick-other" placeholder="Commune, secteur ou chefferie" hidden>
+          <div class="zones-chosen js-geo-communes-chosen"></div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm agents-create-btn">Créer la zone</button>
+      </form>
     </div>
 
-    <div class="card mb-4">
-      <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle mb-0">
-          <thead class="table-light">
+    <div class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2>Zones d'affectation</h2>
+          <span class="table-card-count" th:text="${zones.size()} + ' zone(s)'">0 zone(s)</span>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="households-table zones-table">
+          <thead>
             <tr>
-              <th>Province</th>
-              <th>Ville</th>
-              <th>Communes</th>
-              <th>Agents affectés</th>
-              <th th:if="${currentAgent != null and currentAgent.role.canManageZones()}">Actions</th>
+              <th>Province/Région</th>
+              <th>Ville/Territoire</th>
+              <th>Communes/Secteurs/Chefferies</th>
+              <th>Comptes affectés</th>
+              <th class="col-actions" th:if="${currentAgent != null and currentAgent.role.canManageZones()}">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr th:each="z : ${zones}">
-              <td th:text="${z.province}">-</td>
+              <td class="cell-code" th:text="${z.province}">-</td>
               <td th:text="${z.ville}">-</td>
-              <td th:text="${#strings.listJoin(z.communes, ', ')}">-</td>
-              <td th:text="${agentCounts[z.id]}">0</td>
-              <td th:if="${currentAgent != null and currentAgent.role.canManageZones()}">
+              <td>
+                <span class="zones-communes">
+                  <span class="geo-tag geo-tag-static" th:each="c : ${z.communes}" th:text="${c}">COMMUNE</span>
+                </span>
+              </td>
+              <td>
+                <span class="agent-role-badge" th:text="${agentCounts[z.id]}">0</span>
+              </td>
+              <td class="col-actions" th:if="${currentAgent != null and currentAgent.role.canManageZones()}">
                 <form th:action="@{/dashboard/zones/{id}/delete(id=${z.id})}" method="post"
                       class="js-confirm-form"
                       data-confirm-title="Voulez-vous supprimer cette zone ?"
                       data-confirm-label="Supprimer"
-                      th:data-confirm-detail="${z.label} + ' — les agents affectés à cette zone n\'auront plus de zone.'">
-                  <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                      th:data-confirm-detail="${z.label} + ' — les comptes affectés à cette zone n\'auront plus de zone.'">
+                  <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Supprimer la zone" aria-label="Supprimer la zone">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M4 6h12M8 6V4.5h4V6M6 6l.7 10h6.6L14 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
                 </form>
               </td>
             </tr>
             <tr th:if="${zones.isEmpty()}">
-              <td colspan="5" class="text-center text-secondary py-3">Aucune zone définie pour l'instant.</td>
+              <td colspan="5" class="table-empty">Aucune zone définie pour l'instant.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-  </div>
+  </section>
 
   <div id="confirm-modal" class="confirm-overlay" hidden>
     <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
@@ -111,21 +131,6 @@
     </div>
   </div>
 
-  <script>
-    // Une zone couvre une ou plusieurs communes de la même ville : un champ par commune.
-    (function () {
-      var addBtn = document.getElementById('add-commune');
-      if (!addBtn) return;
-      addBtn.addEventListener('click', function () {
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.name = 'communes';
-        input.className = 'form-control';
-        document.getElementById('zone-communes').appendChild(input);
-        input.focus();
-      });
-    })();
-  </script>
   <script th:src="@{/js/app.js}"></script>
 </body>
 </html>

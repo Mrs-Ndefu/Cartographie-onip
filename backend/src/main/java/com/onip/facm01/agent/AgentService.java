@@ -89,8 +89,10 @@ public class AgentService {
         Agent agent = getAgent(id);
         AgentRole previous = agent.getRole();
         agent.setRole(role);
-        if (role != AgentRole.AGENT) {
+        if (!role.canHaveZone()) {
             agent.setZone(null);
+        }
+        if (role != AgentRole.AGENT) {
             agent.setSuperviseur(null);
         }
         // Un superviseur qui change de rôle n'encadre plus personne.
@@ -103,11 +105,12 @@ public class AgentService {
         return agentRepository.save(agent);
     }
 
-    // Seul un compte AGENT est affecté à une zone de terrain ; zone == null retire l'affectation.
+    // Seuls les comptes AGENT et SUPERVISEUR sont affectés à une zone ; zone == null retire
+    // l'affectation.
     public Agent assignZone(UUID id, Zone zone) {
         Agent agent = getAgent(id);
-        if (zone != null && agent.getRole() != AgentRole.AGENT) {
-            throw new IllegalArgumentException("Seul un compte AGENT peut être affecté à une zone");
+        if (zone != null && !agent.getRole().canHaveZone()) {
+            throw new IllegalArgumentException("Seuls les agents et les superviseurs peuvent être affectés à une zone");
         }
         agent.setZone(zone);
         return agentRepository.save(agent);

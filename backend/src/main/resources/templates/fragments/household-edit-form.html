@@ -25,7 +25,7 @@
       <div class="detail-card">
         <div class="detail-card-header"><h2>Nombre de membres du ménage</h2></div>
         <div class="detail-card-body">
-          <label class="form-label small fw-semibold" for="nombreMembres">Nombre de membres du ménage (chef compris) *</label>
+          <label class="form-label small fw-semibold" for="nombreMembres">Nombre de membres *</label>
           <input type="number" class="form-control js-nombre-membres" th:field="*{nombreMembres}"
                  min="1" th:max="${maxMembres + 1}" required>
           <p class="text-secondary small mt-1 mb-0">
@@ -68,37 +68,44 @@
       <div class="detail-card">
         <div class="detail-card-header"><h2>Adresse</h2></div>
         <div class="detail-card-body">
-          <div class="row g-3">
+          <!-- Province, ville et commune : listes enchaînées (cf. app.js, .js-geo). -->
+          <div class="row g-3 js-geo">
             <div class="col-sm-6">
-              <label class="form-label small fw-semibold" for="province">Province</label>
-              <select class="form-select" th:field="*{province}">
-                <option value="">— Déduite de la ville —</option>
-                <option th:each="pr : ${provinces}" th:value="${pr}" th:text="${pr}">Province</option>
-              </select>
+              <label class="form-label small fw-semibold" for="geo-province">Province/Région *</label>
+              <input type="hidden" name="province" class="js-geo-province-value" th:value="*{province}">
+              <select id="geo-province" class="form-select js-geo-province" required></select>
             </div>
             <div class="col-sm-6">
-              <label class="form-label small fw-semibold" for="ville">Ville</label>
-              <input type="text" class="form-control" th:field="*{ville}">
+              <label class="form-label small fw-semibold" for="geo-ville">Ville/Territoire *</label>
+              <input type="hidden" name="ville" class="js-geo-ville-value" th:value="*{ville}">
+              <select id="geo-ville" class="form-select js-geo-ville" required></select>
+              <input type="text" class="form-control mt-1 js-geo-ville-other" placeholder="Ville ou territoire" hidden>
             </div>
             <div class="col-sm-6">
-              <label class="form-label small fw-semibold" for="commune">Commune *</label>
-              <input type="text" class="form-control" th:field="*{commune}" required>
+              <label class="form-label small fw-semibold" for="geo-commune">Commune/Secteur/Chefferie *</label>
+              <input type="hidden" name="commune" class="js-geo-commune-value" th:value="*{commune}">
+              <select id="geo-commune" class="form-select js-geo-commune" required></select>
+              <input type="text" class="form-control mt-1 js-geo-commune-other" placeholder="Commune, secteur ou chefferie" hidden>
             </div>
             <div class="col-sm-6">
-              <label class="form-label small fw-semibold" for="quartier">Quartier *</label>
-              <input type="text" class="form-control" th:field="*{quartier}" required>
+              <label class="form-label small fw-semibold" for="quartier">Quartier/Groupement</label>
+              <input type="text" class="form-control" th:field="*{quartier}">
             </div>
             <div class="col-sm-8">
-              <label class="form-label small fw-semibold" for="rue">Rue</label>
+              <label class="form-label small fw-semibold" for="rue">Rue/Avenue/Village</label>
               <input type="text" class="form-control" th:field="*{rue}">
             </div>
             <div class="col-sm-4">
               <label class="form-label small fw-semibold" for="numero">N°</label>
               <input type="text" class="form-control" th:field="*{numero}">
             </div>
-            <div class="col-sm-8">
-              <label class="form-label small fw-semibold" for="immeuble">Immeuble ou appartement</label>
+            <div class="col-sm-4">
+              <label class="form-label small fw-semibold" for="immeuble">Immeuble</label>
               <input type="text" class="form-control" th:field="*{immeuble}">
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label small fw-semibold" for="appartement">Appartement</label>
+              <input type="text" class="form-control" th:field="*{appartement}">
             </div>
             <div class="col-sm-4">
               <label class="form-label small fw-semibold" for="etage">Étage</label>

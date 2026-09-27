@@ -25,6 +25,7 @@ data class CapturedHousehold(
     val rue: String,
     val numero: String,
     val immeuble: String,
+    val appartement: String = "",
     val etage: String = "",
     val membres: List<CapturedMember> = emptyList(),
     // Nombre de membres déclaré, chef compris. Null pour les ménages enregistrés avant ce champ

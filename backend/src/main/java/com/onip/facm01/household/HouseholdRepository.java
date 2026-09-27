@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +23,9 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
     long countByArchivedTrue();
 
     Page<Household> findByAgent_Id(UUID agentId, Pageable pageable);
+
+    // Historique du superviseur : ménages (non retirés) enregistrés par ses agents.
+    List<Household> findByAgent_IdInAndArchivedFalseOrderByCreatedAtDesc(Collection<UUID> agentIds);
 
     @Query("SELECT h.createdAt FROM Household h WHERE h.archived = false")
     List<Instant> findAllCreatedAt();

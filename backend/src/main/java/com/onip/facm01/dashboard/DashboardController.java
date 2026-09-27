@@ -3,7 +3,7 @@ package com.onip.facm01.dashboard;
 import com.onip.facm01.agent.Agent;
 import com.onip.facm01.agent.AgentRepository;
 import com.onip.facm01.agent.dto.AgentDto;
-import com.onip.facm01.household.DrcProvinces;
+import com.onip.facm01.household.DrcLocations;
 import com.onip.facm01.household.HouseholdFilter;
 import com.onip.facm01.household.HouseholdPhoto;
 import com.onip.facm01.household.HouseholdRepository;
@@ -223,6 +223,14 @@ public class DashboardController {
         return path != null && path.startsWith("/dashboard") && !path.startsWith("//");
     }
 
+    // Provinces, villes et communes de référence pour les listes déroulantes enchaînées des
+    // formulaires (modification d'un ménage, zones) — cf. app.js, .js-geo.
+    @GetMapping("/dashboard/geo")
+    @ResponseBody
+    public DrcLocations.Geo geo() {
+        return DrcLocations.GEO;
+    }
+
     @GetMapping("/dashboard/households/{id}/photo/{position}")
     @ResponseBody
     public ResponseEntity<byte[]> householdPhoto(@PathVariable UUID id, @PathVariable int position) {
@@ -314,7 +322,6 @@ public class DashboardController {
 
     private void addEditOptions(Model model, HouseholdDto household) {
         model.addAttribute("household", household);
-        model.addAttribute("provinces", DrcProvinces.PROVINCES);
         model.addAttribute("statuses", HouseholdStatus.values());
         model.addAttribute("sexes", Sexe.values());
     }

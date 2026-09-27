@@ -24,6 +24,7 @@ public class HouseholdEditForm {
     private String rue;
     private String numero;
     private String immeuble;
+    private String appartement;
     private String etage;
 
     private HouseholdStatus status;
@@ -54,6 +55,7 @@ public class HouseholdEditForm {
             form.rue = household.address().rue();
             form.numero = household.address().numero();
             form.immeuble = household.address().immeuble();
+            form.appartement = household.address().appartement();
             form.etage = household.address().etage();
         }
         form.status = household.status();
@@ -132,6 +134,8 @@ public class HouseholdEditForm {
     public void setNumero(String numero) { this.numero = numero; }
     public String getImmeuble() { return immeuble; }
     public void setImmeuble(String immeuble) { this.immeuble = immeuble; }
+    public String getAppartement() { return appartement; }
+    public void setAppartement(String appartement) { this.appartement = appartement; }
     public String getEtage() { return etage; }
     public void setEtage(String etage) { this.etage = etage; }
     public HouseholdStatus getStatus() { return status; }

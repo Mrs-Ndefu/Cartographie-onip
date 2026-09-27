@@ -20,7 +20,9 @@
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
     <h1>ADRESSAGE DE MÉNAGES</h1>
     <nav class="topbar-nav">
-      <a th:href="@{/dashboard/archives}" class="link-btn">Retirés</a>
+      <a th:href="@{/dashboard/archives}" class="link-btn">Archives</a>
+      <a th:if="${currentAgent != null and currentAgent.role.canViewSupervisorHistory()}"
+         th:href="@{/dashboard/historique}" class="link-btn">Historique</a>
       <a th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
       <a th:if="${currentAgent != null and currentAgent.role.canAccessAgents()}"
          th:href="@{/dashboard/agents}" class="link-btn">Gérer les agents</a>

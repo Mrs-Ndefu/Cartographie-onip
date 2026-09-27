@@ -38,6 +38,7 @@ data class AddressDto(
     val rue: String?,
     val numero: String?,
     val immeuble: String?,
+    val appartement: String?,
     val etage: String?,
 )
 

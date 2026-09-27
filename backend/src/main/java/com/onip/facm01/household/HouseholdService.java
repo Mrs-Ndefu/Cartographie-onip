@@ -85,7 +85,8 @@ public class HouseholdService {
         household.setAddress(new AddressEmbeddable(
                 DrcProvinces.resolve(addressDto.province(), addressDto.ville()),
                 addressDto.ville(), addressDto.commune(), addressDto.quartier(),
-                addressDto.rue(), addressDto.numero(), addressDto.immeuble(), addressDto.etage()));
+                addressDto.rue(), addressDto.numero(), addressDto.immeuble(), addressDto.appartement(),
+                addressDto.etage()));
 
         GeoLocationDto locationDto = item.location();
         household.setLocation(locationDto == null ? null : new GeoLocationEmbeddable(
@@ -216,8 +217,11 @@ public class HouseholdService {
         if (isBlank(form.getChefNom())) {
             throw new IllegalArgumentException("Le nom du chef de ménage est obligatoire");
         }
-        if (isBlank(form.getCommune()) || isBlank(form.getQuartier())) {
-            throw new IllegalArgumentException("La commune et le quartier sont obligatoires");
+        // Adresse : province, ville et commune obligatoires (la province peut être déduite de la
+        // ville) ; le reste est facultatif.
+        if (DrcProvinces.resolve(form.getProvince(), form.getVille()) == null
+                || isBlank(form.getVille()) || isBlank(form.getCommune())) {
+            throw new IllegalArgumentException("La province, la ville et la commune sont obligatoires");
         }
         long keptMembers = form.getMembres().stream().filter(m -> !m.isRemoved() && !m.isBlank()).count();
         if (form.getNombreMembres() == null || form.getNombreMembres() < 1) {
@@ -233,7 +237,8 @@ public class HouseholdService {
         household.setAddress(new AddressEmbeddable(
                 DrcProvinces.resolve(form.getProvince(), form.getVille()),
                 upper(form.getVille()), upper(form.getCommune()), upper(form.getQuartier()),
-                upper(form.getRue()), upper(form.getNumero()), upper(form.getImmeuble()), upper(form.getEtage())));
+                upper(form.getRue()), upper(form.getNumero()), upper(form.getImmeuble()),
+                upper(form.getAppartement()), upper(form.getEtage())));
         if (form.getStatus() != null) {
             household.setStatus(form.getStatus());
         }

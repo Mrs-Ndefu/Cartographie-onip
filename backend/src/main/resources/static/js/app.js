@@ -210,6 +210,8 @@ document.addEventListener('click', function (e) {
       .then(function (html) {
         if (html === null) return;
         body.innerHTML = html;
+        // Listes province/ville/commune du formulaire chargé (cf. initGeo plus bas).
+        if (window.initGeo) window.initGeo(body);
         modal.hidden = false;
         body.scrollTop = 0;
       })
@@ -224,4 +226,239 @@ document.addEventListener('click', function (e) {
     var confirmOpen = document.getElementById('confirm-modal');
     if (e.key === 'Escape' && !modal.hidden && (!confirmOpen || confirmOpen.hidden)) close();
   });
+})();
+
+// Listes déroulantes enchaînées province -> ville -> commune (formulaire de modification d'un
+// ménage, création des zones). Dans un conteneur .js-geo :
+// - .js-geo-province / .js-geo-ville / .js-geo-commune : les listes affichées ;
+// - .js-geo-*-value : champs cachés réellement envoyés (name="province", "ville", "commune"),
+//   déjà remplis par le serveur avec la valeur actuelle ;
+// - .js-geo-ville-other / .js-geo-commune-other : saisie libre, via l'option "Autre" (la liste de
+//   référence n'est pas exhaustive) ou affichée d'office quand la liste est vide (ville sans
+//   commune connue, ville saisie librement) ;
+// - .js-geo-multi : à la place de .js-geo-commune, choix de plusieurs communes (zones) — liste
+//   .js-geo-commune-pick + bouton .js-geo-commune-add ; chaque commune ajoutée devient une
+//   étiquette dans .js-geo-communes-chosen (champ caché name="communes").
+// Les données viennent de /dashboard/geo (mêmes listes que les apps de saisie), chargées une fois.
+(function () {
+  var AUTRE = '__autre__';
+  var OTHER_LABEL = 'Autre (saisie libre)';
+  var geoPromise = null;
+
+  function loadGeo() {
+    if (!geoPromise) {
+      geoPromise = fetch('/dashboard/geo').then(function (res) { return res.json(); });
+    }
+    return geoPromise;
+  }
+
+  // Comparaison sans casse ni accents : "Kinshasa", "KINSHASA" et "KINSHASA " sont la même ville.
+  function key(value) {
+    return (value || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toUpperCase();
+  }
+
+  function option(value, label, selected) {
+    var opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    opt.selected = !!selected;
+    return opt;
+  }
+
+  // Affiche la liste ou la saisie libre. Une liste masquée ne doit pas rester "required" (le
+  // navigateur bloquerait l'envoi sur un champ invisible).
+  function showOther(select, other, useOther, listEmpty) {
+    if (select.dataset.required === undefined) select.dataset.required = select.required ? 'true' : 'false';
+    select.hidden = listEmpty;
+    select.required = !listEmpty && select.dataset.required === 'true';
+    other.hidden = !useOther;
+    other.required = useOther && select.dataset.required === 'true';
+  }
+
+  // Remplit une liste. Liste vide : saisie libre affichée directement. Valeur actuelle absente de
+  // la liste : option "Autre" choisie, avec la saisie libre pré-remplie.
+  function fill(select, items, current, other) {
+    select.innerHTML = '';
+    select.appendChild(option('', '—', !current));
+    var found = false;
+    items.forEach(function (label) {
+      var match = !!current && key(label) === key(current);
+      found = found || match;
+      select.appendChild(option(label.toUpperCase(), label, match));
+    });
+    if (!other) return;
+    var listEmpty = items.length === 0;
+    var isOther = listEmpty || (!!current && !found);
+    select.appendChild(option(AUTRE, OTHER_LABEL, isOther && !listEmpty));
+    showOther(select, other, isOther, listEmpty);
+    other.value = isOther ? (current || '') : '';
+  }
+
+  function setup(box, geo) {
+    var provinceSel = box.querySelector('.js-geo-province');
+    var villeSel = box.querySelector('.js-geo-ville');
+    var communeSel = box.querySelector('.js-geo-commune');
+    var provinceVal = box.querySelector('.js-geo-province-value');
+    var villeVal = box.querySelector('.js-geo-ville-value');
+    var communeVal = box.querySelector('.js-geo-commune-value');
+    var villeOther = box.querySelector('.js-geo-ville-other');
+    var communeOther = box.querySelector('.js-geo-commune-other');
+    var multi = box.querySelector('.js-geo-multi');
+    var pickSel = multi && multi.querySelector('.js-geo-commune-pick');
+    var pickOther = multi && multi.querySelector('.js-geo-commune-pick-other');
+    var chosen = multi && multi.querySelector('.js-geo-communes-chosen');
+
+    function villeEntry(name) {
+      return geo.villes.find(function (v) { return key(v.name) === key(name); }) || null;
+    }
+
+    function villesFor(province) {
+      return geo.villes
+        .filter(function (v) { return !province || key(v.province) === key(province); })
+        .map(function (v) { return v.name; });
+    }
+
+    function communesFor(ville) {
+      var entry = villeEntry(ville);
+      return entry ? entry.communes : [];
+    }
+
+    function renderCommunes() {
+      var communes = communesFor(villeVal.value);
+      if (communeSel) {
+        fill(communeSel, communes, communeVal.value, communeOther);
+      }
+      if (multi) {
+        fill(pickSel, communes, '', pickOther);
+      }
+    }
+
+    function renderVilles() {
+      fill(villeSel, villesFor(provinceVal.value), villeVal.value, villeOther);
+      renderCommunes();
+    }
+
+    // --- zones : communes ajoutées une à une, affichées en étiquettes
+    function addChosen(value) {
+      var name = (value || '').trim().toUpperCase();
+      if (!name) return;
+      var exists = Array.prototype.some.call(chosen.querySelectorAll('input'), function (input) {
+        return key(input.value) === key(name);
+      });
+      if (exists) return;
+      var tag = document.createElement('span');
+      tag.className = 'geo-tag';
+      tag.appendChild(document.createTextNode(name));
+      var hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = 'communes';
+      hidden.value = name;
+      var remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'geo-tag-remove';
+      remove.setAttribute('aria-label', 'Retirer ' + name);
+      remove.textContent = '×';
+      remove.addEventListener('click', function () { tag.remove(); });
+      tag.appendChild(hidden);
+      tag.appendChild(remove);
+      chosen.appendChild(tag);
+    }
+
+    function addPicked() {
+      var fromList = !pickSel.hidden && pickSel.value && pickSel.value !== AUTRE;
+      addChosen(fromList ? pickSel.value : pickOther.value);
+      pickSel.value = '';
+      pickOther.value = '';
+      if (!pickSel.hidden) showOther(pickSel, pickOther, false, false);
+    }
+
+    fill(provinceSel, geo.provinces, provinceVal.value, null);
+    renderVilles();
+
+    provinceSel.addEventListener('change', function () {
+      provinceVal.value = provinceSel.value;
+      villeVal.value = '';
+      if (communeVal) communeVal.value = '';
+      if (chosen) chosen.innerHTML = '';
+      renderVilles();
+    });
+
+    villeSel.addEventListener('change', function () {
+      var isOther = villeSel.value === AUTRE;
+      showOther(villeSel, villeOther, isOther, false);
+      villeVal.value = isOther ? villeOther.value.trim().toUpperCase() : villeSel.value;
+      if (isOther) villeOther.focus();
+      // Une ville de la liste impose sa province (utile si aucune province n'était choisie).
+      var entry = isOther ? null : villeEntry(villeSel.value);
+      if (entry && key(entry.province) !== key(provinceVal.value)) {
+        provinceVal.value = entry.province;
+        fill(provinceSel, geo.provinces, provinceVal.value, null);
+        fill(villeSel, villesFor(provinceVal.value), villeVal.value, villeOther);
+      }
+      if (communeVal) communeVal.value = '';
+      if (chosen) chosen.innerHTML = '';
+      renderCommunes();
+    });
+
+    villeOther.addEventListener('input', function () {
+      villeVal.value = villeOther.value.trim().toUpperCase();
+    });
+
+    if (communeSel) {
+      communeSel.addEventListener('change', function () {
+        var isOther = communeSel.value === AUTRE;
+        showOther(communeSel, communeOther, isOther, false);
+        communeVal.value = isOther ? communeOther.value.trim().toUpperCase() : communeSel.value;
+        if (isOther) communeOther.focus();
+      });
+      communeOther.addEventListener('input', function () {
+        communeVal.value = communeOther.value.trim().toUpperCase();
+      });
+    }
+
+    if (multi) {
+      pickSel.addEventListener('change', function () {
+        var isOther = pickSel.value === AUTRE;
+        showOther(pickSel, pickOther, isOther, false);
+        if (isOther) pickOther.focus();
+        else addPicked();
+      });
+      multi.querySelector('.js-geo-commune-add').addEventListener('click', addPicked);
+      // Entrée dans la saisie libre : ajoute la commune au lieu d'envoyer le formulaire.
+      pickOther.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addPicked();
+        }
+      });
+      // Au moins une commune avant d'envoyer (une commune tapée mais pas encore ajoutée compte).
+      box.addEventListener('submit', function (e) {
+        if (pickOther.value.trim()) addPicked();
+        if (!chosen.querySelector('input')) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          (pickSel.hidden ? pickOther : pickSel).setCustomValidity('Ajoutez au moins une commune.');
+          (pickSel.hidden ? pickOther : pickSel).reportValidity();
+        }
+      }, true);
+      [pickSel, pickOther].forEach(function (el) {
+        el.addEventListener('input', function () { el.setCustomValidity(''); });
+        el.addEventListener('change', function () { el.setCustomValidity(''); });
+      });
+    }
+  }
+
+  function initGeo(root) {
+    var boxes = (root || document).querySelectorAll('.js-geo:not([data-geo-ready])');
+    if (!boxes.length) return;
+    loadGeo().then(function (geo) {
+      boxes.forEach(function (box) {
+        box.dataset.geoReady = 'true';
+        setup(box, geo);
+      });
+    });
+  }
+
+  window.initGeo = initGeo;
+  initGeo(document);
 })();

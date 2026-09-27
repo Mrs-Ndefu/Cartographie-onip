@@ -42,7 +42,7 @@ public record HouseholdDto(
         var address = household.getAddress();
         AddressDto addressDto = address == null ? null
                 : new AddressDto(address.getProvince(), address.getVille(), address.getCommune(), address.getQuartier(),
-                        address.getRue(), address.getNumero(), address.getImmeuble(), address.getEtage());
+                        address.getRue(), address.getNumero(), address.getImmeuble(), address.getAppartement(), address.getEtage());
 
         var location = household.getLocation();
         GeoLocationDto locationDto = (location == null || !location.isPresent()) ? null

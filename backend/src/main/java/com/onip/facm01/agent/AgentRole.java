@@ -11,6 +11,23 @@ public enum AgentRole {
     DIRECTION_GENERALE,
     AGENT;
 
+    // Libellé affiché dans le tableau de bord.
+    public String label() {
+        return switch (this) {
+            case SUPER_ADMIN -> "Super admin";
+            case ADMIN -> "Admin";
+            case SUPERVISEUR -> "Superviseur";
+            case DIRECTION_GENERALE -> "Direction générale";
+            case AGENT -> "Agent";
+        };
+    }
+
+    // Comptes affectés à une zone de terrain : l'agent (zone où il enregistre) et le superviseur
+    // (zone qu'il encadre).
+    public boolean canHaveZone() {
+        return this == AGENT || this == SUPERVISEUR;
+    }
+
     // Réservé à la gestion des comptes ADMIN/SUPER_ADMIN eux-mêmes (AgentAdminController) : un
     // ADMIN garde tous ses droits sur les comptes SUPERVISEUR/DIRECTION_GENERALE/AGENT, mais seul
     // un SUPER_ADMIN peut créer, changer le rôle de, désactiver ou réinitialiser le mot de passe
@@ -54,6 +71,11 @@ public enum AgentRole {
     // peuvent seulement les consulter (et le SUPERVISEUR y affecte les agents).
     public boolean canManageZones() {
         return this == ADMIN;
+    }
+
+    // Historique des enregistrements de ses agents, dans ou hors de leur zone : SUPERVISEUR seul.
+    public boolean canViewSupervisorHistory() {
+        return this == SUPERVISEUR;
     }
 
     public boolean canAccessAgents() {

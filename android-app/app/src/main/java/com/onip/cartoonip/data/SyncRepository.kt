@@ -52,7 +52,7 @@ object SyncRepository {
                 },
                 address = AddressDto(
                     current.province.ifBlank { null }, current.ville, current.commune, current.quartier, current.rue,
-                    current.numero, current.immeuble, current.etage,
+                    current.numero, current.immeuble, current.appartement.ifBlank { null }, current.etage,
                 ),
                 location = if (current.latitude != null && current.longitude != null) {
                     GeoLocationDto(current.latitude, current.longitude, current.locationPrecision, false)

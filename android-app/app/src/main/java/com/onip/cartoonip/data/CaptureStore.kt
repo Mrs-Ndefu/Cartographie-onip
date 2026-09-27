@@ -46,6 +46,7 @@ class CaptureStore(context: Context) {
         if (fixed.membres == null) fixed = fixed.copy(membres = emptyList())
         if (fixed.photoPaths == null) fixed = fixed.copy(photoPaths = emptyList())
         if (fixed.etage == null) fixed = fixed.copy(etage = "")
+        if (fixed.appartement == null) fixed = fixed.copy(appartement = "")
         if (fixed.province == null) {
             fixed = fixed.copy(province = provinceForVille(fixed.ville)?.uppercase() ?: "")
         }
