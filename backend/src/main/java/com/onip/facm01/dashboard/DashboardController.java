@@ -48,18 +48,21 @@ public class DashboardController {
     private final DashboardService dashboardService;
     private final AgentRepository agentRepository;
     private final ZoneService zoneService;
+    private final DemographicsService demographicsService;
 
     public DashboardController(
             HouseholdRepository householdRepository,
             HouseholdService householdService,
             DashboardService dashboardService,
             AgentRepository agentRepository,
-            ZoneService zoneService) {
+            ZoneService zoneService,
+            DemographicsService demographicsService) {
         this.householdRepository = householdRepository;
         this.householdService = householdService;
         this.dashboardService = dashboardService;
         this.agentRepository = agentRepository;
         this.zoneService = zoneService;
+        this.demographicsService = demographicsService;
     }
 
     @GetMapping("/")
@@ -129,14 +132,21 @@ public class DashboardController {
     }
 
     // Page de la DIRECTION_GENERALE (accessible aussi aux autres rôles du tableau de bord) :
-    // uniquement les statistiques d'enregistrement et la population totale.
+    // total des ménages et de la population, et statistiques de population.
     @GetMapping("/dashboard/stats")
-    public String stats(Authentication authentication, Model model) {
+    public String stats(
+            @RequestParam(required = false) String sexe,
+            @RequestParam(required = false) String age,
+            Authentication authentication,
+            Model model) {
         addCurrentAgent(authentication, model);
+        // Statistiques démographiques, filtrables par sexe et par âge (mineurs / majeurs).
+        model.addAttribute("demo", demographicsService.demographics(sexe, age));
+        model.addAttribute("sexe", sexe);
+        model.addAttribute("age", age);
+        model.addAttribute("majorite", DemographicsService.MAJORITE);
         model.addAttribute("total", householdRepository.count());
         model.addAttribute("population", dashboardService.populationTotal());
-        model.addAttribute("registrationCounts", dashboardService.registrationCounts());
-        model.addAttribute("monthlyRegistrations", dashboardService.monthlyRegistrations(12));
         return "stats";
     }
 

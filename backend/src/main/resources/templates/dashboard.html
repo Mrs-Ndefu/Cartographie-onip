@@ -27,7 +27,7 @@
       <a th:if="${currentAgent != null and currentAgent.role.canAccessAgents()}"
          th:href="@{/dashboard/agents}" class="link-btn">Gérer les agents</a>
       <div class="agent-summary" th:if="${currentAgent != null}">
-        <span class="agent-role-badge" th:text="${currentAgent.role}">ROLE</span>
+        <span class="agent-role-badge" th:text="${currentAgent.role.label()}">ROLE</span>
       </div>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"

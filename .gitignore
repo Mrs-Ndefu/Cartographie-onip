@@ -24,3 +24,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Exports de données de la base (données personnelles) : générés par backend/database/ExportData.java, transmis à part
+backend/database/data-*.sql

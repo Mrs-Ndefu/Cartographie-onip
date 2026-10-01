@@ -1314,3 +1314,81 @@ h1, h2, h3 {
     margin-top: 0;
   }
 }
+
+/* ---------- Statistiques Direction Générale : population ---------- */
+
+.demo-section {
+  scroll-margin-top: 1rem;
+  padding: 1.5rem 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.demo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.demo-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.demo-header p {
+  margin: 0.2rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+}
+
+.demo-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.demo-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.demo-filters label > span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.demo-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card.demo-hommes {
+  border-left-color: #1177c8;
+}
+
+.stat-card.demo-femmes {
+  border-left-color: #eb6834;
+}
+
+.demo-chart-wrap {
+  height: 280px;
+}
+
+.demo-chart-wrap canvas {
+  max-height: none;
+}
+
+.demo-table {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+}

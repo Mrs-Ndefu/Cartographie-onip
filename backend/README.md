@@ -72,6 +72,32 @@ Toutes les routes `/api/**` sont protégées par JWT (sauf `/api/auth/login`).
 
 ## Schéma de données
 
+Le schéma PostgreSQL complet (tables, clés, contraintes) est dans
+[`database/schema-postgresql.sql`](database/schema-postgresql.sql).
+
+Les données de la base de développement (comptes, zones, ménages, membres, photos) peuvent être
+exportées en SQL PostgreSQL avec [`database/ExportData.java`](database/ExportData.java), qui produit
+`database/data-postgresql.sql` et `database/data-photos-postgresql.sql`. Ces deux fichiers ne sont
+pas versionnés (ils contiennent des données personnelles : comptes, ménages recensés, photos des
+fiches) — ils se transmettent à part. À charger dans cet ordre, dans une base vide :
+
+```
+psql -U facm01 -d carto_onip_rdc -f database/schema-postgresql.sql
+psql -U facm01 -d carto_onip_rdc -f database/data-postgresql.sql
+psql -U facm01 -d carto_onip_rdc -f database/data-photos-postgresql.sql
+```
+
+Pour produire l'export (backend arrêté, H2 verrouillant son fichier), depuis la racine du dépôt :
+`java -cp ~/.m2/repository/com/h2database/h2/2.2.224/h2-2.2.224.jar backend/database/ExportData.java`. Pour le régénérer après une
+évolution des entités (sans PostgreSQL, à partir du code) :
+
+```
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.datasource.url=jdbc:h2:mem:schemagen --spring.datasource.driver-class-name=org.h2.Driver --spring.datasource.username=sa --spring.datasource.password= --spring.jpa.hibernate.ddl-auto=none --spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect --spring.jpa.properties.jakarta.persistence.schema-generation.scripts.action=create --spring.jpa.properties.jakarta.persistence.schema-generation.scripts.create-target=database/schema-postgresql.sql --spring.jpa.properties.hibernate.hbm2ddl.delimiter=; --spring.jpa.properties.hibernate.format_sql=true --spring.main.web-application-type=none"
+```
+
+(Le démarrage s'arrête ensuite en erreur, les tables n'existant pas dans cette base temporaire :
+c'est attendu, le fichier est déjà écrit. Remettre l'en-tête explicatif en tête du fichier.)
+
 `spring.jpa.hibernate.ddl-auto=update` : le schéma PostgreSQL est créé/mis à jour
 automatiquement au démarrage à partir des entités JPA. Pratique en développement — à
 remplacer par des migrations versionnées (Flyway/Liquibase) avant une mise en production

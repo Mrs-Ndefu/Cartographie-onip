@@ -12,8 +12,8 @@
   <link rel="stylesheet" th:href="@{/css/dashboard.css}">
 </head>
 <body>
-  <!-- Page de la Direction Générale : uniquement les statistiques d'enregistrement des ménages et
-       la population totale — ni liste de ménages, ni carte, ni gestion des comptes. -->
+  <!-- Page de la Direction Générale : totaux (ménages, population) et statistiques de population
+       (sexe, mineurs / majeurs, tranches d'âge) — ni liste de ménages, ni carte, ni gestion des comptes. -->
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
     <h1>ADRESSAGE DE MÉNAGES — STATISTIQUES</h1>
@@ -21,7 +21,7 @@
       <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}"
          th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <div class="agent-summary" th:if="${currentAgent != null}">
-        <span class="agent-role-badge" th:text="${currentAgent.role}">ROLE</span>
+        <span class="agent-role-badge" th:text="${currentAgent.role.label()}">ROLE</span>
       </div>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
@@ -43,24 +43,80 @@
     </div>
   </section>
 
-  <section class="overview-row">
-    <div class="stat-grid">
+  <!-- Population : sexe, mineurs / majeurs, tranches d'âge (personnes des ménages non retirés). -->
+  <section class="demo-section" id="population">
+    <div class="demo-header">
+      <div>
+        <h2>Population recensée</h2>
+        <p>Chefs et membres des ménages ; âge calculé d'après la date de naissance (majorité à <span th:text="${majorite}">18</span> ans).
+          Les personnes dont le sexe ou la date de naissance n'est pas renseigné ne sont pas comptées.</p>
+      </div>
+      <!-- Après un changement de filtre, la page rechargée revient sur cette section (#population). -->
+      <form th:action="@{/dashboard/stats} + '#population'" method="get" class="demo-filters">
+        <label>
+          <span>Sexe</span>
+          <select name="sexe" class="filter-select" onchange="this.form.submit()">
+            <option value="">Tous</option>
+            <option value="M" th:selected="${sexe == 'M'}">Hommes</option>
+            <option value="F" th:selected="${sexe == 'F'}">Femmes</option>
+          </select>
+        </label>
+        <label>
+          <span>Âge</span>
+          <select name="age" class="filter-select" onchange="this.form.submit()">
+            <option value="">Tous</option>
+            <option value="mineurs" th:selected="${age == 'mineurs'}">Mineurs (moins de 18 ans)</option>
+            <option value="majeurs" th:selected="${age == 'majeurs'}">Majeurs (18 ans et +)</option>
+          </select>
+        </label>
+      </form>
+    </div>
+
+    <div class="demo-tiles">
       <div class="stat-card">
-        <span class="stat-value" th:text="${registrationCounts.today}">0</span>
-        <span class="stat-label">Aujourd'hui</span>
+        <span class="stat-value" th:text="${demo.total}">0</span>
+        <span class="stat-label">Personnes</span>
+      </div>
+      <div class="stat-card demo-hommes">
+        <span class="stat-value" th:text="${demo.hommes}">0</span>
+        <span class="stat-label">Hommes</span>
+      </div>
+      <div class="stat-card demo-femmes">
+        <span class="stat-value" th:text="${demo.femmes}">0</span>
+        <span class="stat-label">Femmes</span>
       </div>
       <div class="stat-card">
-        <span class="stat-value" th:text="${registrationCounts.thisMonth}">0</span>
-        <span class="stat-label">Ce mois-ci</span>
+        <span class="stat-value" th:text="${demo.mineurs}">0</span>
+        <span class="stat-label">Mineurs</span>
       </div>
       <div class="stat-card">
-        <span class="stat-value" th:text="${registrationCounts.thisYear}">0</span>
-        <span class="stat-label">Cette année</span>
+        <span class="stat-value" th:text="${demo.majeurs}">0</span>
+        <span class="stat-label">Majeurs</span>
       </div>
     </div>
-    <div class="chart-card">
-      <h2>Enregistrements mensuels (12 derniers mois)</h2>
-      <canvas id="monthly-chart"></canvas>
+
+    <div class="chart-card demo-chart-card">
+      <h2>Répartition par tranche d'âge et par sexe</h2>
+      <div class="demo-chart-wrap"><canvas id="age-chart" role="img" aria-label="Nombre de personnes par tranche d'âge et par sexe"></canvas></div>
+      <table class="households-table demo-table">
+        <caption class="visually-hidden">Personnes par tranche d'âge et par sexe</caption>
+        <thead>
+          <tr>
+            <th>Tranche d'âge</th>
+            <th>Hommes</th>
+            <th>Femmes</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="g : ${demo.groups}">
+            <td th:text="${g.label}">-</td>
+            <td th:text="${g.hommes}">0</td>
+            <td th:text="${g.femmes}">0</td>
+            <td class="cell-code" th:text="${g.total()}">0</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
@@ -94,24 +150,55 @@
       });
     })();
 
-    const monthlyRegistrations = /*[[${monthlyRegistrations}]]*/ [];
-
-    new Chart(document.getElementById('monthly-chart'), {
-      type: 'bar',
-      data: {
-        labels: monthlyRegistrations.map(function (m) { return m.label; }),
-        datasets: [{
-          label: 'Ménages enregistrés',
-          data: monthlyRegistrations.map(function (m) { return m.count; }),
-          backgroundColor: '#178a17'
-        }]
-      },
-      options: {
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-      }
-    });
+    // Tranches d'âge : barres groupées Hommes / Femmes (couleurs fixes par sexe, validées pour
+    // le daltonisme) ; une série n'apparaît que si elle a des personnes, la légende seulement
+    // quand il y a au moins deux séries.
+    const demo = /*[[${demo}]]*/ null;
+    if (demo) {
+      var series = [
+        { label: 'Hommes', key: 'hommes', color: '#1177c8' },
+        { label: 'Femmes', key: 'femmes', color: '#eb6834' }
+      ].filter(function (s) {
+        return demo.groups.some(function (g) { return g[s.key] > 0; });
+      });
+      new Chart(document.getElementById('age-chart'), {
+        type: 'bar',
+        data: {
+          labels: demo.groups.map(function (g) { return g.label; }),
+          datasets: series.map(function (s) {
+            return {
+              label: s.label,
+              data: demo.groups.map(function (g) { return g[s.key]; }),
+              backgroundColor: s.color,
+              borderRadius: { topLeft: 4, topRight: 4 },
+              borderSkipped: 'bottom',
+              borderColor: '#ffffff',
+              borderWidth: { left: 1, right: 1 },
+              maxBarThickness: 28
+            };
+          })
+        },
+        options: {
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: series.length > 1, position: 'top', align: 'start', labels: { boxWidth: 12, boxHeight: 12, color: '#5b6673' } },
+            tooltip: {
+              callbacks: {
+                footer: function (items) {
+                  var total = items.reduce(function (sum, i) { return sum + i.parsed.y; }, 0);
+                  return 'Total : ' + total;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#5b6673' } },
+            y: { beginAtZero: true, ticks: { precision: 0, color: '#5b6673' }, grid: { color: '#eef0f3' } }
+          }
+        }
+      });
+    }
     /*]]>*/
   </script>
 </body>
