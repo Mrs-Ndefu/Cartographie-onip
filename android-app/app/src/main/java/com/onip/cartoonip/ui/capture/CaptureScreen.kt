@@ -61,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -81,6 +82,10 @@ import com.onip.cartoonip.data.model.AgentZone
 import com.onip.cartoonip.data.model.MAX_HOUSEHOLD_PHOTOS
 import com.onip.cartoonip.ui.navigation.Routes
 import com.onip.cartoonip.ui.theme.OnipBlue
+import kotlin.math.roundToInt
+
+// Au-delà, le relevé peut placer le ménage chez le voisin ou dans la rue suivante.
+private const val POOR_GPS_PRECISION_METERS = 30.0
 
 private val fieldKeyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters)
 private val dateKeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -146,6 +151,29 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
+                    }
+                    uiState.locationPrecision?.let { precision ->
+                        Text(
+                            "Précision ±${precision.roundToInt()} m",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (precision > POOR_GPS_PRECISION_METERS) MaterialTheme.colorScheme.error else Color.Unspecified,
+                        )
+                    }
+                    if (uiState.hasLocation && uiState.locationStale) {
+                        Text(
+                            "Position récente du téléphone, pas un relevé à l'instant — relevez à nouveau à découvert si possible.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    } else if ((uiState.locationPrecision ?: 0.0) > POOR_GPS_PRECISION_METERS) {
+                        Text(
+                            "Position imprécise — placez-vous à découvert et relevez à nouveau.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    if (uiState.gpsLoading) {
+                        Text("Recherche du signal GPS (jusqu'à 30 s)…", style = MaterialTheme.typography.bodySmall)
                     }
                     uiState.gpsError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                     OutlinedButton(

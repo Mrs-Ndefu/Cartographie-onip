@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.time.Instant
 import java.util.UUID
@@ -75,6 +74,8 @@ data class CaptureUiState(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val locationPrecision: Double? = null,
+    // Position reprise du cache du téléphone faute de relevé frais — signalée à l'agent.
+    val locationStale: Boolean = false,
     val gpsLoading: Boolean = false,
     val gpsError: String? = null,
     val generatedCode: String? = null,
@@ -283,7 +284,7 @@ class CaptureViewModel : ViewModel() {
                 update { copy(gpsLoading = false, gpsError = "Autorisation de localisation refusée.") }
                 return@launch
             }
-            val fix = withTimeoutOrNull(20_000) { locationHelper.awaitFix() } ?: locationHelper.lastKnown()
+            val fix = locationHelper.bestFix() ?: locationHelper.recentLastKnown()
             if (fix == null) {
                 update { copy(gpsLoading = false, gpsError = "Position indisponible — activez le GPS et réessayez.") }
             } else {
@@ -294,6 +295,7 @@ class CaptureViewModel : ViewModel() {
                         latitude = fix.latitude,
                         longitude = fix.longitude,
                         locationPrecision = fix.accuracyMeters.toDouble(),
+                        locationStale = fix.stale,
                     )
                 }
             }

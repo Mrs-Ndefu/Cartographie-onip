@@ -7,10 +7,13 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Looper
+import android.os.SystemClock
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 
-data class GpsResult(val latitude: Double, val longitude: Double, val accuracyMeters: Float)
+/** [stale] = position reprise du cache du téléphone, et non relevée à l'instant. */
+data class GpsResult(val latitude: Double, val longitude: Double, val accuracyMeters: Float, val stale: Boolean = false)
 
 /**
  * GPS via l'API Android native (LocationManager) plutôt que Play Services Location — évite une
@@ -22,35 +25,42 @@ class LocationHelper(private val context: Context) {
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
-    /** Suspend jusqu'à obtenir un relevé — à envelopper avec un timeout côté appelant. */
-    suspend fun awaitFix(): GpsResult? {
+    /**
+     * Écoute le GPS (et le réseau en complément) pendant au plus [maxWaitMs] et garde le relevé le
+     * plus précis : le premier relevé reçu est souvent grossier (50 à 500 m) et s'affine en quelques
+     * secondes. S'arrête dès qu'un relevé atteint [targetAccuracyMeters]. Renvoie null si aucun
+     * relevé n'est arrivé dans le délai.
+     */
+    suspend fun bestFix(targetAccuracyMeters: Float = 20f, maxWaitMs: Long = 30_000): GpsResult? {
         if (!hasPermission()) return null
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val provider = when {
-            manager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
-            manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
-            else -> return null
-        }
+        val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+            .filter { manager.isProviderEnabled(it) }
+        if (providers.isEmpty()) return null
 
-        return suspendCancellableCoroutine { cont ->
-            val listener = object : LocationListener {
-                override fun onLocationChanged(location: Location) {
-                    manager.removeUpdates(this)
-                    if (cont.isActive) cont.resumeWith(Result.success(GpsResult(location.latitude, location.longitude, location.accuracy)))
-                }
-            }
-            try {
-                manager.requestLocationUpdates(provider, 0L, 0f, listener, Looper.getMainLooper())
-            } catch (e: SecurityException) {
-                cont.resumeWith(Result.success(null))
-                return@suspendCancellableCoroutine
-            }
-            cont.invokeOnCancellation { manager.removeUpdates(listener) }
+        var best: Location? = null
+        val listener = LocationListener { location ->
+            val current = best
+            if (current == null || location.accuracy < current.accuracy) best = location
         }
+        try {
+            providers.forEach { manager.requestLocationUpdates(it, 0L, 0f, listener, Looper.getMainLooper()) }
+            withTimeoutOrNull(maxWaitMs) {
+                while (best.let { it == null || it.accuracy > targetAccuracyMeters }) delay(250)
+            }
+        } catch (e: SecurityException) {
+            return null
+        } finally {
+            manager.removeUpdates(listener)
+        }
+        return best?.let { GpsResult(it.latitude, it.longitude, it.accuracy) }
     }
 
-    /** Dernière position connue — utilisée comme repli si awaitFix() dépasse le délai imparti. */
-    fun lastKnown(): GpsResult? {
+    /**
+     * Dernière position connue, seulement si elle date de moins de [maxAgeMs] — au-delà, l'agent a
+     * pu se déplacer et la position ne correspond plus au ménage. Repli si [bestFix] n'aboutit pas.
+     */
+    fun recentLastKnown(maxAgeMs: Long = 2 * 60_000): GpsResult? {
         if (!hasPermission()) return null
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val location = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
@@ -61,7 +71,8 @@ class LocationHelper(private val context: Context) {
                     null
                 }
             }
-            .maxByOrNull { it.time }
-        return location?.let { GpsResult(it.latitude, it.longitude, it.accuracy) }
+            .filter { SystemClock.elapsedRealtimeNanos() - it.elapsedRealtimeNanos <= maxAgeMs * 1_000_000 }
+            .minByOrNull { it.accuracy }
+        return location?.let { GpsResult(it.latitude, it.longitude, it.accuracy, stale = true) }
     }
 }
