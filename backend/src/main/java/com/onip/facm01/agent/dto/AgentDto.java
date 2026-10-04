@@ -16,7 +16,9 @@ public record AgentDto(
         Instant createdAt,
         String photoDataUrl,
         UUID zoneId,
+        String zoneCode,
         String zoneLabel,
+        String zonePlace,
         UUID superviseurId,
         String superviseurName) {
 
@@ -35,7 +37,9 @@ public record AgentDto(
                 agent.getCreatedAt(),
                 photoDataUrl,
                 agent.getZone() == null ? null : agent.getZone().getId(),
+                agent.getZone() == null ? null : agent.getZone().getCode(),
                 agent.getZone() == null ? null : agent.getZone().getLabel(),
+                agent.getZone() == null ? null : agent.getZone().getPlace(),
                 agent.getSuperviseur() == null ? null : agent.getSuperviseur().getId(),
                 agent.getSuperviseur() == null ? null : agent.getSuperviseur().getFullName());
     }

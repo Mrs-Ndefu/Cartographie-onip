@@ -16,7 +16,8 @@
 -- Tables :
 --   agents                  comptes (SUPER_ADMIN, ADMIN, SUPERVISEUR, DIRECTION_GENERALE, AGENT),
 --                           zone d'affectation et superviseur de chaque agent
---   zones / zone_communes   zones d'affectation : 1 province + 1 ville + une ou plusieurs communes
+--   zones / zone_communes   zones d'affectation : 1 province + 1 ville + une ou plusieurs communes,
+--                           avec un code : lettre de la province (A = Kinshasa) + numéro (A1, A2, B1...)
 --   households              ménages (adresse, GPS, statut, retrait/archivage, agent d'origine)
 --   household_members       chef (chef = true) et membres de chaque ménage
 --   household_photos        photos de la fiche papier (jusqu'à 4 par ménage)
@@ -115,6 +116,7 @@ create table agents (
     create table zones (
         created_at timestamp(6) with time zone not null,
         id uuid not null,
+        code varchar(4),
         province varchar(255) not null,
         ville varchar(255) not null,
         primary key (id)

@@ -60,6 +60,15 @@ public class ZoneAdminController {
         return "redirect:/dashboard/zones";
     }
 
+    @PostMapping("/delete-all")
+    public String deleteAll(RedirectAttributes redirectAttributes) {
+        int deleted = zoneService.deleteAll();
+        redirectAttributes.addFlashAttribute("success", deleted == 0
+                ? "Aucune zone à supprimer."
+                : deleted + " zone(s) supprimée(s) ; les comptes affectés n'ont plus de zone.");
+        return "redirect:/dashboard/zones";
+    }
+
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable UUID id, RedirectAttributes redirectAttributes) {
         try {

@@ -47,6 +47,29 @@ class SessionManager(context: Context) {
         get() = prefs.getString(KEY_LAST_BASE_URL, "") ?: ""
         set(value) = prefs.edit().putString(KEY_LAST_BASE_URL, value).apply()
 
+    // Identifiant de l'agent dont la session vient d'expirer : l'écran de connexion le
+    // pré-remplit et affiche "session expirée". Effacé à la connexion suivante.
+    val expiredUsername: String?
+        get() = prefs.getString(KEY_EXPIRED_USERNAME, null)
+
+    /** Session refusée par le serveur : on la ferme en gardant l'identifiant pour la reconnexion. */
+    fun expire() {
+        val username = _session.value?.username ?: return
+        // Enregistré avant de fermer la session : l'écran de connexion, qui s'affiche dès la
+        // fermeture, doit déjà le trouver.
+        prefs.edit().putString(KEY_EXPIRED_USERNAME, username).commit()
+        clear()
+    }
+
+    // Dernière zone d'affectation connue, pour l'afficher même sans réseau sur le terrain.
+    var zoneCode: String?
+        get() = prefs.getString(KEY_ZONE_CODE, null)
+        set(value) = prefs.edit().putString(KEY_ZONE_CODE, value).apply()
+
+    var zonePlace: String?
+        get() = prefs.getString(KEY_ZONE_PLACE, null)
+        set(value) = prefs.edit().putString(KEY_ZONE_PLACE, value).apply()
+
     fun save(baseUrl: String, token: String, agent: AgentDto) {
         prefs.edit()
             .putString(KEY_BASE_URL, baseUrl)
@@ -55,6 +78,7 @@ class SessionManager(context: Context) {
             .putString(KEY_USERNAME, agent.username)
             .putString(KEY_FULL_NAME, agent.fullName)
             .putString(KEY_LAST_BASE_URL, baseUrl)
+            .remove(KEY_EXPIRED_USERNAME)
             .apply()
         _session.value = loadSession()
     }
@@ -63,6 +87,7 @@ class SessionManager(context: Context) {
         prefs.edit()
             .remove(KEY_BASE_URL).remove(KEY_TOKEN).remove(KEY_AGENT_ID)
             .remove(KEY_USERNAME).remove(KEY_FULL_NAME)
+            .remove(KEY_ZONE_CODE).remove(KEY_ZONE_PLACE)
             .apply()
         _session.value = null
     }
@@ -78,6 +103,9 @@ class SessionManager(context: Context) {
 
     companion object {
         private const val KEY_BASE_URL = "base_url"
+        private const val KEY_ZONE_CODE = "zone_code"
+        private const val KEY_EXPIRED_USERNAME = "expired_username"
+        private const val KEY_ZONE_PLACE = "zone_place"
         private const val KEY_TOKEN = "token"
         private const val KEY_AGENT_ID = "agent_id"
         private const val KEY_USERNAME = "username"

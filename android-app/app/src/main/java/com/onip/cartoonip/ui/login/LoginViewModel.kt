@@ -17,11 +17,17 @@ data class LoginUiState(
     val password: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
+    // Message d'information (ex. session expirée), affiché au-dessus du formulaire.
+    val notice: String? = null,
 )
 
 class LoginViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LoginUiState())
+    private val _uiState = MutableStateFlow(
+        AppContainer.sessionManager.expiredUsername?.let {
+            LoginUiState(username = it, notice = "Votre session a expiré. Reconnectez-vous pour continuer et synchroniser vos ménages.")
+        } ?: LoginUiState(),
+    )
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun onBaseUrlChange(value: String) {
@@ -49,7 +55,7 @@ class LoginViewModel : ViewModel() {
             try {
                 val response = AppContainer.apiFor(baseUrl).auth.login(LoginRequest(state.username.trim(), state.password))
                 AppContainer.sessionManager.save(baseUrl, response.token, response.agent)
-                AppContainer.setAgentPhoto(response.agent.photoDataUrl)
+                AppContainer.applyAgent(response.agent)
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 onSuccess()
             } catch (e: HttpException) {

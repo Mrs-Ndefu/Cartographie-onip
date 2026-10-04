@@ -28,7 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,9 +42,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.onip.cartoonip.data.AppContainer
+import com.onip.cartoonip.ui.capture.ZoneBanner
+import com.onip.cartoonip.ui.common.PasswordField
 import com.onip.cartoonip.ui.theme.OnipBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,6 +85,8 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit, viewModel: ProfileVi
                     uiState.agent?.username?.let {
                         Text("@$it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                    val agentZone by AppContainer.agentZone.collectAsState()
+                    ZoneBanner(agentZone, modifier = Modifier.padding(top = 10.dp))
                     OutlinedButton(
                         onClick = { photoPickerLauncher.launch("image/*") },
                         enabled = !uiState.photoUploading,
@@ -102,25 +105,22 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit, viewModel: ProfileVi
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text("Changer le mot de passe", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = OnipBlue)
 
-                        OutlinedTextField(
+                        PasswordField(
                             value = uiState.currentPassword,
                             onValueChange = viewModel::onCurrentPasswordChange,
-                            label = { Text("Mot de passe actuel") },
-                            visualTransformation = PasswordVisualTransformation(),
+                            label = "Mot de passe actuel",
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        PasswordField(
                             value = uiState.newPassword,
                             onValueChange = viewModel::onNewPasswordChange,
-                            label = { Text("Nouveau mot de passe") },
-                            visualTransformation = PasswordVisualTransformation(),
+                            label = "Nouveau mot de passe",
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        PasswordField(
                             value = uiState.confirmPassword,
                             onValueChange = viewModel::onConfirmPasswordChange,
-                            label = { Text("Confirmer le nouveau mot de passe") },
-                            visualTransformation = PasswordVisualTransformation(),
+                            label = "Confirmer le nouveau mot de passe",
                             modifier = Modifier.fillMaxWidth(),
                         )
 

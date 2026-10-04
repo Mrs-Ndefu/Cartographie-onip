@@ -24,10 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.onip.cartoonip.ui.common.PasswordField
 import com.onip.cartoonip.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,15 +80,21 @@ fun LoginScreen(onLoginSuccess: () -> Unit, viewModel: LoginViewModel = viewMode
             singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
-        OutlinedTextField(
+        PasswordField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Mot de passe") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            label = "Mot de passe",
             modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
         )
+
+        uiState.notice?.let { notice ->
+            Text(
+                text = notice,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
+        }
 
         uiState.error?.let { error ->
             Text(

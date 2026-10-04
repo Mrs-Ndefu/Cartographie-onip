@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // Les 26 provinces de la RDC. Sert à proposer la liste des provinces dans le tableau de bord, et à
 // déduire la province d'un ménage envoyé sans province (anciennes versions des apps, ménages déjà
@@ -17,11 +18,28 @@ public final class DrcProvinces {
             "LUALABA", "MAI-NDOMBE", "MANIEMA", "MONGALA", "NORD-KIVU", "NORD-UBANGI", "SANKURU",
             "SUD-KIVU", "SUD-UBANGI", "TANGANYIKA", "TSHOPO", "TSHUAPA");
 
+    // Lettre fixe de chaque province, pour les codes de zone (A1, A2, B1...) : A = Kinshasa, puis
+    // les 25 autres provinces dans l'ordre alphabétique (B = Bas-Uele ... Z = Tshuapa).
+    public static final List<String> PROVINCES_BY_LETTER = Stream.concat(
+                    Stream.of("KINSHASA"),
+                    PROVINCES.stream().filter(p -> !p.equals("KINSHASA")))
+            .toList();
+
     // Clé sans accents : "Kasaï" saisi "KASAI" doit retrouver la même province.
     private static final Map<String, String> PROVINCE_BY_KEY = PROVINCES.stream()
             .collect(Collectors.toMap(DrcProvinces::key, p -> p));
 
     private DrcProvinces() {
+    }
+
+    /** Lettre de la province (A = Kinshasa...), ou vide pour une province hors de la liste. */
+    public static Optional<String> letterOf(String province) {
+        if (province == null || province.isBlank()) {
+            return Optional.empty();
+        }
+        String normalized = normalize(province);
+        int index = PROVINCES_BY_LETTER.indexOf(normalized);
+        return index < 0 ? Optional.empty() : Optional.of(String.valueOf((char) ('A' + index)));
     }
 
     public static Optional<String> fromVille(String ville) {

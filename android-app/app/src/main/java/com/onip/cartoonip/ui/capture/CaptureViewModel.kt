@@ -135,14 +135,11 @@ class CaptureViewModel : ViewModel() {
     val uiState: StateFlow<CaptureUiState> = _uiState.asStateFlow()
 
     init {
-        // Recharge la photo de profil pour l'avatar de la barre du haut — pas persistée en
-        // session, donc absente tant qu'on ne l'a pas redemandée après un redémarrage de l'app.
-        if (AppContainer.agentPhoto.value == null) {
-            viewModelScope.launch {
-                runCatching { AppContainer.api().agent.me() }.getOrNull()?.let {
-                    AppContainer.setAgentPhoto(it.photoDataUrl)
-                }
-            }
+        // Recharge la fiche de l'agent : photo de profil (barre du haut, pas persistée) et zone
+        // d'affectation (peut avoir changé depuis la dernière ouverture). Hors connexion, on
+        // garde la dernière zone connue.
+        viewModelScope.launch {
+            runCatching { AppContainer.api().agent.me() }.getOrNull()?.let { AppContainer.applyAgent(it) }
         }
     }
 

@@ -77,6 +77,7 @@ import com.onip.cartoonip.data.DRC_PROVINCES
 import com.onip.cartoonip.data.DRC_VILLES
 import com.onip.cartoonip.data.communesForVille
 import com.onip.cartoonip.data.villesForProvince
+import com.onip.cartoonip.data.model.AgentZone
 import com.onip.cartoonip.data.model.MAX_HOUSEHOLD_PHOTOS
 import com.onip.cartoonip.ui.navigation.Routes
 import com.onip.cartoonip.ui.theme.OnipBlue
@@ -126,6 +127,8 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                     color = OnipBlue,
                     modifier = Modifier.padding(start = 16.dp, top = 2.dp, bottom = 8.dp),
                 )
+                val agentZone by AppContainer.agentZone.collectAsState()
+                ZoneBanner(agentZone)
             }
         },
     ) { padding ->
@@ -636,6 +639,35 @@ private fun MembersSection(
                     Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text("  Ajouter un membre", modifier = Modifier.padding(start = 4.dp))
                 }
+            }
+        }
+    }
+}
+
+/** "Vous êtes affecté dans la zone A" + lieu de la zone, ou un rappel si aucune zone. */
+@Composable
+fun ZoneBanner(zone: AgentZone?, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = if (zone != null) OnipBlue.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+            if (zone != null) {
+                Text(
+                    "Vous êtes affecté dans la zone ${zone.code}",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = OnipBlue,
+                )
+                if (zone.place.isNotBlank()) {
+                    Text(zone.place, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                Text(
+                    "Vous n'êtes affecté à aucune zone pour le moment.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

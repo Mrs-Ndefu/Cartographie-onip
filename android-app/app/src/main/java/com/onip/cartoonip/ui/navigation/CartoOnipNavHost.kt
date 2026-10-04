@@ -1,6 +1,7 @@
 package com.onip.cartoonip.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
@@ -26,6 +27,13 @@ fun CartoOnipNavHost(navController: NavHostController = rememberNavController())
             navController.navigate(Routes.LOGIN) { popUpTo(0) }
         } else {
             navController.navigate(route)
+        }
+    }
+
+    // Session fermée en cours d'utilisation (expirée, ou déconnexion) : retour à la connexion.
+    LaunchedEffect(session) {
+        if (session == null && navController.currentDestination?.route != Routes.LOGIN) {
+            navController.navigate(Routes.LOGIN) { popUpTo(0) }
         }
     }
 

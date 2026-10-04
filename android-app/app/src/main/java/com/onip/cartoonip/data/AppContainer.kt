@@ -1,6 +1,8 @@
 package com.onip.cartoonip.data
 
 import android.content.Context
+import com.onip.cartoonip.data.model.AgentDto
+import com.onip.cartoonip.data.model.AgentZone
 import com.onip.cartoonip.data.network.ApiServices
 import com.onip.cartoonip.data.network.buildRetrofit
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +30,33 @@ object AppContainer {
         _agentPhoto.value = photoDataUrl
     }
 
+    // Zone d'affectation de l'agent connecté : rechargée depuis /api/me (l'ADMIN ou le superviseur
+    // peut la changer à tout moment) et gardée en session pour rester visible hors connexion.
+    private val _agentZone = MutableStateFlow<AgentZone?>(null)
+    val agentZone: StateFlow<AgentZone?> = _agentZone.asStateFlow()
+
+    fun setAgentZone(code: String?, place: String?) {
+        _agentZone.value = if (code.isNullOrBlank()) null else AgentZone(code, place.orEmpty())
+        sessionManager.zoneCode = code
+        sessionManager.zonePlace = place
+    }
+
+    // Jeton refusé par le serveur : on ferme la session (l'écran de connexion s'affiche, cf.
+    // CartoOnipNavHost). Les ménages enregistrés sur l'appareil ne sont pas touchés ; leur
+    // synchronisation reprend après la reconnexion.
+    private fun onSessionExpired() {
+        if (sessionManager.session.value == null) return
+        sessionManager.expire()
+        _agentPhoto.value = null
+        _agentZone.value = null
+    }
+
+    /** Met à jour photo et zone d'après la fiche de l'agent renvoyée par le serveur. */
+    fun applyAgent(agent: AgentDto) {
+        setAgentPhoto(agent.photoDataUrl)
+        setAgentZone(agent.zoneCode, agent.zonePlace)
+    }
+
     private var retrofit: Retrofit? = null
     private var cachedBaseUrl: String? = null
     private var initialized = false
@@ -37,12 +66,17 @@ object AppContainer {
         appContext = context.applicationContext
         sessionManager = SessionManager(appContext)
         captureStore = CaptureStore(appContext)
+        sessionManager.zoneCode?.let { _agentZone.value = AgentZone(it, sessionManager.zonePlace.orEmpty()) }
         initialized = true
     }
 
     fun apiFor(baseUrl: String): ApiServices {
         if (retrofit == null || cachedBaseUrl != baseUrl) {
-            retrofit = buildRetrofit(baseUrl) { sessionManager.session.value?.token }
+            retrofit = buildRetrofit(
+                baseUrl,
+                tokenProvider = { sessionManager.session.value?.token },
+                onUnauthorized = ::onSessionExpired,
+            )
             cachedBaseUrl = baseUrl
         }
         return ApiServices(retrofit!!)

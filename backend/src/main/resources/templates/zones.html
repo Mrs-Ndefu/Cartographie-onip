@@ -38,7 +38,7 @@
       <div class="table-card-header">
         <div>
           <h2>Définir une zone</h2>
-          <span class="table-card-count">Une province, une ville, et une ou plusieurs communes de cette ville.</span>
+          <span class="table-card-count">Une province, une ville, et une ou plusieurs communes de cette ville. Son code est attribué automatiquement : lettre de la province (A = Kinshasa, puis ordre alphabétique) et numéro dans la province — A1, A2, B1…</span>
         </div>
       </div>
       <!-- Province, ville et communes : listes enchaînées (cf. app.js, .js-geo). -->
@@ -73,11 +73,20 @@
           <h2>Zones d'affectation</h2>
           <span class="table-card-count" th:text="${zones.size()} + ' zone(s)'">0 zone(s)</span>
         </div>
+        <form th:if="${currentAgent != null and currentAgent.role.canManageZones() and !zones.isEmpty()}"
+              th:action="@{/dashboard/zones/delete-all}" method="post"
+              class="js-confirm-form"
+              data-confirm-title="Voulez-vous supprimer toutes les zones ?"
+              data-confirm-label="Tout supprimer"
+              th:data-confirm-detail="${zones.size()} + ' zone(s) seront supprimées et les comptes affectés n\'auront plus de zone. Cette action est définitive.'">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer toutes les zones</button>
+        </form>
       </div>
       <div class="table-scroll">
         <table class="households-table zones-table">
           <thead>
             <tr>
+              <th>Zone</th>
               <th>Province/Région</th>
               <th>Ville/Territoire</th>
               <th>Communes/Secteurs/Chefferies</th>
@@ -87,6 +96,7 @@
           </thead>
           <tbody>
             <tr th:each="z : ${zones}">
+              <td><span class="zone-letter" th:text="${z.code ?: '?'}">A</span></td>
               <td class="cell-code" th:text="${z.province}">-</td>
               <td th:text="${z.ville}">-</td>
               <td>
@@ -112,7 +122,7 @@
               </td>
             </tr>
             <tr th:if="${zones.isEmpty()}">
-              <td colspan="5" class="table-empty">Aucune zone définie pour l'instant.</td>
+              <td colspan="6" class="table-empty">Aucune zone définie pour l'instant.</td>
             </tr>
           </tbody>
         </table>

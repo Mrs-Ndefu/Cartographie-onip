@@ -144,7 +144,7 @@ public class AgentAdminController {
             agentService.assignZone(id, zone);
             redirectAttributes.addFlashAttribute("success", zone == null
                     ? "Affectation retirée pour " + target.getUsername()
-                    : target.getUsername() + " affecté à la zone " + zone.getLabel());
+                    : target.getUsername() + " affecté à la " + zone.getLabel());
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

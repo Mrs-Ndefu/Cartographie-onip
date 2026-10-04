@@ -7,4 +7,8 @@ import java.util.UUID;
 
 public interface ZoneRepository extends JpaRepository<Zone, UUID> {
     List<Zone> findAllByOrderByProvinceAscVilleAsc();
+
+    List<Zone> findByProvince(String province);
+
+    List<Zone> findAllByOrderByCreatedAtAsc();
 }

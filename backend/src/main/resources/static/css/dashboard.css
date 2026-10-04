@@ -1392,3 +1392,18 @@ h1, h2, h3 {
   margin-top: 1rem;
   border-top: 1px solid var(--border);
 }
+
+/* Lettre de la zone (A, B, C... par province). */
+.zone-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.4rem;
+  border-radius: var(--radius-sm);
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+}

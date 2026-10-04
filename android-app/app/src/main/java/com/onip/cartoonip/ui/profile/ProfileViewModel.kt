@@ -80,7 +80,7 @@ class ProfileViewModel : ViewModel() {
             try {
                 val agent = AppContainer.api().agent.me()
                 _uiState.value = _uiState.value.copy(isLoading = false, agent = agent)
-                AppContainer.setAgentPhoto(agent.photoDataUrl)
+                AppContainer.applyAgent(agent)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false)
             }
@@ -175,5 +175,6 @@ class ProfileViewModel : ViewModel() {
     fun logout() {
         AppContainer.sessionManager.clear()
         AppContainer.setAgentPhoto(null)
+        AppContainer.setAgentZone(null, null)
     }
 }
