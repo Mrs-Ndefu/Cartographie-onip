@@ -19,8 +19,12 @@ spring:
     cache: false
   servlet:
     multipart:
-      max-file-size: 8MB
-      max-request-size: 8MB
+      # Les photos jointes par l'app Android ne sont pas compressées côté client et peuvent
+      # dépasser 8 Mo chacune (appareil photo haute résolution) ; jusqu'à 4 photos par ménage
+      # envoyées en un seul POST (cf. HouseholdController.uploadPhotos) — d'où une limite par
+      # requête nettement supérieure à la limite par fichier.
+      max-file-size: 15MB
+      max-request-size: 50MB
 
 app:
   jwt:
