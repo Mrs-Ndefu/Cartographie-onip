@@ -35,10 +35,6 @@
         <span class="stat-value" th:text="${inZone}">0</span>
         <span class="stat-label">Dans la zone</span>
       </div>
-      <div class="stat-card incomplet">
-        <span class="stat-value" th:text="${outOfZone}">0</span>
-        <span class="stat-label">Hors zone</span>
-      </div>
       <div class="stat-card">
         <span class="stat-value" th:text="${noZone}">0</span>
         <span class="stat-label">Agent sans zone</span>
@@ -64,10 +60,6 @@
                     th:text="${a.fullName} + ' (' + ${a.zoneLabel ?: 'sans zone'} + ')'"
                     th:selected="${agentId != null and a.id == agentId}">Agent</option>
           </select>
-          <label class="d-flex align-items-center gap-1 small fw-semibold mb-0">
-            <input type="checkbox" name="horsZone" value="true" th:checked="${horsZone}" onchange="this.form.submit()">
-            Hors zone uniquement
-          </label>
         </form>
       </div>
       <div class="table-scroll">
