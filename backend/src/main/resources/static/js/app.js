@@ -10,24 +10,30 @@ document.querySelectorAll('.agents-messages .alert').forEach(function (el, i) {
   }, 2000 + i * 300);
 });
 
-// Bandeau "ménages incomplets en attente de validation" (dashboard.html,
-// #pending-validation-toast) : visible au chargement, disparaît après quelques secondes comme un
-// toast normal, puis revient toutes les minutes — tant que la page reste ouverte — pour rappeler
-// qu'il reste des ménages ni validés ni rejetés. Le nombre n'est pas revérifié auprès du serveur
-// entre deux apparitions : un ménage traité depuis un autre onglet ou un autre appareil continue
-// donc de déclencher le rappel jusqu'au prochain chargement de cette page.
+// Cloche de notification (dashboard.html, #pending-notif-bell) : point rouge avec le nombre de
+// ménages incomplets en attente, tant qu'ils n'ont pas été "consultés". Pas de suivi côté
+// serveur (ce n'est pas un vrai système de notifications par utilisateur) : le nombre déjà vu
+// est juste mémorisé dans ce navigateur, au moment où on clique sur la cloche. Le point
+// réapparaît automatiquement si de nouveaux ménages incomplets font monter le compte au-delà de
+// cette valeur mémorisée (donc aussi après un nouveau chargement de page si rien n'a changé).
 (function () {
-  var toast = document.getElementById('pending-validation-toast');
-  if (!toast) return;
+  var bell = document.getElementById('pending-notif-bell');
+  var badge = document.getElementById('pending-notif-badge');
+  if (!bell || !badge) return;
 
-  function show() { toast.classList.remove('pending-toast-hidden'); }
-  function hide() { toast.classList.add('pending-toast-hidden'); }
+  var STORAGE_KEY = 'facm01.pendingNotifAcknowledged';
+  var count = parseInt(bell.dataset.pendingCount || '0', 10);
+  var acknowledged = 0;
+  try { acknowledged = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10); } catch (e) { /* stockage indisponible : traité comme "rien vu" */ }
 
-  setTimeout(hide, 6000);
-  setInterval(function () {
-    show();
-    setTimeout(hide, 6000);
-  }, 60000);
+  if (count > acknowledged) {
+    badge.hidden = false;
+    badge.textContent = count > 99 ? '99+' : String(count);
+  }
+
+  bell.addEventListener('click', function () {
+    try { localStorage.setItem(STORAGE_KEY, String(count)); } catch (e) { /* tant pis, pas bloquant */ }
+  });
 })();
 
 // Confirmation stylée avant une action sensible (ex: retirer/restaurer un ménage) —
