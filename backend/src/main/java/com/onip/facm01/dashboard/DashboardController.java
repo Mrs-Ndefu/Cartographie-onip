@@ -217,7 +217,7 @@ public class DashboardController {
         Agent actor = agentRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("Compte introuvable"));
         if (!actor.getRole().canEditHousehold(householdService.get(id).status())) {
-            throw new IllegalArgumentException("Le superviseur ne peut modifier que les ménages incomplets.");
+            throw new IllegalArgumentException("Vous n'avez pas le droit de modifier ce ménage.");
         }
     }
 

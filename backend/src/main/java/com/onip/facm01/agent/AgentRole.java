@@ -44,12 +44,17 @@ public enum AgentRole {
         return this == SUPER_ADMIN || this == ADMIN || this == SUPERVISEUR;
     }
 
-    public boolean canEditHouseholds() {
-        return this == ADMIN || this == SUPERVISEUR;
+    // Modifier les champs d'un ménage (formulaire d'édition) : réservé à l'ADMIN et au
+    // SUPER_ADMIN. Le SUPERVISEUR ne modifie plus — il valide ou rejette (cf.
+    // canReviewHousehold), ce qui est différent de changer les champs saisis par l'agent.
+    public boolean canEditHousehold(HouseholdStatus status) {
+        return this == ADMIN || this == SUPER_ADMIN;
     }
 
-    // Le SUPERVISEUR ne modifie que les ménages incomplets ; l'ADMIN modifie tout ménage.
-    public boolean canEditHousehold(HouseholdStatus status) {
+    // Valider ou rejeter un ménage incomplet (pas en modifier les champs) : l'ADMIN peut agir sur
+    // n'importe quel ménage, le SUPERVISEUR seulement sur les siens qui ne sont pas encore
+    // complets — cf. household-detail.html (page détail, seul endroit où ces actions existent).
+    public boolean canReviewHousehold(HouseholdStatus status) {
         return this == ADMIN || (this == SUPERVISEUR && status != HouseholdStatus.COMPLET);
     }
 

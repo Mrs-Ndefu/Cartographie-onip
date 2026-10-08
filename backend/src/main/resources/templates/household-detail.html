@@ -19,11 +19,11 @@
       <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <a th:if="${currentAgent != null and currentAgent.role.canEditHousehold(household.status)}"
          th:href="@{/dashboard/households/{id}/edit(id=${household.id})}" class="link-btn">Modifier le ménage</a>
-      <form th:if="${household.status.value != 'complet' and currentAgent != null and currentAgent.role.canEditHousehold(household.status)}"
+      <form th:if="${household.status.value != 'complet' and currentAgent != null and currentAgent.role.canReviewHousehold(household.status)}"
             th:action="@{/dashboard/households/{id}/validate(id=${household.id})}" method="post" style="display:inline">
         <button type="submit" class="btn btn-sm btn-success">Valider</button>
       </form>
-      <form th:if="${household.status.value != 'complet' and currentAgent != null and currentAgent.role.canEditHousehold(household.status)}"
+      <form th:if="${household.status.value != 'complet' and currentAgent != null and currentAgent.role.canReviewHousehold(household.status)}"
             th:action="@{/dashboard/households/{id}/reject(id=${household.id})}" method="post" style="display:inline"
             class="js-confirm-form" data-confirm-title="Rejeter ce ménage ?" data-confirm-label="Rejeter"
             th:data-confirm-detail="${household.codeMenage} + ' — il sera archivé (consultable dans les ménages retirés), pas supprimé.'">

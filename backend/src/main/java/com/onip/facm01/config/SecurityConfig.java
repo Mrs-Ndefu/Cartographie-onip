@@ -100,7 +100,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/dashboard/households/*/restore")
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .requestMatchers("/dashboard/households/*/edit", "/dashboard/households/*/edit-form")
-                        .hasAnyRole("ADMIN", "SUPERVISEUR")
+                        .hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/dashboard/households/*/validate", "/dashboard/households/*/reject")
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .requestMatchers(HttpMethod.POST, "/dashboard/zones", "/dashboard/zones/**")
