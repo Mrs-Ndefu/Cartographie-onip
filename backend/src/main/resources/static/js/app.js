@@ -10,13 +10,16 @@ document.querySelectorAll('.agents-messages .alert').forEach(function (el, i) {
   }, 2000 + i * 300);
 });
 
-// Cloche de notification (dashboard.html, #pending-notif-bell) : affiche toujours le nombre réel
-// de ménages incomplets en attente (data-pending-count, calculé côté serveur à chaque chargement
-// de la page) tant qu'il y en a au moins un — pas de logique de "déjà vu" à retenir, pour rester
-// simple et fiable : le badge reflète directement l'état du serveur, sans surprise.
+// Cloche de notification (dashboard.html, #pending-notif-bell) : le badge affiche toujours le
+// nombre réel de ménages incomplets en attente (data-pending-count, calculé côté serveur à
+// chaque chargement de la page) tant qu'il y en a au moins un. Au clic, ouvre un petit menu
+// (#pending-notif-popover, même principe que les menus de suggestions .combo-menu) avec ce
+// nombre et un bouton "Consulter" qui mène au tableau filtré — pas de navigation directe au clic
+// sur la cloche elle-même.
 (function () {
   var bell = document.getElementById('pending-notif-bell');
   var badge = document.getElementById('pending-notif-badge');
+  var popover = document.getElementById('pending-notif-popover');
   if (!bell || !badge) return;
 
   var count = parseInt(bell.dataset.pendingCount || '0', 10);
@@ -24,6 +27,28 @@ document.querySelectorAll('.agents-messages .alert').forEach(function (el, i) {
     badge.hidden = false;
     badge.textContent = count > 99 ? '99+' : String(count);
   }
+
+  if (!popover) return;
+
+  function closePopover() {
+    popover.hidden = true;
+    bell.setAttribute('aria-expanded', 'false');
+  }
+
+  bell.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var willOpen = popover.hidden;
+    popover.hidden = !willOpen;
+    bell.setAttribute('aria-expanded', String(willOpen));
+  });
+
+  // Ferme le menu en cliquant ailleurs, ou avec Échap — comportement standard d'un popover.
+  document.addEventListener('click', function (e) {
+    if (!popover.hidden && !popover.contains(e.target)) closePopover();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closePopover();
+  });
 })();
 
 // Confirmation stylée avant une action sensible (ex: retirer/restaurer un ménage) —

@@ -372,9 +372,15 @@ h1, h2, h3 {
 }
 
 /* Cloche de notification (barre de navigation, à côté de l'avatar du profil) : remplace
-   l'ancien bandeau "toast" (#pending-validation-toast). Le point rouge reste visible tant que le
-   nombre de ménages incomplets en attente n'a pas été consulté — comparaison côté client avec la
-   dernière valeur mémorisée au clic, cf. app.js (aucun suivi "vu/pas vu" côté serveur). */
+   l'ancien bandeau "toast" (#pending-validation-toast). Le badge rouge affiche le nombre de
+   ménages incomplets en attente tant qu'il y en a au moins un (cf. app.js). Au clic, ouvre un
+   petit menu (.notif-popover, même style que .combo-menu) plutôt que de naviguer directement. */
+.notif-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .notif-bell {
   position: relative;
   display: flex;
@@ -382,9 +388,12 @@ h1, h2, h3 {
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
+  border: none;
+  background: none;
   border-radius: 50%;
   color: var(--ink-muted);
   flex-shrink: 0;
+  cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -419,6 +428,26 @@ h1, h2, h3 {
 @keyframes notif-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(211, 63, 63, 0.45); }
   50% { box-shadow: 0 0 0 4px rgba(211, 63, 63, 0); }
+}
+
+.notif-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 0.9rem;
+  animation: toast-in 0.15s ease-out;
+}
+
+.notif-popover-text {
+  margin: 0 0 0.7rem;
+  font-size: 0.82rem;
+  color: var(--ink);
 }
 
 .agent-form-card {
