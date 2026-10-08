@@ -58,7 +58,7 @@ class LocationHelper(private val context: Context) {
 
     /**
      * Dernière position connue, seulement si elle date de moins de [maxAgeMs] — au-delà, l'agent a
-     * pu se déplacer et la position ne correspond plus au ménage. Repli si [bestFix] n'aboutit pas.
+     * pu se déplacer et la position ne correspond plus au foyer. Repli si [bestFix] n'aboutit pas.
      */
     fun recentLastKnown(maxAgeMs: Long = 2 * 60_000): GpsResult? {
         if (!hasPermission()) return null

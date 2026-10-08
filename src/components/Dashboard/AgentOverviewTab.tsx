@@ -32,7 +32,7 @@ export function AgentOverviewTab({ session }: AgentOverviewTabProps) {
         <div className="hero-stat">
           <span className="hero-stat-value">{todayCount}</span>
           <span className="hero-stat-label">
-            ménage{todayCount !== 1 ? 's' : ''} enregistré{todayCount !== 1 ? 's' : ''}
+            foyer{todayCount !== 1 ? 's' : ''} enregistré{todayCount !== 1 ? 's' : ''}
             <br />
             aujourd'hui
           </span>

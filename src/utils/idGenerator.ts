@@ -7,7 +7,7 @@ export function generateHouseholdId(): string {
 
 const CODE_MENAGE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
-// Génère un code ménage aléatoire (majuscules/chiffres, longueur du formulaire papier).
+// Génère un code foyer aléatoire (majuscules/chiffres, longueur du formulaire papier).
 // Reste modifiable dans le formulaire si l'agent doit reprendre un code déjà imprimé.
 export function generateCodeMenage(): string {
   let code = ''

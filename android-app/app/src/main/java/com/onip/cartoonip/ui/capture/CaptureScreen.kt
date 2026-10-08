@@ -84,7 +84,7 @@ import com.onip.cartoonip.ui.navigation.Routes
 import com.onip.cartoonip.ui.theme.OnipBlue
 import kotlin.math.roundToInt
 
-// Au-delà, le relevé peut placer le ménage chez le voisin ou dans la rue suivante.
+// Au-delà, le relevé peut placer le foyer chez le voisin ou dans la rue suivante.
 private const val POOR_GPS_PRECISION_METERS = 30.0
 
 private val fieldKeyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters)
@@ -126,7 +126,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                     },
                 )
                 Text(
-                    if (uiState.isEditing) "Modifier le ménage" else "Nouveau ménage",
+                    if (uiState.isEditing) "Modifier le foyer" else "Nouveau foyer",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = OnipBlue,
@@ -212,7 +212,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
             }
 
             item {
-                StepCard(number = 2, title = "Chef de ménage") {
+                StepCard(number = 2, title = "Chef de foyer") {
                     OutlinedTextField(
                         value = uiState.chefNom, onValueChange = viewModel::onChefNomChange,
                         label = { Text("Nom*") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
@@ -310,7 +310,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
             }
 
             item {
-                StepCard(number = 4, title = "Code du ménage") {
+                StepCard(number = 4, title = "Code du foyer") {
                     if (uiState.generatedCode != null) {
                         Text(
                             uiState.generatedCode!!,
@@ -325,7 +325,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         )
                     } else {
                         Text(
-                            "Le code est généré automatiquement dès que le GPS, le chef de ménage et l'adresse (province, ville, commune) sont renseignés.",
+                            "Le code est généré automatiquement dès que le GPS, le chef de foyer et l'adresse (province, ville, commune) sont renseignés.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -387,7 +387,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                     if (uiState.isSaving) {
                         CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
                     } else {
-                        Text(if (uiState.isEditing) "Mettre à jour le ménage" else "Enregistrer le ménage")
+                        Text(if (uiState.isEditing) "Mettre à jour le foyer" else "Enregistrer le foyer")
                     }
                 }
             }
@@ -397,12 +397,12 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
     if (showSaveConfirm) {
         AlertDialog(
             onDismissRequest = { showSaveConfirm = false },
-            title = { Text("Voulez-vous enregistrer ce ménage ?") },
+            title = { Text("Voulez-vous enregistrer ce foyer ?") },
             confirmButton = {
                 TextButton(onClick = {
                     showSaveConfirm = false
                     viewModel.submit {
-                        Toast.makeText(context, "Ménage enregistré avec succès", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Foyer enregistré avec succès", Toast.LENGTH_SHORT).show()
                         if (uiState.isEditing) onNavigate(Routes.JOURNAL) else viewModel.resetForm()
                     }
                 }) { Text("Oui") }
@@ -617,7 +617,7 @@ private fun MembersSection(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Membres du ménage (facultatif)", style = MaterialTheme.typography.titleMedium)
+                    Text("Membres du foyer (facultatif)", style = MaterialTheme.typography.titleMedium)
                     // Fiches ajoutées / membres possibles d'après le nombre saisi (chef non compté).
                     Text(
                         "Membres ajoutés : ${members.size} / ${declaredMembers?.minus(1) ?: "?"}",

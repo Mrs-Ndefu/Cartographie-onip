@@ -27,7 +27,7 @@ export function useAdminHouseholds(session: AuthSession) {
         setTotalPages(data.totalPages)
         setTotalElements(data.totalElements)
       } catch {
-        setError('Impossible de charger les ménages.')
+        setError('Impossible de charger les foyers.')
       } finally {
         setLoading(false)
       }

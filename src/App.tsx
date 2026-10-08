@@ -56,7 +56,7 @@ function App() {
   }
 
   function handleSaved(household: Household) {
-    setToast(editingHousehold ? `Ménage ${household.codeMenage} mis à jour.` : `Ménage ${household.codeMenage} enregistré.`)
+    setToast(editingHousehold ? `Foyer ${household.codeMenage} mis à jour.` : `Foyer ${household.codeMenage} enregistré.`)
     setView('map')
     setEditingHousehold(null)
     setPickedLocation(null)
@@ -69,7 +69,7 @@ function App() {
   }
 
   async function handleDeleted(household: Household) {
-    setToast(`Ménage ${household.codeMenage || '(sans code)'} supprimé.`)
+    setToast(`Foyer ${household.codeMenage || '(sans code)'} supprimé.`)
     setView('map')
     setEditingHousehold(null)
     setPickedLocation(null)
@@ -78,7 +78,7 @@ function App() {
       try {
         await deleteHouseholdOnServer(household.id, session.token)
       } catch {
-        // best effort : le ménage reste supprimé localement même si le serveur est injoignable
+        // best effort : le foyer reste supprimé localement même si le serveur est injoignable
       }
     }
   }
@@ -107,11 +107,11 @@ function App() {
         <>
           <header className="app-toolbar">
             <img src="/onip-logo.png" alt="ONIP" className="app-toolbar-logo" />
-            <h1>Adressage de Ménages</h1>
+            <h1>Adressage de Foyers</h1>
             <div className="app-toolbar-actions">
               {view === 'map' && (
                 <button type="button" className="add-member-btn" onClick={startNewHousehold}>
-                  + Nouveau ménage
+                  + Nouveau foyer
                 </button>
               )}
               {view === 'map' && session && (
@@ -125,7 +125,7 @@ function App() {
                 className="resync-btn"
                 onClick={() => void forceSyncAll()}
                 disabled={syncStatus === 'syncing'}
-                title="Renvoyer tous les ménages locaux au serveur"
+                title="Renvoyer tous les foyers locaux au serveur"
               >
                 ⟳
               </button>

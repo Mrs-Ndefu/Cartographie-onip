@@ -20,14 +20,14 @@ type Tab = 'overview' | 'households' | 'agents' | 'journal' | 'map'
 
 const ADMIN_TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: "Vue d'ensemble" },
-  { id: 'households', label: 'Ménages' },
+  { id: 'households', label: 'Foyers' },
   { id: 'map', label: 'Carte' },
   { id: 'agents', label: 'Agents' },
 ]
 
 // Un compte AGENT voit ses propres statistiques (calculées localement, hors ligne) et son
 // journal du jour — pas les stats globales ni la gestion des autres agents, réservées aux ADMIN.
-// La Carte, elle, vient du serveur (via /api/households, déjà filtré à ses propres ménages côté
+// La Carte, elle, vient du serveur (via /api/households, déjà filtré à ses propres foyers côté
 // backend) — c'est la seule vue de ce dashboard qui n'est pas purement locale pour un agent.
 const AGENT_TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: "Vue d'ensemble" },

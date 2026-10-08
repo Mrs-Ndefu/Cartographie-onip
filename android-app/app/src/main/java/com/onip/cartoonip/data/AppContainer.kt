@@ -45,7 +45,7 @@ object AppContainer {
     }
 
     // Jeton refusé par le serveur : on ferme la session (l'écran de connexion s'affiche, cf.
-    // CartoOnipNavHost). Les ménages enregistrés sur l'appareil ne sont pas touchés ; leur
+    // CartoOnipNavHost). Les foyers enregistrés sur l'appareil ne sont pas touchés ; leur
     // synchronisation reprend après la reconnexion.
     private fun onSessionExpired() {
         if (sessionManager.session.value == null) return

@@ -75,7 +75,7 @@ export const householdSchema: z.ZodType<HouseholdFormValues> = z
       .min(1, 'Nombre de membres obligatoire')
       .regex(/^\d+$/, 'Nombre invalide'),
     chef: personSchema,
-    // Pas de plafond : un ménage peut compter autant de membres que nécessaire.
+    // Pas de plafond : un foyer peut compter autant de membres que nécessaire.
     membres: z.array(personSchema),
     address: addressSchema,
     faitA: z.string(),

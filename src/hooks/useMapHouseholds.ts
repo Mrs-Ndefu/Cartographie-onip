@@ -24,7 +24,7 @@ export function useMapHouseholds(session: AuthSession) {
         )
         if (!cancelled) setHouseholds(data.content)
       } catch {
-        if (!cancelled) setError('Impossible de charger les ménages.')
+        if (!cancelled) setError('Impossible de charger les foyers.')
       } finally {
         if (!cancelled) setLoading(false)
       }

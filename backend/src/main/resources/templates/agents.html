@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Agents — Adressage de Ménages</title>
+  <title>Agents — Adressage de Foyers</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
 <body>
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>Adressage de Ménages — Gestion des agents</h1>
+    <h1>Adressage de Foyers — Gestion des agents</h1>
     <nav class="topbar-nav">
       <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}" th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <a th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
@@ -193,7 +193,7 @@
                           class="js-confirm-form"
                           data-confirm-title="Supprimer définitivement ce compte ?"
                           data-confirm-label="Supprimer"
-                          th:data-confirm-detail="${a.fullName} + ' (' + ${a.username} + ') — action définitive, impossible si ce compte a des ménages enregistrés ou encadre des agents.'">
+                          th:data-confirm-detail="${a.fullName} + ' (' + ${a.username} + ') — action définitive, impossible si ce compte a des foyers enregistrés ou encadre des agents.'">
                       <button type="submit" class="btn btn-sm btn-danger w-100">Supprimer le compte</button>
                     </form>
                   </div>
@@ -227,7 +227,7 @@
 
   <div id="confirm-modal" class="confirm-overlay" hidden>
     <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
-      <h3 id="confirm-title" class="confirm-title">Voulez-vous retirer ce ménage ?</h3>
+      <h3 id="confirm-title" class="confirm-title">Voulez-vous retirer ce foyer ?</h3>
       <p class="confirm-message"></p>
       <div class="confirm-actions">
         <button type="button" class="btn btn-sm btn-outline-secondary confirm-cancel">Annuler</button>

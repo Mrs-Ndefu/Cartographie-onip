@@ -6,7 +6,7 @@
   <meta name="_csrf" th:content="${_csrf.token}">
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <meta name="_csrf_parameter" th:content="${_csrf.parameterName}">
-  <title>Adressage de Ménages</title>
+  <title>Adressage de Foyers</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,7 @@
 <body>
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>ADRESSAGE DE MÉNAGES</h1>
+    <h1>ADRESSAGE DE FOYERS</h1>
     <nav class="topbar-nav">
       <a th:href="@{/dashboard/archives}" class="link-btn">Archives</a>
       <a th:if="${currentAgent != null and currentAgent.role.canViewSupervisorHistory()}"
@@ -29,13 +29,13 @@
       <div class="agent-summary" th:if="${currentAgent != null}">
         <span class="agent-role-badge" th:text="${currentAgent.role.label()}">ROLE</span>
       </div>
-      <!-- Cloche de notification : un point rouge avec le nombre de ménages incomplets en
+      <!-- Cloche de notification : un point rouge avec le nombre de foyers incomplets en
            attente, tant qu'ils n'ont pas été consultés (cf. app.js, qui compare le nombre actuel
            à celui mémorisé en local au dernier clic — pas de suivi côté serveur). Remplace
            l'ancien bandeau "toast", jugé peu pro et redondant. -->
       <div class="notif-wrap" th:if="${currentAgent != null and (currentAgent.role.name() == 'ADMIN' or currentAgent.role.name() == 'SUPERVISEUR' or currentAgent.role.name() == 'SUPER_ADMIN')}">
         <button type="button" id="pending-notif-bell" class="notif-bell"
-                title="Ménages incomplets en attente de validation" th:attr="data-pending-count=${countIncomplet}"
+                title="Foyers incomplets en attente de validation" th:attr="data-pending-count=${countIncomplet}"
                 aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M10 2.3c-2.5 0-4.4 2-4.4 4.6v2.2c0 1-.3 1.9-.9 2.7l-.6.8c-.5.7 0 1.6.8 1.6h10.2c.8 0 1.3-.9.8-1.6l-.6-.8c-.6-.8-.9-1.7-.9-2.7V6.9c0-2.6-1.9-4.6-4.4-4.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
@@ -47,7 +47,7 @@
              style que les autres menus de la page (cf. .combo-menu). -->
         <div id="pending-notif-popover" class="notif-popover" hidden>
           <p class="notif-popover-text"
-             th:text="${countIncomplet} + ' ménage(s) incomplet(s) en attente de validation.'">-</p>
+             th:text="${countIncomplet} + ' foyer(s) incomplet(s) en attente de validation.'">-</p>
           <a th:href="@{/dashboard#menages(statut='incomplet')}" class="btn btn-sm btn-primary w-100">Consulter</a>
         </div>
       </div>
@@ -63,7 +63,7 @@
   <section class="hero-row">
     <div class="population-hero">
       <span class="population-hero-value" th:text="${total}" th:data-target="${total}">0</span>
-      <span class="population-hero-label">Total ménages</span>
+      <span class="population-hero-label">Total foyers</span>
     </div>
     <div class="population-hero">
       <span class="population-hero-value" th:text="${population}" th:data-target="${population}">0</span>
@@ -117,7 +117,7 @@
     <div class="table-card">
       <div class="table-card-header">
         <div>
-          <h2>Ménages enregistrés</h2>
+          <h2>Foyers enregistrés</h2>
           <span class="table-card-count" th:text="${page.totalElements} + ' au total'">0 au total</span>
         </div>
         <form id="hh-filters" th:action="@{/dashboard}" method="get" class="table-filters" role="search">
@@ -127,7 +127,7 @@
               <path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
             </svg>
             <input type="search" name="search" class="table-search-input"
-                   placeholder="Chef de ménage ou code ménage…" th:value="${search}">
+                   placeholder="Chef de foyer ou code foyer…" th:value="${search}">
           </div>
           <select name="zoneId" id="zone-filter" class="filter-select" title="Zone d'affectation">
             <option value="">Toutes les zones</option>
@@ -140,7 +140,7 @@
         <table class="households-table">
           <thead>
             <tr>
-              <th>Code Ménage</th>
+              <th>Code Foyer</th>
               <th>Chef</th>
               <th>
                 <div class="th-with-filter">
@@ -218,11 +218,11 @@
                   </a>
                   <!-- Modifier/Valider/Rejeter : plus dans le tableau, pour personne — toujours
                        depuis la page détail (cf. household-detail.html) : il faut consulter le
-                       ménage avant d'agir. -->
+                       foyer avant d'agir. -->
                   <form th:if="${currentAgent != null and currentAgent.role.canRemoveHouseholds()}"
                         th:action="@{/dashboard/households/{id}/archive(id=${h.id})}" method="post"
                         class="js-confirm-form"
-                        th:data-confirm-detail="${h.codeMenage} + ' — il ne sera plus visible dans la liste principale, mais reste consultable dans les ménages retirés.'">
+                        th:data-confirm-detail="${h.codeMenage} + ' — il ne sera plus visible dans la liste principale, mais reste consultable dans les foyers retirés.'">
                     <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Retirer" aria-label="Retirer">
                       <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                         <rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/>
@@ -236,15 +236,15 @@
             </tr>
             <tr th:if="${households.isEmpty()}">
               <td colspan="9" class="table-empty"
-                  th:text="${search != null and !#strings.isEmpty(search)} ? 'Aucun ménage ne correspond à cette recherche.' : 'Aucun ménage synchronisé pour l\'instant.'">
-                Aucun ménage synchronisé pour l'instant.
+                  th:text="${search != null and !#strings.isEmpty(search)} ? 'Aucun foyer ne correspond à cette recherche.' : 'Aucun foyer synchronisé pour l\'instant.'">
+                Aucun foyer synchronisé pour l'instant.
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <nav th:if="${page.totalPages > 1}" aria-label="Pagination des ménages" class="table-card-footer">
+      <nav th:if="${page.totalPages > 1}" aria-label="Pagination des foyers" class="table-card-footer">
         <ul class="pagination pagination-sm mb-1">
           <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
             <a class="page-link" th:href="@{/dashboard(page=${page.number - 1}, search=${search}, province=${province}, ville=${ville}, commune=${commune}, statut=${statut}, zoneId=${zoneId}, dateFrom=${dateFrom}, dateTo=${dateTo})}">Précédent</a>
@@ -258,7 +258,7 @@
         </ul>
         <p class="text-secondary small mb-0">
           Page <span th:text="${page.number + 1}">1</span> / <span th:text="${page.totalPages}">1</span>
-          — <span th:text="${page.totalElements}">0</span> ménage(s) au total
+          — <span th:text="${page.totalElements}">0</span> foyer(s) au total
         </p>
       </nav>
     </div>
@@ -267,7 +267,7 @@
   <div id="edit-modal" class="edit-modal" hidden>
     <div class="edit-modal-box" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
       <div class="edit-modal-header">
-        <h2 id="edit-modal-title">Modifier le ménage</h2>
+        <h2 id="edit-modal-title">Modifier le foyer</h2>
         <button type="button" class="btn-close edit-modal-close" aria-label="Fermer"></button>
       </div>
       <div class="edit-modal-body"></div>
@@ -276,7 +276,7 @@
 
   <div id="confirm-modal" class="confirm-overlay" hidden>
     <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
-      <h3 id="confirm-title" class="confirm-title">Voulez-vous retirer ce ménage ?</h3>
+      <h3 id="confirm-title" class="confirm-title">Voulez-vous retirer ce foyer ?</h3>
       <p class="confirm-message"></p>
       <div class="confirm-actions">
         <button type="button" class="btn btn-sm btn-outline-secondary confirm-cancel">Annuler</button>
@@ -289,7 +289,7 @@
   <script src="https://unpkg.com/chart.js@4/dist/chart.umd.js"></script>
   <script th:inline="javascript">
     /*<![CDATA[*/
-    // Compteurs animés (total ménages, population) : partent de 0 et montent jusqu'à la valeur
+    // Compteurs animés (total foyers, population) : partent de 0 et montent jusqu'à la valeur
     // réelle au chargement de la page (purement visuel — la valeur cible reste celle calculée
     // côté serveur).
     (function () {
@@ -329,7 +329,7 @@
       data: {
         labels: monthlyRegistrations.map(function (m) { return m.label; }),
         datasets: [{
-          label: 'Ménages enregistrés',
+          label: 'Foyers enregistrés',
           data: monthlyRegistrations.map(function (m) { return m.count; }),
           backgroundColor: '#178a17'
         }]
@@ -341,9 +341,9 @@
       }
     });
 
-    // Carte : tous les ménages correspondant aux filtres (pas seulement la page du tableau). Dès
+    // Carte : tous les foyers correspondant aux filtres (pas seulement la page du tableau). Dès
     // qu'une province, une ville, une commune ou une zone est choisie, la carte zoome pour cadrer
-    // exactement les ménages trouvés.
+    // exactement les foyers trouvés.
     const mapPoints = /*[[${mapPoints}]]*/ [];
     const zoomToPoints = /*[[${zoomToPoints}]]*/ false;
     const map = L.map('dashboard-map').setView([-4.4419, 15.2663], 11);
@@ -367,7 +367,7 @@
       map.fitBounds(L.featureGroup(markers).getBounds(), { padding: [40, 40], maxZoom: 16 });
     }
 
-    // Recherche en direct : filtre dès la première lettre tapée (nom du chef ou code ménage),
+    // Recherche en direct : filtre dès la première lettre tapée (nom du chef ou code foyer),
     // sans recharger la page — reprend aussi la commune/plage de dates actuellement sélectionnées
     // pour que le total affiché reste cohérent avec l'ensemble des filtres actifs.
     (function () {
@@ -494,7 +494,7 @@
           +   '</a>'
           +   (canRemove
                 ? '<form method="post" action="/dashboard/households/' + h.id + '/archive" class="js-confirm-form"'
-                  + ' data-confirm-detail="' + escapeHtml(code).replace(/"/g, '&quot;') + ' — il ne sera plus visible dans la liste principale, mais reste consultable dans les ménages retirés.">'
+                  + ' data-confirm-detail="' + escapeHtml(code).replace(/"/g, '&quot;') + ' — il ne sera plus visible dans la liste principale, mais reste consultable dans les foyers retirés.">'
                   + '<input type="hidden" name="' + csrfParam + '" value="' + csrfToken + '">'
                   + '<button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Retirer" aria-label="Retirer">'
                   + '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2.5" y="4" width="15" height="3" rx="0.8" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 7.5V15a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M8 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'
@@ -543,7 +543,7 @@
               }
               tbody.innerHTML = results.length
                 ? results.map(renderRow).join('')
-                : '<tr><td colspan="9" class="table-empty">Aucun ménage ne correspond à cette recherche.</td></tr>';
+                : '<tr><td colspan="9" class="table-empty">Aucun foyer ne correspond à cette recherche.</td></tr>';
             })
             .catch(function () {
               // Recherche live indisponible — la touche Entrée / le rechargement de page reste utilisable.

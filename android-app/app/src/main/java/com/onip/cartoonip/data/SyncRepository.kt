@@ -14,10 +14,10 @@ import java.io.File
 import java.time.Instant
 
 /**
- * Synchronise un ménage capturé localement : d'abord les champs (sync JSON, comme le fait déjà
+ * Synchronise un foyer capturé localement : d'abord les champs (sync JSON, comme le fait déjà
  * l'app terrain React), puis les photos (jusqu'à MAX_HOUSEHOLD_PHOTOS, envoyées en un seul appel
  * qui remplace tout le jeu côté serveur) si elles ne sont pas encore envoyées. Les deux étapes
- * sont indépendantes exprès — une coupure réseau entre les deux laisse le ménage "à moitié
+ * sont indépendantes exprès — une coupure réseau entre les deux laisse le foyer "à moitié
  * synchronisé" (syncedAt posé, photoSyncedAt vide), ce que l'écran Journal peut détecter et
  * relancer seul.
  */

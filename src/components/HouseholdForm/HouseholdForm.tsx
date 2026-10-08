@@ -90,7 +90,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
       await updateHousehold(household.id, changes)
       onSaved?.({ ...household, ...changes })
     } else {
-      // Code ménage non saisi par l'agent : généré automatiquement au moment de l'enregistrement.
+      // Code foyer non saisi par l'agent : généré automatiquement au moment de l'enregistrement.
       const finalValues = values.codeMenage ? values : { ...values, codeMenage: generateCodeMenage() }
       const saved = await addHousehold(toHousehold(finalValues, location))
       onSaved?.(saved)
@@ -99,7 +99,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
 
   async function handleDelete() {
     if (!household) return
-    if (!window.confirm(`Supprimer le ménage ${household.codeMenage || '(sans code)'} ? Cette action est irréversible.`)) {
+    if (!window.confirm(`Supprimer le foyer ${household.codeMenage || '(sans code)'} ? Cette action est irréversible.`)) {
       return
     }
     await deleteHousehold(household.id)
@@ -111,7 +111,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
       <OfficialHeader />
       <div className="form-header">
         <div className="header-field">
-          <label className="field-label">Code Ménage*</label>
+          <label className="field-label">Code Foyer*</label>
           <Controller
             control={control}
             name="codeMenage"
@@ -156,15 +156,15 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
       </div>
 
       <section className="form-section">
-        <h2>Identité du chef de ménage</h2>
-        <PersonFields control={control} namePrefix="chef" title="Chef de ménage" />
+        <h2>Identité du chef de foyer</h2>
+        <PersonFields control={control} namePrefix="chef" title="Chef de foyer" />
       </section>
 
       <AddressFields control={control} setValue={setValue} />
 
       <section className="form-section">
         <div className="section-header-row">
-          <h2>Identités des membres du ménage</h2>
+          <h2>Identités des membres du foyer</h2>
           <button
             type="button"
             className="add-member-btn"
@@ -194,7 +194,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
       <div className="form-actions">
         {household ? (
           <button type="button" className="delete-btn" onClick={handleDelete}>
-            Supprimer le ménage
+            Supprimer le foyer
           </button>
         ) : (
           <span />
@@ -206,7 +206,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
             </button>
           )}
           <button type="submit" className="submit-btn" disabled={isSubmitting}>
-            {household ? 'Mettre à jour le ménage' : 'Enregistrer le ménage'}
+            {household ? 'Mettre à jour le foyer' : 'Enregistrer le foyer'}
           </button>
         </div>
       </div>

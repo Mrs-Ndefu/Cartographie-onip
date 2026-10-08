@@ -21,7 +21,7 @@ import java.time.Instant
 import java.util.UUID
 
 // Mêmes options que l'app React (types/household.ts RELATION_OPTIONS) — lien du membre avec
-// le chef de ménage.
+// le chef de foyer.
 val RELATION_OPTIONS = listOf(
     "Époux/Épouse",
     "Fils/Fille",
@@ -48,7 +48,7 @@ data class MemberInput(
 
 data class CaptureUiState(
     val householdId: String = UUID.randomUUID().toString(),
-    // Nombre de membres du ménage, chef compris, saisi au-dessus du chef de ménage. Obligatoire :
+    // Nombre de membres du foyer, chef compris, saisi au-dessus du chef de foyer. Obligatoire :
     // 1 = le chef vit seul ; sinon l'agent peut ajouter jusqu'à (nombre - 1) fiches membres.
     val declaredMembersText: String = "",
     // Message affiché quand l'agent tente d'ajouter une fiche au-delà du nombre déclaré.
@@ -99,7 +99,7 @@ data class CaptureUiState(
     val totalMembers get() = 1 + members.size
 
     // null = pas encore saisi, ou hors limites.
-    // Aucun plafond : un ménage peut compter autant de membres que nécessaire, pas seulement
+    // Aucun plafond : un foyer peut compter autant de membres que nécessaire, pas seulement
     // jusqu'à la taille de la fiche papier.
     val declaredMembers: Int? get() = declaredMembersText.toIntOrNull()?.takeIf { it >= 1 }
 
@@ -116,7 +116,7 @@ data class CaptureUiState(
     val missingForSubmit: List<String>
         get() = buildList {
             if (!hasLocation) add("le GPS")
-            if (chefNom.isBlank()) add("le nom du chef de ménage")
+            if (chefNom.isBlank()) add("le nom du chef de foyer")
             if (province.isBlank()) add("la province")
             if (ville.isBlank()) add("la ville")
             if (commune.isBlank()) add("la commune")
@@ -147,7 +147,7 @@ class CaptureViewModel : ViewModel() {
     // Toute saisie est forcée en majuscules — convention de la fiche papier FACM01.
     private fun String.toFieldCase() = uppercase()
 
-    // Une fois généré, le code du ménage n'est plus jamais invalidé par la suite (même si le
+    // Une fois généré, le code du foyer n'est plus jamais invalidé par la suite (même si le
     // chef/l'adresse changent ensuite) — il ne doit pouvoir être régénéré qu'une seule fois.
     fun onChefNomChange(v: String) = update { copy(chefNom = v.toFieldCase()) }
     fun onChefPostnomChange(v: String) = update { copy(chefPostnom = v.toFieldCase()) }
@@ -195,9 +195,9 @@ class CaptureViewModel : ViewModel() {
         if (declared == null || totalMembers >= declared) {
             copy(
                 memberLimitMessage = if (declared == null) {
-                    "Saisissez d'abord le nombre de membres du ménage (chef compris) en haut du formulaire."
+                    "Saisissez d'abord le nombre de membres du foyer (chef compris) en haut du formulaire."
                 } else {
-                    "Le ménage compte $declared membre(s), chef compris. Pour ajouter un autre membre, " +
+                    "Le foyer compte $declared membre(s), chef compris. Pour ajouter un autre membre, " +
                         "modifiez d'abord le nombre de membres en haut du formulaire."
                 },
             )
@@ -242,7 +242,7 @@ class CaptureViewModel : ViewModel() {
         _uiState.value = newState
     }
 
-    /** Recharge un ménage déjà enregistré localement pour le corriger. */
+    /** Recharge un foyer déjà enregistré localement pour le corriger. */
     fun loadForEdit(householdId: String) {
         val h = AppContainer.captureStore.get(householdId) ?: return
         _uiState.value = CaptureUiState(
@@ -388,7 +388,7 @@ class CaptureViewModel : ViewModel() {
             try {
                 household = SyncRepository.sync(household)
             } catch (e: Exception) {
-                // Échec réseau ou serveur : le ménage reste enregistré localement, synchronisable
+                // Échec réseau ou serveur : le foyer reste enregistré localement, synchronisable
                 // plus tard depuis le Journal — ce n'est pas un échec de la capture elle-même.
             }
 

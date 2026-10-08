@@ -15,7 +15,7 @@ export function CodeMenageInput({ value, onChange, error }: CodeMenageInputProps
       onChange={onChange}
       pattern={/[A-Z0-9]/}
       error={error}
-      ariaLabel="Code Ménage"
+      ariaLabel="Code Foyer"
     />
   )
 }

@@ -3,8 +3,8 @@ export const NAME_FIELD_LENGTH = 19 // Nom / Postnom / Prénom — compté sur l
 
 export type Sexe = 'M' | 'F'
 
-// Lien de parenté avec le chef de ménage — non présent sur le formulaire papier FACM01,
-// ajouté pour mieux qualifier la composition du ménage.
+// Lien de parenté avec le chef de foyer — non présent sur le formulaire papier FACM01,
+// ajouté pour mieux qualifier la composition du foyer.
 export const RELATION_OPTIONS = [
   'Époux/Épouse',
   'Fils/Fille',

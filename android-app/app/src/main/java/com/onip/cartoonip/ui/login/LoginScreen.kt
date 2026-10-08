@@ -59,7 +59,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, viewModel: LoginViewModel = viewMode
             textAlign = TextAlign.Center,
         )
         Text(
-            text = "Enregistrement des ménages sur le terrain",
+            text = "Enregistrement des foyers sur le terrain",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp, top = 4.dp),
             textAlign = TextAlign.Center,

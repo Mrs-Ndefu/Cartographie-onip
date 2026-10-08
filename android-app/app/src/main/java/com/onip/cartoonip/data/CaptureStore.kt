@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Stockage local des ménages capturés — un simple fichier JSON dans le stockage privé de l'app
+ * Stockage local des foyers capturés — un simple fichier JSON dans le stockage privé de l'app
  * (pas de base de données embarquée : le volume attendu par agent et par jour est modeste, et ça
  * évite d'ajouter Room/KSP au projet). Les photos elles-mêmes sont des fichiers séparés
  * (voir PhotoStore) ; ce fichier ne référence que leur chemin.

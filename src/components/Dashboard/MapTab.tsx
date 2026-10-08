@@ -37,7 +37,7 @@ export function MapTab({ session }: MapTabProps) {
   return (
     <div className="map-tab">
       <p className="households-count">
-        {withLocation.length} ménage{withLocation.length > 1 ? 's' : ''} localisé
+        {withLocation.length} foyer{withLocation.length > 1 ? 's' : ''} localisé
         {withLocation.length > 1 ? 's' : ''} sur {households.length} au total
       </p>
       <MapContainer center={center} zoom={DEFAULT_ZOOM} className="map-tab-container">

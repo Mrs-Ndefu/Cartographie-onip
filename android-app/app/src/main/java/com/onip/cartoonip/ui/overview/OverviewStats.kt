@@ -20,7 +20,7 @@ data class OverviewStats(
 
 private val DAY_LABEL = DateTimeFormatter.ofPattern("dd/MM")
 
-/** Calculé localement à partir des ménages capturés sur l'appareil — pas d'appel serveur. */
+/** Calculé localement à partir des foyers capturés sur l'appareil — pas d'appel serveur. */
 fun computeOverviewStats(households: List<CapturedHousehold>, daysBack: Int = 14): OverviewStats {
     val zone = ZoneId.systemDefault()
     val today = LocalDate.now(zone)

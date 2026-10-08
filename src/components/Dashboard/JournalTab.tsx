@@ -44,7 +44,7 @@ export function JournalTab({ session, onEdit, onToast }: JournalTabProps) {
     setDeleting(household.id)
     try {
       await deleteHousehold(household.id)
-      onToast(`Ménage ${household.codeMenage || '(sans code)'} supprimé.`)
+      onToast(`Foyer ${household.codeMenage || '(sans code)'} supprimé.`)
 
       if (household.syncedAt && navigator.onLine) {
         try {
@@ -77,7 +77,7 @@ export function JournalTab({ session, onEdit, onToast }: JournalTabProps) {
             <input
               type="search"
               className="journal-search"
-              placeholder="Rechercher un chef de ménage…"
+              placeholder="Rechercher un chef de foyer…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -88,8 +88,8 @@ export function JournalTab({ session, onEdit, onToast }: JournalTabProps) {
           <table className="dashboard-table">
             <thead>
               <tr>
-                <th>Code Ménage</th>
-                <th>Chef de ménage</th>
+                <th>Code Foyer</th>
+                <th>Chef de foyer</th>
                 <th>Commune / Quartier</th>
                 <th>Statut</th>
                 <th>Heure</th>
@@ -134,8 +134,8 @@ export function JournalTab({ session, onEdit, onToast }: JournalTabProps) {
                       </svg>
                       <p>
                         {search
-                          ? 'Aucun ménage ne correspond à cette recherche pour aujourd\'hui.'
-                          : "Aucun ménage enregistré aujourd'hui pour l'instant."}
+                          ? 'Aucun foyer ne correspond à cette recherche pour aujourd\'hui.'
+                          : "Aucun foyer enregistré aujourd'hui pour l'instant."}
                       </p>
                     </div>
                   </td>
@@ -149,7 +149,7 @@ export function JournalTab({ session, onEdit, onToast }: JournalTabProps) {
       {confirmTarget && (
         <div className="settings-overlay" onClick={() => setConfirmTarget(null)}>
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <p>Supprimer le ménage {confirmTarget.codeMenage || '(sans code)'} ? Cette action est définitive.</p>
+            <p>Supprimer le foyer {confirmTarget.codeMenage || '(sans code)'} ? Cette action est définitive.</p>
             <div className="confirm-dialog-actions">
               <button type="button" className="cancel-btn" onClick={() => setConfirmTarget(null)}>
                 Annuler

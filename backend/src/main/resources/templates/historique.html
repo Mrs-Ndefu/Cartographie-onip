@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Historique de mes agents — Adressage de Ménages</title>
+  <title>Historique de mes agents — Adressage de Foyers</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,11 +12,11 @@
   <link rel="stylesheet" th:href="@{/css/dashboard.css}">
 </head>
 <body>
-  <!-- Historique du SUPERVISEUR : ménages enregistrés par ses agents, avec la zone affectée à
+  <!-- Historique du SUPERVISEUR : foyers enregistrés par ses agents, avec la zone affectée à
        chaque agent et un signalement des enregistrements faits hors de cette zone. -->
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>Adressage de Ménages — Historique de mes agents</h1>
+    <h1>Adressage de Foyers — Historique de mes agents</h1>
     <nav class="topbar-nav">
       <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <a th:href="@{/dashboard/agents}" class="link-btn">Gérer les agents</a>
@@ -67,7 +67,7 @@
           <thead>
             <tr>
               <th>Enregistré le</th>
-              <th>Code Ménage</th>
+              <th>Code Foyer</th>
               <th>Chef</th>
               <th>Adresse (province / ville / commune)</th>
               <th>Agent</th>
