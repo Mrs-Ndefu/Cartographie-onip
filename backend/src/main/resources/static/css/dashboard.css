@@ -1190,6 +1190,63 @@ h1, h2, h3 {
   height: 31px;
 }
 
+/* Menu de suggestions (champs Nom complet / Adresse mail du formulaire "Créer un compte"),
+   alimenté par le personnel importé (cf. app.js, STAFF_SUGGESTIONS). Remplace le <datalist>
+   natif, dont l'apparence ne se personnalise pas selon le navigateur. */
+.combo-field {
+  position: relative;
+}
+
+.combo {
+  position: relative;
+}
+
+.combo-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.3rem;
+}
+
+.combo-option {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.05rem;
+  padding: 0.4rem 0.6rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.combo-option:hover,
+.combo-option:focus-visible {
+  background: var(--brand-light);
+  outline: none;
+}
+
+.combo-option-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.combo-option-email {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
 .agents-table td {
   vertical-align: middle;
 }

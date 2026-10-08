@@ -45,7 +45,7 @@
       </div>
       <form th:action="@{/dashboard/agents/import-staff}" method="post" enctype="multipart/form-data" class="agents-create-form">
         <label class="agents-field">
-          <span>Fichier Excel (.xlsx — colonnes : nom, email)</span>
+          <span>Fichier Excel (.xlsx — colonnes : nom, email, rôle [optionnel])</span>
           <input type="file" name="file" accept=".xlsx" class="form-control form-control-sm" required>
         </label>
         <button type="submit" class="btn btn-primary btn-sm agents-create-btn">Importer (remplace la liste actuelle)</button>
@@ -60,25 +60,31 @@
         </div>
       </div>
       <form th:action="@{/dashboard/agents}" method="post" class="agents-create-form" id="create-agent-form">
-        <label class="agents-field">
+        <!-- Suggestions du personnel importé (cf. StaffMemberRepository), consommées par le
+             composant JS plus bas (cf. app.js) : filtrage et menu stylés, pas un <datalist>
+             natif. Choisir une suggestion remplit nom + email + rôle (s'il est défini dans le
+             fichier Excel importé). -->
+        <script th:inline="javascript">
+          /*<![CDATA[*/
+          var STAFF_SUGGESTIONS = /*[[${staffSuggestions}]]*/ [];
+          /*]]>*/
+        </script>
+        <label class="agents-field combo-field">
           <span>Nom complet</span>
-          <input type="text" name="fullName" id="create-fullname" class="form-control form-control-sm"
-                 list="staff-names-list" autocomplete="off" required>
+          <div class="combo" data-combo-field="fullName">
+            <input type="text" name="fullName" id="create-fullname" class="form-control form-control-sm"
+                   autocomplete="off" required>
+            <div class="combo-menu" hidden></div>
+          </div>
         </label>
-        <label class="agents-field">
+        <label class="agents-field combo-field">
           <span>Adresse mail</span>
-          <input type="email" name="username" id="create-username" class="form-control form-control-sm"
-                 list="staff-emails-list" autocomplete="off" placeholder="agent@onip.local" required>
+          <div class="combo" data-combo-field="email">
+            <input type="email" name="username" id="create-username" class="form-control form-control-sm"
+                   autocomplete="off" placeholder="agent@onip.local" required>
+            <div class="combo-menu" hidden></div>
+          </div>
         </label>
-        <!-- Liste du personnel importé (cf. StaffMemberRepository) : se filtre nativement selon les
-             lettres tapées (comportement natif du navigateur pour <input list="...">). Choisir une
-             suggestion remplit aussi l'autre champ (cf. script plus bas). -->
-        <datalist id="staff-names-list">
-          <option th:each="s : ${staffList}" th:value="${s.fullName}"></option>
-        </datalist>
-        <datalist id="staff-emails-list">
-          <option th:each="s : ${staffList}" th:value="${s.email}"></option>
-        </datalist>
         <label class="agents-field">
           <span>Mot de passe</span>
           <span class="input-group input-group-sm">
