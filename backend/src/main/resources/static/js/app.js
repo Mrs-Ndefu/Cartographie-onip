@@ -1,6 +1,9 @@
 // Toasts succès/erreur (.agents-messages .alert) : disparaissent tout seuls après quelques
-// secondes au lieu de rester affichés indéfiniment dans la page.
+// secondes au lieu de rester affichés indéfiniment dans la page. Exception : le message qui
+// contient le mot de passe généré automatiquement (cf. AgentAdminController#create) reste
+// affiché, le temps de le copier — il ne sera plus jamais montré une fois la page quittée.
 document.querySelectorAll('.agents-messages .alert').forEach(function (el, i) {
+  if (el.textContent.indexOf('Mot de passe :') !== -1) return;
   setTimeout(function () {
     el.classList.add('alert-fade-out');
     el.addEventListener('transitionend', function () { el.remove(); }, { once: true });
