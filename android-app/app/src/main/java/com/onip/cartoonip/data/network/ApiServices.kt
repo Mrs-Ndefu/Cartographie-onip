@@ -37,7 +37,7 @@ interface HouseholdApi {
     @POST("api/households/sync")
     suspend fun sync(@Body request: HouseholdSyncRequest): SyncResponse
 
-    // Remplace l'intégralité des photos du ménage en un seul envoi (jusqu'à MAX_HOUSEHOLD_PHOTOS)
+    // Remplace l'intégralité des photos du foyer en un seul envoi (jusqu'à MAX_HOUSEHOLD_PHOTOS)
     // — cf. SyncRepository.sync pour le pourquoi du "remplace tout" plutôt qu'un ajout.
     @Multipart
     @POST("api/households/{id}/photos")

@@ -7,8 +7,8 @@ private const val CODE_LENGTH = 6
 private const val CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 /**
- * Code déterministe dérivé du GPS + nom du chef de ménage + adresse (commune/quartier) : deux
- * ménages saisis au même endroit, pour le même chef et la même adresse, obtiennent exactement le
+ * Code déterministe dérivé du GPS + nom du chef de foyer + adresse (commune/quartier) : deux
+ * foyers saisis au même endroit, pour le même chef et la même adresse, obtiennent exactement le
  * même code (utile pour repérer un doublon de saisie) — contrairement à un code purement
  * aléatoire. La position est arrondie à 4 décimales (~11 m) pour ne pas faire varier le code au
  * bruit naturel du capteur GPS entre deux relevés au même endroit.

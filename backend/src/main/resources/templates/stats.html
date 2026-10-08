@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Statistiques — Adressage de Ménages</title>
+  <title>Statistiques — Adressage de Foyers</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,11 +12,11 @@
   <link rel="stylesheet" th:href="@{/css/dashboard.css}">
 </head>
 <body>
-  <!-- Page de la Direction Générale : totaux (ménages, population) et statistiques de population
-       (sexe, mineurs / majeurs, tranches d'âge) — ni liste de ménages, ni carte, ni gestion des comptes. -->
+  <!-- Page de la Direction Générale : totaux (foyers, population) et statistiques de population
+       (sexe, mineurs / majeurs, tranches d'âge) — ni liste de foyers, ni carte, ni gestion des comptes. -->
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>ADRESSAGE DE MÉNAGES — STATISTIQUES</h1>
+    <h1>ADRESSAGE DE FOYERS — STATISTIQUES</h1>
     <nav class="topbar-nav">
       <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}"
          th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
@@ -35,7 +35,7 @@
   <section class="hero-row">
     <div class="population-hero">
       <span class="population-hero-value" th:text="${total}" th:data-target="${total}">0</span>
-      <span class="population-hero-label">Total ménages</span>
+      <span class="population-hero-label">Total foyers</span>
     </div>
     <div class="population-hero">
       <span class="population-hero-value" th:text="${population}" th:data-target="${population}">0</span>
@@ -43,12 +43,12 @@
     </div>
   </section>
 
-  <!-- Population : sexe, mineurs / majeurs, tranches d'âge (personnes des ménages non retirés). -->
+  <!-- Population : sexe, mineurs / majeurs, tranches d'âge (personnes des foyers non retirés). -->
   <section class="demo-section" id="population">
     <div class="demo-header">
       <div>
         <h2>Population recensée</h2>
-        <p>Chefs et membres des ménages ; âge calculé d'après la date de naissance (majorité à <span th:text="${majorite}">18</span> ans).
+        <p>Chefs et membres des foyers ; âge calculé d'après la date de naissance (majorité à <span th:text="${majorite}">18</span> ans).
           Les personnes dont le sexe ou la date de naissance n'est pas renseigné ne sont pas comptées.</p>
       </div>
       <!-- Après un changement de filtre, la page rechargée revient sur cette section (#population). -->

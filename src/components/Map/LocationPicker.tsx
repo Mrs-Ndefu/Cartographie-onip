@@ -19,7 +19,7 @@ export function LocationPicker({
 }: LocationPickerProps) {
   return (
     <div className="location-picker">
-      <p className="location-picker-title">Position du ménage</p>
+      <p className="location-picker-title">Position du foyer</p>
       <div className="location-picker-actions">
         <button type="button" className="add-member-btn" onClick={onUseGps} disabled={gpsLoading}>
           {gpsLoading ? 'Recherche GPS…' : '📍 Utiliser ma position GPS'}

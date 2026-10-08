@@ -25,7 +25,7 @@ class LoginViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         AppContainer.sessionManager.expiredUsername?.let {
-            LoginUiState(username = it, notice = "Votre session a expiré. Reconnectez-vous pour continuer et synchroniser vos ménages.")
+            LoginUiState(username = it, notice = "Votre session a expiré. Reconnectez-vous pour continuer et synchroniser vos foyers.")
         } ?: LoginUiState(),
     )
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()

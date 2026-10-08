@@ -9,7 +9,7 @@ data class CapturedMember(
     val relation: String = "",
 )
 
-/** Un ménage capturé sur l'appareil — persistant localement avant/après synchronisation. */
+/** Un foyer capturé sur l'appareil — persistant localement avant/après synchronisation. */
 data class CapturedHousehold(
     val id: String,
     val codeMenage: String,
@@ -28,7 +28,7 @@ data class CapturedHousehold(
     val appartement: String = "",
     val etage: String = "",
     val membres: List<CapturedMember> = emptyList(),
-    // Nombre de membres déclaré, chef compris. Null pour les ménages enregistrés avant ce champ
+    // Nombre de membres déclaré, chef compris. Null pour les foyers enregistrés avant ce champ
     // (on retombe alors sur chef + fiches membres).
     val nombreMembres: Int? = null,
     val latitude: Double?,
@@ -47,7 +47,7 @@ data class CapturedHousehold(
         get() = syncedAt != null && (photoPaths.isEmpty() || photoSyncedAt != null)
 
     /** Complet seulement si absolument tous les champs (obligatoires et facultatifs) sont
-     * renseignés, y compris au moins une photo — sinon le ménage est un brouillon côté serveur
+     * renseignés, y compris au moins une photo — sinon le foyer est un brouillon côté serveur
      * (affiché "Incomplet" dans le tableau de bord). */
     val isComplete: Boolean
         get() = chefNom.isNotBlank() && chefPostnom.isNotBlank() && chefPrenom.isNotBlank() &&
@@ -58,5 +58,5 @@ data class CapturedHousehold(
             photoPaths.isNotEmpty()
 }
 
-/** Nombre max de photos de fiche capturables par ménage (galerie). */
+/** Nombre max de photos de fiche capturables par foyer (galerie). */
 const val MAX_HOUSEHOLD_PHOTOS = 4

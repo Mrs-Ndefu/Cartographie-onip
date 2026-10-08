@@ -121,7 +121,7 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
                             tint = MaterialTheme.colorScheme.outline,
                         )
                         Text(
-                            "Aucun ménage enregistré aujourd'hui.",
+                            "Aucun foyer enregistré aujourd'hui.",
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -151,7 +151,7 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
         deleteTarget?.let { target ->
             AlertDialog(
                 onDismissRequest = { deleteTarget = null },
-                title = { Text("Supprimer ce ménage ?") },
+                title = { Text("Supprimer ce foyer ?") },
                 text = { Text("${target.codeMenage} — ${target.chefFullName.ifBlank { "(sans nom)" }} sera supprimé de cet appareil. Cette action est définitive.") },
                 confirmButton = {
                     TextButton(onClick = {
@@ -183,7 +183,7 @@ private fun JournalSummaryHeader(total: Int, pending: Int) {
         )
         Row(modifier = Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "$total ménage${if (total != 1) "s" else ""} aujourd'hui",
+                "$total foyer${if (total != 1) "s" else ""} aujourd'hui",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

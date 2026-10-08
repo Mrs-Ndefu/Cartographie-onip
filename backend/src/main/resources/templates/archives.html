@@ -6,7 +6,7 @@
   <meta name="_csrf" th:content="${_csrf.token}">
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <meta name="_csrf_parameter" th:content="${_csrf.parameterName}">
-  <title>Ménages retirés — Adressage de Ménages</title>
+  <title>Foyers retirés — Adressage de Foyers</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,7 @@
 <body>
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>Adressage de Ménages — Ménages retirés</h1>
+    <h1>Adressage de Foyers — Foyers retirés</h1>
     <nav class="topbar-nav">
       <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
@@ -38,7 +38,7 @@
     <div class="table-card">
       <div class="table-card-header">
         <div>
-          <h2>Ménages retirés</h2>
+          <h2>Foyers retirés</h2>
           <span class="table-card-count" th:text="${page.totalElements} + ' au total'">0 au total</span>
         </div>
         <form th:action="@{/dashboard/archives}" method="get" class="table-search-form" role="search">
@@ -47,7 +47,7 @@
             <path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
           </svg>
           <input type="search" name="search" class="table-search-input"
-                 placeholder="Chef de ménage ou code ménage…" th:value="${search}">
+                 placeholder="Chef de foyer ou code foyer…" th:value="${search}">
           <button type="submit" class="visually-hidden">Rechercher</button>
         </form>
       </div>
@@ -55,7 +55,7 @@
         <table class="households-table">
           <thead>
             <tr>
-              <th>Code Ménage</th>
+              <th>Code Foyer</th>
               <th>Chef</th>
               <th>Ville</th>
               <th>Commune</th>
@@ -82,7 +82,7 @@
                   <form th:if="${currentAgent != null and currentAgent.role.canRestoreHouseholds()}"
                         th:action="@{/dashboard/households/{id}/restore(id=${h.id})}" method="post"
                         class="js-confirm-form"
-                        data-confirm-title="Voulez-vous restaurer ce ménage ?"
+                        data-confirm-title="Voulez-vous restaurer ce foyer ?"
                         data-confirm-label="Restaurer"
                         data-confirm-variant="success"
                         th:data-confirm-detail="${h.codeMenage} + ' — il redeviendra visible dans la liste principale du tableau de bord.'">
@@ -97,13 +97,13 @@
               </td>
             </tr>
             <tr th:if="${households.isEmpty()}">
-              <td colspan="6" class="table-empty">Aucun ménage retiré pour l'instant.</td>
+              <td colspan="6" class="table-empty">Aucun foyer retiré pour l'instant.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <nav th:if="${page.totalPages > 1}" aria-label="Pagination des ménages retirés" class="table-card-footer">
+      <nav th:if="${page.totalPages > 1}" aria-label="Pagination des foyers retirés" class="table-card-footer">
         <ul class="pagination pagination-sm mb-1">
           <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
             <a class="page-link" th:href="@{/dashboard/archives(page=${page.number - 1}, search=${search})}">Précédent</a>
@@ -117,7 +117,7 @@
         </ul>
         <p class="text-secondary small mb-0">
           Page <span th:text="${page.number + 1}">1</span> / <span th:text="${page.totalPages}">1</span>
-          — <span th:text="${page.totalElements}">0</span> ménage(s) au total
+          — <span th:text="${page.totalElements}">0</span> foyer(s) au total
         </p>
       </nav>
     </div>
@@ -125,7 +125,7 @@
 
   <div id="confirm-modal" class="confirm-overlay" hidden>
     <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
-      <h3 id="confirm-title" class="confirm-title">Voulez-vous retirer ce ménage ?</h3>
+      <h3 id="confirm-title" class="confirm-title">Voulez-vous retirer ce foyer ?</h3>
       <p class="confirm-message"></p>
       <div class="confirm-actions">
         <button type="button" class="btn btn-sm btn-outline-secondary confirm-cancel">Annuler</button>

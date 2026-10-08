@@ -103,7 +103,7 @@ fun OverviewScreen(onBack: () -> Unit) {
 
             item {
                 Text(
-                    "${stats.total} ménage${if (stats.total != 1) "s" else ""} enregistré${if (stats.total != 1) "s" else ""} sur cet appareil.",
+                    "${stats.total} foyer${if (stats.total != 1) "s" else ""} enregistré${if (stats.total != 1) "s" else ""} sur cet appareil.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

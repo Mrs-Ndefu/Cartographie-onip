@@ -34,13 +34,13 @@ export function HouseholdsTab({ session }: HouseholdsTabProps) {
 
   return (
     <div className="households-tab">
-      <p className="households-count">{totalElements} ménage{totalElements > 1 ? 's' : ''} enregistré{totalElements > 1 ? 's' : ''}</p>
+      <p className="households-count">{totalElements} foyer{totalElements > 1 ? 's' : ''} enregistré{totalElements > 1 ? 's' : ''}</p>
 
       <table className="dashboard-table">
         <thead>
           <tr>
-            <th>Code ménage</th>
-            <th>Chef de ménage</th>
+            <th>Code foyer</th>
+            <th>Chef de foyer</th>
             <th>Commune / Quartier</th>
             <th>Statut</th>
             <th>Agent</th>
@@ -74,7 +74,7 @@ export function HouseholdsTab({ session }: HouseholdsTabProps) {
           {households.length === 0 && (
             <tr>
               <td colSpan={7} className="dashboard-empty-row">
-                Aucun ménage enregistré.
+                Aucun foyer enregistré.
               </td>
             </tr>
           )}
@@ -103,7 +103,7 @@ export function HouseholdsTab({ session }: HouseholdsTabProps) {
       {confirmTarget && (
         <div className="settings-overlay" onClick={() => setConfirmTarget(null)}>
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <p>Supprimer le ménage {confirmTarget.codeMenage || '(sans code)'} ? Cette action est définitive.</p>
+            <p>Supprimer le foyer {confirmTarget.codeMenage || '(sans code)'} ? Cette action est définitive.</p>
             <div className="confirm-dialog-actions">
               <button type="button" className="cancel-btn" onClick={() => setConfirmTarget(null)}>
                 Annuler

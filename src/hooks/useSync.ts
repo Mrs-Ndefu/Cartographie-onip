@@ -42,7 +42,7 @@ export function useSync(session: AuthSession | null, onAuthExpired: () => void) 
     }
   }, [session, households, markSynced, onAuthExpired])
 
-  // Renvoie tous les ménages locaux au serveur, indépendamment de leur syncedAt.
+  // Renvoie tous les foyers locaux au serveur, indépendamment de leur syncedAt.
   // Utile si le serveur a perdu des données déjà marquées "synchronisées" côté client
   // (ex. base ré-initialisée) : sans ça, l'app ne les renverrait jamais, faute de le savoir.
   const forceSyncAll = useCallback(async () => {

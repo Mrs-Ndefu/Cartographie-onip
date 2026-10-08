@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zones — Adressage de Ménages</title>
+  <title>Zones — Adressage de Foyers</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
 <body>
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>Adressage de Ménages — Zones d'affectation</h1>
+    <h1>Adressage de Foyers — Zones d'affectation</h1>
     <nav class="topbar-nav">
       <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <a th:if="${currentAgent != null and currentAgent.role.canAccessAgents()}"

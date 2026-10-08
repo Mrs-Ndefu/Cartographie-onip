@@ -7,7 +7,7 @@ function isSameDay(a: Date, b: Date) {
 }
 
 /**
- * Statistiques calculées côté client à partir des ménages stockés localement (IndexedDB) — pas
+ * Statistiques calculées côté client à partir des foyers stockés localement (IndexedDB) — pas
  * d'appel serveur. Reflète donc uniquement ce que CET appareil a enregistré, cohérent avec le
  * reste de l'app terrain (carte, formulaire) qui fonctionne déjà exclusivement sur les données
  * locales. Fonctionne hors ligne.

@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 
 /**
- * Relance automatiquement la synchronisation des ménages en attente dès que l'appareil retrouve
+ * Relance automatiquement la synchronisation des foyers en attente dès que l'appareil retrouve
  * une connexion internet validée ET qu'un agent est connecté. L'agent n'a plus besoin d'ouvrir
  * le Journal pour ça ; la synchro manuelle (icônes de relance, "Tout synchroniser") reste
  * disponible en complément pour les cas où l'auto-sync a échoué (ex : serveur down).

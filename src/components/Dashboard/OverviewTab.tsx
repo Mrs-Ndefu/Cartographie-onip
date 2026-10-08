@@ -25,7 +25,7 @@ export function OverviewTab({ session }: OverviewTabProps) {
   return (
     <div className="overview-tab">
       <div className="stat-cards">
-        <StatCard label="Total ménages" value={stats.total} />
+        <StatCard label="Total foyers" value={stats.total} />
         <StatCard label="Complets" value={stats.countComplet} tone="good" />
         <StatCard label="Brouillons" value={stats.countBrouillon} tone="muted" />
         <StatCard label="À vérifier" value={stats.countAVerifier} tone="warning" />
