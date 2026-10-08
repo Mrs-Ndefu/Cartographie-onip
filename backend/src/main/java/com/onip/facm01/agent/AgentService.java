@@ -1,5 +1,6 @@
 package com.onip.facm01.agent;
 
+import com.onip.facm01.household.HouseholdRepository;
 import com.onip.facm01.zone.Zone;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,12 +22,17 @@ public class AgentService {
 
     private final AgentRepository agentRepository;
     private final StaffMemberRepository staffMemberRepository;
+    private final HouseholdRepository householdRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AgentService(
-            AgentRepository agentRepository, StaffMemberRepository staffMemberRepository, PasswordEncoder passwordEncoder) {
+            AgentRepository agentRepository,
+            StaffMemberRepository staffMemberRepository,
+            HouseholdRepository householdRepository,
+            PasswordEncoder passwordEncoder) {
         this.agentRepository = agentRepository;
         this.staffMemberRepository = staffMemberRepository;
+        this.householdRepository = householdRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -151,6 +157,24 @@ public class AgentService {
         }
         agent.setPasswordHash(passwordEncoder.encode(newPassword));
         return agentRepository.save(agent);
+    }
+
+    // Suppression définitive (pas une désactivation) — réservée à l'ADMIN/SUPER_ADMIN, cf.
+    // AgentAdminController#deleteAgent et SecurityConfig. Refusée si le compte a des ménages
+    // enregistrés (orphelins sinon, ou simple échec sur la contrainte de clé étrangère) ou s'il
+    // est le superviseur d'autres comptes (eux aussi orphelins de superviseur) : désactiver est
+    // la bonne option dans ces cas, pas supprimer.
+    public void deleteAgent(UUID id) {
+        Agent agent = getAgent(id);
+        if (householdRepository.existsByAgent_Id(id)) {
+            throw new IllegalArgumentException(
+                    "Impossible de supprimer : ce compte a des ménages enregistrés. Désactivez-le plutôt.");
+        }
+        if (agentRepository.existsBySuperviseur_Id(id)) {
+            throw new IllegalArgumentException(
+                    "Impossible de supprimer : ce compte encadre encore des agents. Réaffectez-les, puis désactivez-le plutôt.");
+        }
+        agentRepository.delete(agent);
     }
 
     public Agent updatePhoto(UUID id, byte[] photo, String contentType) {

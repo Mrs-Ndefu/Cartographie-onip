@@ -56,7 +56,7 @@
       <div class="table-card-header">
         <div>
           <h2>Créer un compte</h2>
-          <span class="table-card-count">L'adresse mail sert de nom d'utilisateur. Le mot de passe est généré automatiquement.</span>
+          <span class="table-card-count">L'adresse mail sert de nom d'utilisateur. Le mot de passe se remplit automatiquement, modifiable si besoin.</span>
         </div>
       </div>
       <form th:action="@{/dashboard/agents}" method="post" class="agents-create-form" id="create-agent-form">
@@ -86,8 +86,15 @@
           </div>
         </label>
         <label class="agents-field">
+          <span>Mot de passe</span>
+          <span class="input-group input-group-sm">
+            <input type="password" name="password" id="create-password" class="form-control" minlength="5">
+            <button type="button" class="btn btn-outline-secondary toggle-password" aria-label="Afficher le mot de passe">👁</button>
+          </span>
+        </label>
+        <label class="agents-field">
           <span>Rôle</span>
-          <select name="role" class="form-select form-select-sm">
+          <select name="role" id="create-role" class="form-select form-select-sm">
             <option th:each="r : ${roles}" th:value="${r}" th:text="${r.label()}">Rôle</option>
           </select>
         </label>
@@ -181,6 +188,14 @@
                               th:classappend="${a.active} ? 'btn-outline-danger' : 'btn-outline-success'"
                               th:text="${a.active} ? 'Désactiver le compte' : 'Réactiver le compte'">-</button>
                     </form>
+                    <form th:if="${currentAgent != null and currentAgent.role.isAdminTier() and a.id != actorId}"
+                          th:action="@{/dashboard/agents/{id}/delete(id=${a.id})}" method="post"
+                          class="js-confirm-form"
+                          data-confirm-title="Supprimer définitivement ce compte ?"
+                          data-confirm-label="Supprimer"
+                          th:data-confirm-detail="${a.fullName} + ' (' + ${a.username} + ') — action définitive, impossible si ce compte a des ménages enregistrés ou encadre des agents.'">
+                      <button type="submit" class="btn btn-sm btn-danger w-100">Supprimer le compte</button>
+                    </form>
                   </div>
                 </details>
                 <span th:unless="${a.role.canBeManagedBy(actorRole)}" class="agent-muted">Non modifiable</span>
@@ -209,6 +224,17 @@
       </nav>
     </div>
   </section>
+
+  <div id="confirm-modal" class="confirm-overlay" hidden>
+    <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+      <h3 id="confirm-title" class="confirm-title">Voulez-vous retirer ce ménage ?</h3>
+      <p class="confirm-message"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary confirm-cancel">Annuler</button>
+        <button type="button" class="btn btn-sm btn-danger confirm-ok">Retirer</button>
+      </div>
+    </div>
+  </div>
 
   <script th:src="@{/js/app.js}"></script>
 </body>

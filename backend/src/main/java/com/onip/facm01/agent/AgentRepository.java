@@ -22,4 +22,6 @@ public interface AgentRepository extends JpaRepository<Agent, UUID> {
     List<Agent> findByRoleAndActiveTrueOrderByFullNameAsc(AgentRole role);
 
     List<Agent> findBySuperviseur_Id(UUID superviseurId);
+
+    boolean existsBySuperviseur_Id(UUID superviseurId);
 }

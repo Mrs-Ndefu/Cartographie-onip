@@ -24,6 +24,11 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
 
     Page<Household> findByAgent_Id(UUID agentId, Pageable pageable);
 
+    // Empêche de supprimer définitivement un compte agent qui a déjà des ménages enregistrés
+    // (cf. AgentService.deleteAgent) : les ménages resteraient orphelins (agent_id en FK), ou la
+    // suppression échouerait brutalement sur la contrainte de clé étrangère.
+    boolean existsByAgent_Id(UUID agentId);
+
     // Historique du superviseur : ménages (non retirés) enregistrés par ses agents.
     List<Household> findByAgent_IdInAndArchivedFalseOrderByCreatedAtDesc(Collection<UUID> agentIds);
 
