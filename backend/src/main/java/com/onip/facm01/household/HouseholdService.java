@@ -199,17 +199,17 @@ public class HouseholdService {
         return updated;
     }
 
-    // Modification d'un ménage depuis le tableau de bord (ADMIN, SUPERVISEUR — cf.
-    // SecurityConfig), avec un motif obligatoire conservé dans l'historique du ménage. Le code
-    // ménage, le GPS et l'agent d'origine ne changent pas. updatedAt avance : une synchronisation
-    // ultérieure d'une version plus ancienne depuis la tablette n'écrasera donc pas cette
-    // correction (cf. upsert).
+    // Modification d'un ménage depuis le tableau de bord (ADMIN, SUPER_ADMIN — cf.
+    // SecurityConfig ; le SUPERVISEUR valide ou rejette, mais ne modifie pas les champs), avec un
+    // motif obligatoire conservé dans l'historique du ménage. Le code ménage, le GPS et l'agent
+    // d'origine ne changent pas. updatedAt avance : une synchronisation ultérieure d'une version
+    // plus ancienne depuis la tablette n'écrasera donc pas cette correction (cf. upsert).
     @Transactional
     public void updateFromDashboard(UUID id, HouseholdEditForm form, Agent author) {
         Household household = householdRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Ménage introuvable : " + id));
         if (!author.getRole().canEditHousehold(household.getStatus())) {
-            throw new IllegalArgumentException("Le superviseur ne peut modifier que les ménages incomplets.");
+            throw new IllegalArgumentException("Vous n'avez pas le droit de modifier ce ménage.");
         }
         if (isBlank(form.getMotif())) {
             throw new IllegalArgumentException("Le motif de la modification est obligatoire");
