@@ -4,6 +4,7 @@ import com.onip.facm01.agent.Agent;
 import com.onip.facm01.agent.AgentRepository;
 import com.onip.facm01.agent.AgentRole;
 import com.onip.facm01.agent.AgentService;
+import com.onip.facm01.agent.PasswordGenerator;
 import com.onip.facm01.agent.StaffImportService;
 import com.onip.facm01.agent.StaffMemberRepository;
 import com.onip.facm01.agent.dto.AgentDto;
@@ -84,25 +85,29 @@ public class AgentAdminController {
         return "agents";
     }
 
+    // Le mot de passe n'est plus saisi : généré automatiquement (cf. PasswordGenerator), un mot
+    // de passe différent par personne plutôt qu'une valeur par défaut partagée. Affiché une seule
+    // fois dans le message de confirmation ci-dessous — il n'est pas stocké en clair
+    // (AgentService.createAgent le hache immédiatement), donc à communiquer tout de suite à la
+    // personne concernée, qui devra le changer à sa première connexion (cf. /dashboard/profile).
     @PostMapping
     public String create(
             @RequestParam String username,
-            @RequestParam String password,
             @RequestParam String fullName,
             @RequestParam AgentRole role,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
         try {
             requireCanManage(authentication, role);
-            if (password == null || password.length() < 6) {
-                throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères");
-            }
+            String password = PasswordGenerator.generate();
             Agent created = agentService.createAgentFromStaffList(username, password, fullName, role);
             Agent actor = actor(authentication);
             if (actor.getRole() == AgentRole.SUPERVISEUR && role == AgentRole.AGENT) {
                 agentService.assignSupervisor(created.getId(), actor);
             }
-            redirectAttributes.addFlashAttribute("success", "Agent \"" + username + "\" créé.");
+            redirectAttributes.addFlashAttribute("success",
+                    "Agent \"" + username + "\" créé. Mot de passe : " + password
+                            + " — à communiquer à la personne concernée (il ne sera plus affiché).");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
