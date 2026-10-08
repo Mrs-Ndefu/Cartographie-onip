@@ -471,10 +471,11 @@ document.addEventListener('click', function (e) {
 //   pas) sur les champs Nom complet et Adresse mail, filtré selon les lettres tapées, à partir
 //   de la liste du personnel importé (STAFF_SUGGESTIONS, injectée par agents.html, avec le rôle
 //   affiché dans chaque suggestion s'il est connu) ;
-// - mot de passe rempli automatiquement dès que le nom ET l'email sont renseignés (saisie
-//   manuelle ou suggestion choisie), sans écraser un mot de passe déjà modifié à la main —
-//   fonctionne même sans personnel importé (STAFF_SUGGESTIONS vide), contrairement aux
-//   suggestions elles-mêmes.
+// - mot de passe rempli automatiquement dès que le nom ET l'email sont renseignés à la main (sans
+//   écraser une valeur déjà saisie) — fonctionne même sans personnel importé (STAFF_SUGGESTIONS
+//   vide), contrairement aux suggestions elles-mêmes ; choisir une suggestion régénère toujours
+//   un mot de passe neuf, même si un mot de passe était déjà rempli pour une sélection précédente
+//   (un mot de passe unique par personne choisie, pas réutilisé d'une personne à l'autre).
 // Choisir une suggestion remplit nom + email + rôle ; le rôle importé n'est qu'indicatif (cf.
 // AgentService.createAgentFromStaffList, qui ne vérifie que nom + email, pas le rôle).
 (function () {
@@ -510,6 +511,14 @@ document.addEventListener('click', function (e) {
     }
   }
 
+  // Un mot de passe neuf à chaque personne choisie dans les suggestions, même si un mot de passe
+  // était déjà rempli pour la sélection précédente (maybeFillPassword, utilisé pour la saisie
+  // manuelle, ne régénère pas tant que le champ n'est pas vide — ici on force, car changer de
+  // personne doit changer son mot de passe).
+  function forceFillPassword() {
+    if (passwordInput) passwordInput.value = generatePassword();
+  }
+
   nameInput.addEventListener('input', maybeFillPassword);
   emailInput.addEventListener('input', maybeFillPassword);
 
@@ -532,7 +541,7 @@ document.addEventListener('click', function (e) {
       if (known) roleSelect.value = staff.role;
     }
     combos.forEach(function (c) { c.menu.hidden = true; });
-    maybeFillPassword();
+    forceFillPassword();
   }
 
   combos.forEach(function (combo) {
