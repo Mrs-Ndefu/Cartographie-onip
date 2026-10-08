@@ -15,5 +15,5 @@ app:
     secret: test-secret-key-at-least-32-characters-long
     expiration-minutes: 60
   bootstrap-admin:
-    username: admin
+    username: admin@test.local
     password: admin123

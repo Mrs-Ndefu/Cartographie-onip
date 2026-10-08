@@ -3,7 +3,7 @@ package com.onip.cartoonip.data
 import java.security.MessageDigest
 import java.util.Locale
 
-private const val CODE_LENGTH = 18
+private const val CODE_LENGTH = 6
 private const val CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 /**

@@ -101,10 +101,16 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .requestMatchers("/dashboard/households/*/edit", "/dashboard/households/*/edit-form")
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
+                        .requestMatchers(HttpMethod.POST, "/dashboard/households/*/validate")
+                        .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .requestMatchers(HttpMethod.POST, "/dashboard/zones", "/dashboard/zones/**")
                         .hasRole("ADMIN")
                         .requestMatchers("/dashboard/historique")
                         .hasRole("SUPERVISEUR")
+                        // Import du personnel : réservé à l'ADMIN/SUPER_ADMIN, donc listé avant la règle
+                        // générale sur /dashboard/agents/** (ouverte en plus au SUPERVISEUR).
+                        .requestMatchers(HttpMethod.POST, "/dashboard/agents/import-staff")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN")
                         .requestMatchers("/dashboard/agents", "/dashboard/agents/**")
                         .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR")
                         .requestMatchers(HttpMethod.GET, "/dashboard", "/dashboard/**")

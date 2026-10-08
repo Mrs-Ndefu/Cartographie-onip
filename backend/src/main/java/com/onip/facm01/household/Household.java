@@ -27,6 +27,8 @@ public class Household {
     @Id
     private UUID id;
 
+    // Les clients (app Android, app React) génèrent désormais des codes de 6 caractères, mais la
+    // colonne garde 18 pour ne pas tronquer les codes déjà synchronisés avant ce changement.
     @Column(name = "code_menage", length = 18)
     private String codeMenage;
 

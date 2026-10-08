@@ -20,10 +20,13 @@ public class AgentService {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final AgentRepository agentRepository;
+    private final StaffMemberRepository staffMemberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AgentService(AgentRepository agentRepository, PasswordEncoder passwordEncoder) {
+    public AgentService(
+            AgentRepository agentRepository, StaffMemberRepository staffMemberRepository, PasswordEncoder passwordEncoder) {
         this.agentRepository = agentRepository;
+        this.staffMemberRepository = staffMemberRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -36,6 +39,25 @@ public class AgentService {
         }
         Agent agent = new Agent(UUID.randomUUID(), username, passwordEncoder.encode(rawPassword), fullName, role);
         return agentRepository.save(agent);
+    }
+
+    // Variante utilisée par la création d'un compte depuis le tableau de bord/l'API (pas par le
+    // bootstrap au démarrage, cf. DataSeeder, qui doit toujours réussir) : le nom et l'email
+    // saisis doivent correspondre à une ligne du fichier Excel importé par l'ADMIN. Si aucun
+    // fichier n'a encore été importé (liste vide), la vérification est ignorée — la fonctionnalité
+    // n'est tout simplement pas encore activée.
+    public Agent createAgentFromStaffList(String username, String rawPassword, String fullName, AgentRole role) {
+        if (staffMemberRepository.count() > 0) {
+            boolean matches = staffMemberRepository.findByEmailIgnoreCase(username)
+                    .filter(s -> s.getFullName().trim().equalsIgnoreCase(fullName.trim()))
+                    .isPresent();
+            if (!matches) {
+                throw new IllegalArgumentException(
+                        "Ce nom et cet email ne correspondent à aucun personnel importé. "
+                                + "Vérifiez l'orthographe ou mettez à jour le fichier Excel.");
+            }
+        }
+        return createAgent(username, rawPassword, fullName, role);
     }
 
     public List<Agent> listAgents() {

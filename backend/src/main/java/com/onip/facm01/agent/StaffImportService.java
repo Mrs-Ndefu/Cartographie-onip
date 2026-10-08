@@ -1,0 +1,94 @@
+package com.onip.facm01.agent;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+// Import du fichier Excel (.xlsx) listant le personnel autorisé (colonne A : nom, colonne B :
+// email) — déposé par un ADMIN dans "Gérer les agents". Chaque import REMPLACE la liste
+// précédente : le fichier est censé être la liste à jour, pas un ajout au fur et à mesure.
+@Service
+public class StaffImportService {
+
+    private final StaffMemberRepository staffMemberRepository;
+
+    public StaffImportService(StaffMemberRepository staffMemberRepository) {
+        this.staffMemberRepository = staffMemberRepository;
+    }
+
+    @Transactional
+    public int importFrom(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Choisissez un fichier Excel (.xlsx) à importer");
+        }
+        List<StaffMember> parsed = parse(file);
+        if (parsed.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Aucune ligne valide trouvée (colonnes attendues : nom, email — première ligne ignorée si c'est un en-tête)");
+        }
+        // Remplace l'intégralité de la liste précédente par celle du fichier importé.
+        staffMemberRepository.deleteAll();
+        staffMemberRepository.saveAll(parsed);
+        return parsed.size();
+    }
+
+    private List<StaffMember> parse(MultipartFile file) {
+        List<StaffMember> result = new ArrayList<>();
+        Instant now = Instant.now();
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (Row row : sheet) {
+                // La première ligne est un en-tête ("Nom", "Email"...) si sa 2e colonne n'est pas
+                // une adresse mail valide — on l'ignore dans ce cas, sinon on la traite comme une
+                // ligne de données (fichier sans en-tête).
+                String fullName = cellText(row, 0);
+                String email = cellText(row, 1);
+                if (fullName.isBlank() && email.isBlank()) {
+                    continue;
+                }
+                if (row.getRowNum() == 0 && !looksLikeEmail(email)) {
+                    continue;
+                }
+                if (!looksLikeEmail(email) || fullName.isBlank()) {
+                    continue;
+                }
+                result.add(new StaffMember(UUID.randomUUID(), email.trim().toLowerCase(), fullName.trim(), now));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Impossible de lire le fichier Excel", e);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Fichier Excel invalide ou illisible : " + e.getMessage());
+        }
+        return result;
+    }
+
+    private static String cellText(Row row, int index) {
+        Cell cell = row.getCell(index);
+        if (cell == null) {
+            return "";
+        }
+        String text = switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> String.valueOf(cell.getNumericCellValue());
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            default -> cell.toString();
+        };
+        return text.trim();
+    }
+
+    private static boolean looksLikeEmail(String value) {
+        return value != null && value.contains("@") && value.contains(".");
+    }
+}

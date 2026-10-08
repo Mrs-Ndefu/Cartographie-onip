@@ -39,7 +39,8 @@ public class AgentController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AgentDto create(@Valid @RequestBody CreateAgentRequest request) {
-        Agent agent = agentService.createAgent(request.username(), request.password(), request.fullName(), request.role());
+        Agent agent = agentService.createAgentFromStaffList(
+                request.username(), request.password(), request.fullName(), request.role());
         return AgentDto.from(agent);
     }
 

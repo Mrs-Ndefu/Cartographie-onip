@@ -4,6 +4,8 @@ import com.onip.facm01.agent.Agent;
 import com.onip.facm01.agent.AgentRepository;
 import com.onip.facm01.agent.AgentRole;
 import com.onip.facm01.agent.AgentService;
+import com.onip.facm01.agent.StaffImportService;
+import com.onip.facm01.agent.StaffMemberRepository;
 import com.onip.facm01.agent.dto.AgentDto;
 import com.onip.facm01.zone.Zone;
 import com.onip.facm01.zone.ZoneService;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.UUID;
@@ -29,11 +32,20 @@ public class AgentAdminController {
     private final AgentService agentService;
     private final AgentRepository agentRepository;
     private final ZoneService zoneService;
+    private final StaffImportService staffImportService;
+    private final StaffMemberRepository staffMemberRepository;
 
-    public AgentAdminController(AgentService agentService, AgentRepository agentRepository, ZoneService zoneService) {
+    public AgentAdminController(
+            AgentService agentService,
+            AgentRepository agentRepository,
+            ZoneService zoneService,
+            StaffImportService staffImportService,
+            StaffMemberRepository staffMemberRepository) {
         this.agentService = agentService;
         this.agentRepository = agentRepository;
         this.zoneService = zoneService;
+        this.staffImportService = staffImportService;
+        this.staffMemberRepository = staffMemberRepository;
     }
 
     // Un SUPERVISEUR ne voit que les agents que l'ADMIN lui a affectés ; les autres rôles
@@ -56,6 +68,7 @@ public class AgentAdminController {
         model.addAttribute("zones", zoneService.list());
         model.addAttribute("supervisors", agentService.listSupervisors().stream().map(AgentDto::from).toList());
         model.addAttribute("currentAgent", AgentDto.from(actor));
+        model.addAttribute("staffCount", staffMemberRepository.count());
         return "agents";
     }
 
@@ -72,12 +85,26 @@ public class AgentAdminController {
             if (password == null || password.length() < 6) {
                 throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères");
             }
-            Agent created = agentService.createAgent(username, password, fullName, role);
+            Agent created = agentService.createAgentFromStaffList(username, password, fullName, role);
             Agent actor = actor(authentication);
             if (actor.getRole() == AgentRole.SUPERVISEUR && role == AgentRole.AGENT) {
                 agentService.assignSupervisor(created.getId(), actor);
             }
             redirectAttributes.addFlashAttribute("success", "Agent \"" + username + "\" créé.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/dashboard/agents";
+    }
+
+    // Réservé à l'ADMIN (et au SUPER_ADMIN) — cf. SecurityConfig, qui restreint cette route avant
+    // la règle générale sur /dashboard/agents/**. Remplace la liste du personnel importée
+    // précédemment par celle de ce fichier.
+    @PostMapping("/import-staff")
+    public String importStaff(@RequestParam MultipartFile file, RedirectAttributes redirectAttributes) {
+        try {
+            int count = staffImportService.importFrom(file);
+            redirectAttributes.addFlashAttribute("success", count + " personne(s) importée(s) depuis le fichier.");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
