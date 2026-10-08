@@ -101,7 +101,7 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .requestMatchers("/dashboard/households/*/edit", "/dashboard/households/*/edit-form")
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
-                        .requestMatchers(HttpMethod.POST, "/dashboard/households/*/validate")
+                        .requestMatchers(HttpMethod.POST, "/dashboard/households/*/validate", "/dashboard/households/*/reject")
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .requestMatchers(HttpMethod.POST, "/dashboard/zones", "/dashboard/zones/**")
                         .hasRole("ADMIN")

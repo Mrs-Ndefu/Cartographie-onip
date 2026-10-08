@@ -332,6 +332,23 @@ public class DashboardController {
         return "redirect:/dashboard?statut=incomplet";
     }
 
+    // Rejet d'un ménage incomplet, depuis la même file d'attente que validate() ci-dessus :
+    // réutilise l'archivage existant (householdService.archive) plutôt qu'un nouveau statut —
+    // un ménage rejeté est donc consultable depuis "Ménages retirés", comme un ménage archivé
+    // par l'ADMIN. Réservé à l'ADMIN/SUPERVISEUR (cf. SecurityConfig), contrairement à
+    // /archive ci-dessus qui reste réservé à l'ADMIN seul (retirer un ménage déjà complet est
+    // une décision différente de rejeter un ménage jamais validé).
+    @PostMapping("/dashboard/households/{id}/reject")
+    public String rejectHousehold(@PathVariable UUID id, RedirectAttributes redirectAttributes) {
+        try {
+            householdService.archive(id);
+            redirectAttributes.addFlashAttribute("success", "Ménage rejeté : archivé, consultable dans les ménages retirés.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/dashboard?statut=incomplet";
+    }
+
     // Une zone choisie remplace les filtres province/ville/commune par les siens : le ménage doit
     // être dans l'une des communes de la zone.
     private HouseholdFilter filter(
