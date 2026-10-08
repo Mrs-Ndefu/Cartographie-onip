@@ -48,7 +48,7 @@
         <div id="pending-notif-popover" class="notif-popover" hidden>
           <p class="notif-popover-text"
              th:text="${countIncomplet} + ' ménage(s) incomplet(s) en attente de validation.'">-</p>
-          <a th:href="@{/dashboard(statut='incomplet')}" class="btn btn-sm btn-primary w-100">Consulter</a>
+          <a th:href="@{/dashboard#menages(statut='incomplet')}" class="btn btn-sm btn-primary w-100">Consulter</a>
         </div>
       </div>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
@@ -113,7 +113,7 @@
     <div id="dashboard-map"></div>
   </section>
 
-  <section class="table-section">
+  <section class="table-section" id="menages">
     <div class="table-card">
       <div class="table-card-header">
         <div>
