@@ -69,6 +69,10 @@ public class AgentAdminController {
         model.addAttribute("supervisors", agentService.listSupervisors().stream().map(AgentDto::from).toList());
         model.addAttribute("currentAgent", AgentDto.from(actor));
         model.addAttribute("staffCount", staffMemberRepository.count());
+        // Alimente la liste déroulante filtrée du formulaire "Créer un compte" (cf. agents.html) :
+        // la liste du personnel importé est petite (quelques centaines de lignes au plus), donc
+        // on la rend en entier côté serveur plutôt que d'ajouter un endpoint de recherche.
+        model.addAttribute("staffList", staffMemberRepository.findAll());
         return "agents";
     }
 

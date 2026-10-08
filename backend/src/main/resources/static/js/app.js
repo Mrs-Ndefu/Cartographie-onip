@@ -462,3 +462,38 @@ document.addEventListener('click', function (e) {
   window.initGeo = initGeo;
   initGeo(document);
 })();
+
+// Formulaire "Créer un compte" (agents.html) : en choisissant un nom ou un email suggéré par la
+// liste déroulante filtrée (datalist, cf. staff-names-list / staff-emails-list), remplit aussi
+// l'autre champ — pour éviter une faute de frappe qui ferait échouer la vérification de
+// correspondance avec le personnel importé (cf. AgentService.createAgentFromStaffList).
+(function () {
+  var form = document.getElementById('create-agent-form');
+  if (!form) return;
+
+  var nameInput = document.getElementById('create-fullname');
+  var emailInput = document.getElementById('create-username');
+  var nameOptions = document.querySelectorAll('#staff-names-list option');
+  var emailOptions = document.querySelectorAll('#staff-emails-list option');
+
+  // Les deux datalist sont rendues dans le même ordre à partir de la même liste côté serveur
+  // (cf. AgentAdminController#list) : l'option à l'index i de l'une correspond à celle de l'autre.
+  var nameToEmail = {};
+  var emailToName = {};
+  nameOptions.forEach(function (opt, i) {
+    var email = emailOptions[i] ? emailOptions[i].value : null;
+    if (email) {
+      nameToEmail[opt.value] = email;
+      emailToName[email] = opt.value;
+    }
+  });
+
+  nameInput.addEventListener('input', function () {
+    var email = nameToEmail[nameInput.value];
+    if (email) emailInput.value = email;
+  });
+  emailInput.addEventListener('input', function () {
+    var name = emailToName[emailInput.value];
+    if (name) nameInput.value = name;
+  });
+})();

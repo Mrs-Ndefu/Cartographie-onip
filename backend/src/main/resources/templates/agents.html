@@ -59,15 +59,26 @@
           <span class="table-card-count">L'adresse mail sert de nom d'utilisateur.</span>
         </div>
       </div>
-      <form th:action="@{/dashboard/agents}" method="post" class="agents-create-form">
+      <form th:action="@{/dashboard/agents}" method="post" class="agents-create-form" id="create-agent-form">
         <label class="agents-field">
           <span>Nom complet</span>
-          <input type="text" name="fullName" class="form-control form-control-sm" required>
+          <input type="text" name="fullName" id="create-fullname" class="form-control form-control-sm"
+                 list="staff-names-list" autocomplete="off" required>
         </label>
         <label class="agents-field">
           <span>Adresse mail</span>
-          <input type="email" name="username" class="form-control form-control-sm" placeholder="agent@onip.local" required>
+          <input type="email" name="username" id="create-username" class="form-control form-control-sm"
+                 list="staff-emails-list" autocomplete="off" placeholder="agent@onip.local" required>
         </label>
+        <!-- Liste du personnel importé (cf. StaffMemberRepository) : se filtre nativement selon les
+             lettres tapées (comportement natif du navigateur pour <input list="...">). Choisir une
+             suggestion remplit aussi l'autre champ (cf. script plus bas). -->
+        <datalist id="staff-names-list">
+          <option th:each="s : ${staffList}" th:value="${s.fullName}"></option>
+        </datalist>
+        <datalist id="staff-emails-list">
+          <option th:each="s : ${staffList}" th:value="${s.email}"></option>
+        </datalist>
         <label class="agents-field">
           <span>Mot de passe</span>
           <span class="input-group input-group-sm">
