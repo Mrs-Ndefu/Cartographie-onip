@@ -631,6 +631,13 @@ h1, h2, h3 {
   overflow: hidden;
 }
 
+/* Carte "Créer un compte" (agents.html) : son menu de suggestions (.combo-menu) dépasse de la
+   carte quand il s'affiche (position absolute) — "overflow: hidden" ci-dessus le couperait
+   sinon, en ne laissant voir qu'un menu vide ou tronqué. */
+.table-card--allow-overflow {
+  overflow: visible;
+}
+
 .table-card-header {
   display: flex;
   align-items: center;
