@@ -88,6 +88,13 @@ public class DashboardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             Authentication authentication,
             Model model) {
+        // Par défaut (aucun statut choisi explicitement), le tableau ne montre que les ménages
+        // "complet" : un ménage incomplet reste caché tant qu'un ADMIN/SUPERVISEUR ne l'a pas
+        // validé (cf. countIncomplet ci-dessous et le bandeau de notification dans dashboard.html).
+        // Choisir "Tous" dans le filtre (valeur vide) redonne la vue complète.
+        if (statut == null) {
+            statut = "complet";
+        }
         HouseholdFilter filter = filter(search, province, ville, commune, statut, zoneId, dateFrom, dateTo);
         Page<HouseholdDto> households = householdService.searchAdmin(
                 filter, false, PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "updatedAt")));
@@ -310,6 +317,19 @@ public class DashboardController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/dashboard/archives";
+    }
+
+    // Validation d'un ménage incomplet : le fait apparaître dans le tableau par défaut (cf.
+    // dashboard() ci-dessus). Réservé à l'ADMIN/SUPERVISEUR (cf. SecurityConfig).
+    @PostMapping("/dashboard/households/{id}/validate")
+    public String validateHousehold(@PathVariable UUID id, RedirectAttributes redirectAttributes) {
+        try {
+            householdService.validate(id);
+            redirectAttributes.addFlashAttribute("success", "Ménage validé : il apparaît maintenant dans le tableau.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/dashboard?statut=incomplet";
     }
 
     // Une zone choisie remplace les filtres province/ville/commune par les siens : le ménage doit

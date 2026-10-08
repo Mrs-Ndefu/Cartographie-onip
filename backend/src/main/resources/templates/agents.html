@@ -35,6 +35,23 @@
   </section>
 
   <section class="table-section agents-page">
+    <div class="table-card" th:if="${actorRole.name() == 'ADMIN' or actorRole.name() == 'SUPER_ADMIN'}">
+      <div class="table-card-header">
+        <div>
+          <h2>Personnel importé</h2>
+          <span class="table-card-count"
+                th:text="${staffCount} + ' personne(s) — seuls un nom et un email de cette liste peuvent créer un compte.'">0 personne(s)</span>
+        </div>
+      </div>
+      <form th:action="@{/dashboard/agents/import-staff}" method="post" enctype="multipart/form-data" class="agents-create-form">
+        <label class="agents-field">
+          <span>Fichier Excel (.xlsx — colonnes : nom, email)</span>
+          <input type="file" name="file" accept=".xlsx" class="form-control form-control-sm" required>
+        </label>
+        <button type="submit" class="btn btn-primary btn-sm agents-create-btn">Importer (remplace la liste actuelle)</button>
+      </form>
+    </div>
+
     <div class="table-card" th:unless="${roles.isEmpty()}">
       <div class="table-card-header">
         <div>

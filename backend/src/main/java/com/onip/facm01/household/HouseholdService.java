@@ -311,6 +311,18 @@ public class HouseholdService {
         householdRepository.save(household);
     }
 
+    // Validation par un ADMIN/SUPERVISEUR d'un ménage incomplet (cf. SecurityConfig pour les
+    // rôles autorisés) : un ménage non "complet" n'apparaît pas dans le tableau de bord par
+    // défaut (cf. DashboardController, filtre statut="complet" par défaut) tant qu'il n'a pas été
+    // validé ainsi.
+    @Transactional
+    public void validate(UUID id) {
+        Household household = householdRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Ménage introuvable : " + id));
+        household.setStatus(HouseholdStatus.COMPLET);
+        householdRepository.save(household);
+    }
+
     // Variantes utilisées par l'API REST (/api/households), accessible aux comptes AGENT en plus
     // des ADMIN : un agent ne doit voir/modifier que ses propres ménages, un admin voit tout.
     // Les routes Thymeleaf /dashboard/** au-dessus utilisent les méthodes sans scope, car déjà
