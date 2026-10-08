@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Controller
@@ -69,10 +70,17 @@ public class AgentAdminController {
         model.addAttribute("supervisors", agentService.listSupervisors().stream().map(AgentDto::from).toList());
         model.addAttribute("currentAgent", AgentDto.from(actor));
         model.addAttribute("staffCount", staffMemberRepository.count());
-        // Alimente la liste déroulante filtrée du formulaire "Créer un compte" (cf. agents.html) :
-        // la liste du personnel importé est petite (quelques centaines de lignes au plus), donc
-        // on la rend en entier côté serveur plutôt que d'ajouter un endpoint de recherche.
-        model.addAttribute("staffList", staffMemberRepository.findAll());
+        // Alimente la liste déroulante filtrée du formulaire "Créer un compte" (cf. agents.html,
+        // app.js) : la liste du personnel importé est petite (quelques centaines de lignes au
+        // plus), donc on l'envoie en entier côté client plutôt que d'ajouter un endpoint de
+        // recherche. "role" est la valeur de l'enum (ex. "AGENT") pour correspondre directement à
+        // l'attribut value des <option> du select Rôle, ou "" si non renseigné/reconnu.
+        model.addAttribute("staffSuggestions", staffMemberRepository.findAll().stream()
+                .map(s -> Map.of(
+                        "fullName", s.getFullName(),
+                        "email", s.getEmail(),
+                        "role", s.getRole() == null ? "" : s.getRole().name()))
+                .toList());
         return "agents";
     }
 

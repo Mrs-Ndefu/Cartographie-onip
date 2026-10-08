@@ -463,37 +463,80 @@ document.addEventListener('click', function (e) {
   initGeo(document);
 })();
 
-// Formulaire "Créer un compte" (agents.html) : en choisissant un nom ou un email suggéré par la
-// liste déroulante filtrée (datalist, cf. staff-names-list / staff-emails-list), remplit aussi
-// l'autre champ — pour éviter une faute de frappe qui ferait échouer la vérification de
-// correspondance avec le personnel importé (cf. AgentService.createAgentFromStaffList).
+// Formulaire "Créer un compte" (agents.html) : menu de suggestions stylé (pas un <datalist>
+// natif, dont l'apparence ne se personnalise pas) sur les champs Nom complet et Adresse mail,
+// filtré selon les lettres tapées, à partir de la liste du personnel importé (STAFF_SUGGESTIONS,
+// injectée par agents.html). Choisir une suggestion remplit nom + email + rôle (le rôle importé
+// n'est qu'une suggestion : cf. AgentService.createAgentFromStaffList, qui ne vérifie que
+// nom + email, pas le rôle).
 (function () {
   var form = document.getElementById('create-agent-form');
-  if (!form) return;
+  if (!form || typeof STAFF_SUGGESTIONS === 'undefined' || !STAFF_SUGGESTIONS.length) return;
 
   var nameInput = document.getElementById('create-fullname');
   var emailInput = document.getElementById('create-username');
-  var nameOptions = document.querySelectorAll('#staff-names-list option');
-  var emailOptions = document.querySelectorAll('#staff-emails-list option');
+  var roleSelect = form.querySelector('select[name="role"]');
+  var combos = [
+    { input: nameInput, field: 'fullName' },
+    { input: emailInput, field: 'email' },
+  ];
 
-  // Les deux datalist sont rendues dans le même ordre à partir de la même liste côté serveur
-  // (cf. AgentAdminController#list) : l'option à l'index i de l'une correspond à celle de l'autre.
-  var nameToEmail = {};
-  var emailToName = {};
-  nameOptions.forEach(function (opt, i) {
-    var email = emailOptions[i] ? emailOptions[i].value : null;
-    if (email) {
-      nameToEmail[opt.value] = email;
-      emailToName[email] = opt.value;
+  function norm(value) {
+    return (value || '').toLowerCase();
+  }
+
+  function escapeHtml(value) {
+    var div = document.createElement('div');
+    div.textContent = value == null ? '' : String(value);
+    return div.innerHTML;
+  }
+
+  function applySelection(staff) {
+    nameInput.value = staff.fullName;
+    emailInput.value = staff.email;
+    if (staff.role && roleSelect) {
+      var known = Array.prototype.some.call(roleSelect.options, function (o) { return o.value === staff.role; });
+      if (known) roleSelect.value = staff.role;
     }
-  });
+    combos.forEach(function (c) { c.menu.hidden = true; });
+  }
 
-  nameInput.addEventListener('input', function () {
-    var email = nameToEmail[nameInput.value];
-    if (email) emailInput.value = email;
-  });
-  emailInput.addEventListener('input', function () {
-    var name = emailToName[emailInput.value];
-    if (name) nameInput.value = name;
+  combos.forEach(function (combo) {
+    var menu = combo.input.closest('.combo').querySelector('.combo-menu');
+    combo.menu = menu;
+
+    function renderMenu() {
+      var q = norm(combo.input.value);
+      if (!q) {
+        menu.hidden = true;
+        return;
+      }
+      var matches = STAFF_SUGGESTIONS.filter(function (s) {
+        return norm(s[combo.field]).indexOf(q) !== -1;
+      }).slice(0, 8);
+      if (!matches.length) {
+        menu.hidden = true;
+        return;
+      }
+      menu.innerHTML = matches.map(function (s) {
+        return '<button type="button" class="combo-option">'
+          + '<span class="combo-option-name">' + escapeHtml(s.fullName) + '</span>'
+          + '<span class="combo-option-email">' + escapeHtml(s.email) + '</span>'
+          + '</button>';
+      }).join('');
+      Array.prototype.forEach.call(menu.querySelectorAll('.combo-option'), function (el, i) {
+        el.addEventListener('mousedown', function (e) {
+          e.preventDefault(); // garde le focus pour ne pas déclencher le blur avant le clic
+          applySelection(matches[i]);
+        });
+      });
+      menu.hidden = false;
+    }
+
+    combo.input.addEventListener('input', renderMenu);
+    combo.input.addEventListener('focus', renderMenu);
+    combo.input.addEventListener('blur', function () {
+      setTimeout(function () { menu.hidden = true; }, 150);
+    });
   });
 })();

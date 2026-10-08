@@ -17,8 +17,9 @@ import java.util.List;
 import java.util.UUID;
 
 // Import du fichier Excel (.xlsx) listant le personnel autorisé (colonne A : nom, colonne B :
-// email) — déposé par un ADMIN dans "Gérer les agents". Chaque import REMPLACE la liste
-// précédente : le fichier est censé être la liste à jour, pas un ajout au fur et à mesure.
+// email, colonne C : rôle — optionnelle) — déposé par un ADMIN dans "Gérer les agents". Chaque
+// import REMPLACE la liste précédente : le fichier est censé être la liste à jour, pas un ajout
+// au fur et à mesure.
 @Service
 public class StaffImportService {
 
@@ -60,6 +61,7 @@ public class StaffImportService {
                 // ligne de données (fichier sans en-tête).
                 String fullName = cellText(row, 0);
                 String email = cellText(row, 1);
+                String roleText = cellText(row, 2);
                 if (fullName.isBlank() && email.isBlank()) {
                     continue;
                 }
@@ -69,7 +71,11 @@ public class StaffImportService {
                 if (!looksLikeEmail(email) || fullName.isBlank()) {
                     continue;
                 }
-                result.add(new StaffMember(UUID.randomUUID(), email.trim().toLowerCase(), fullName.trim(), now));
+                // Rôle non reconnu (colonne absente, vide, ou texte libre type intitulé de poste
+                // qui ne correspond à aucun rôle de l'application) : on l'ignore plutôt que de
+                // rejeter la ligne — c'est une aide à la saisie, pas une contrainte.
+                AgentRole role = parseRole(roleText);
+                result.add(new StaffMember(UUID.randomUUID(), email.trim().toLowerCase(), fullName.trim(), role, now));
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible de lire le fichier Excel", e);
@@ -95,5 +101,25 @@ public class StaffImportService {
 
     private static boolean looksLikeEmail(String value) {
         return value != null && value.contains("@") && value.contains(".");
+    }
+
+    // Accepte le nom exact du rôle (ex. "SUPERVISEUR", insensible à la casse) ou son libellé
+    // affiché dans l'application (ex. "Superviseur", cf. AgentRole.label()).
+    private static AgentRole parseRole(String text) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+        String trimmed = text.trim();
+        try {
+            return AgentRole.valueOf(trimmed.toUpperCase().replace(' ', '_'));
+        } catch (IllegalArgumentException ignored) {
+            // Pas le nom exact de l'enum : on essaie le libellé affiché (ex. "Super admin").
+        }
+        for (AgentRole candidate : AgentRole.values()) {
+            if (candidate.label().equalsIgnoreCase(trimmed)) {
+                return candidate;
+            }
+        }
+        return null;
     }
 }
