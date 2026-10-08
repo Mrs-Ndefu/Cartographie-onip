@@ -40,10 +40,6 @@ import java.util.UUID;
 @Controller
 public class DashboardController {
 
-    // 19 membres en plus du chef (20 personnes au total) — même limite que MAX_MEMBRES côté web
-    // et MAX_TOTAL_MEMBERS côté Android.
-    private static final int MAX_MEMBRES = 19;
-
     private final HouseholdRepository householdRepository;
     private final HouseholdService householdService;
     private final DashboardService dashboardService;
@@ -231,7 +227,6 @@ public class DashboardController {
             model.addAttribute("form", HouseholdEditForm.from(household));
         }
         model.addAttribute("returnTo", isDashboardPath(returnTo) ? returnTo : null);
-        model.addAttribute("maxMembres", MAX_MEMBRES);
         addEditOptions(model, household);
     }
 

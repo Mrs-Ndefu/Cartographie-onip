@@ -169,10 +169,6 @@ document.addEventListener('click', function (e) {
     tbody.insertAdjacentHTML('beforeend', template.innerHTML.replace(/__INDEX__/g, String(rows(form).length)));
   }
 
-  function maxMembres(form) {
-    return parseInt(form.dataset.maxMembres, 10) || 14;
-  }
-
   function showLimit(form, message) {
     var el = form.querySelector('.js-member-limit');
     if (!el) return;
@@ -180,13 +176,16 @@ document.addEventListener('click', function (e) {
     el.hidden = !message;
   }
 
+  // Aucun plafond sur le nombre de membres : seule borne, le nombre déclaré par l'agent/l'admin
+  // en haut du formulaire (chef compris) — ça reste une vérification de cohérence des données,
+  // pas une limite du nombre de personnes qu'un ménage peut compter.
   function tryAddMember(form) {
     var total = parseInt(form.querySelector('.js-nombre-membres').value, 10);
     if (!(total >= 1)) {
       showLimit(form, 'Saisissez d\'abord le nombre de membres du ménage (chef compris).');
       return;
     }
-    if (1 + rows(form).length >= Math.min(total, maxMembres(form) + 1)) {
+    if (1 + rows(form).length >= total + 1) {
       showLimit(form, 'Le ménage compte ' + total + ' membre(s), chef compris. Pour ajouter un autre membre, '
         + 'modifiez d\'abord le nombre de membres.');
       return;

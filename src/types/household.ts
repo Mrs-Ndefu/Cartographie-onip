@@ -1,6 +1,5 @@
 export const CODE_MENAGE_LENGTH = 6
 export const NAME_FIELD_LENGTH = 19 // Nom / Postnom / Prénom — compté sur le scan (chef et membres)
-export const MAX_MEMBRES = 19
 
 export type Sexe = 'M' | 'F'
 
