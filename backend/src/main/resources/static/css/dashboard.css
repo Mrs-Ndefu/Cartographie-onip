@@ -700,6 +700,9 @@ h1, h2, h3 {
 
 .table-section {
   padding: 0.5rem 1.75rem 2rem;
+  /* .topbar est "position: sticky" : sans cette marge, défiler vers #menages (cf. la popover de
+     la cloche de notification) cale la section juste sous la barre, qui la recouvre. */
+  scroll-margin-top: 80px;
 }
 
 .table-card {
