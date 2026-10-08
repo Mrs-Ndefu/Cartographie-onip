@@ -38,8 +38,13 @@ public class StaffImportService {
             throw new IllegalArgumentException(
                     "Aucune ligne valide trouvée (colonnes attendues : nom, email — première ligne ignorée si c'est un en-tête)");
         }
-        // Remplace l'intégralité de la liste précédente par celle du fichier importé.
+        // Remplace l'intégralité de la liste précédente par celle du fichier importé. Le flush
+        // après deleteAll() est nécessaire : sans lui, Hibernate peut exécuter les INSERT avant
+        // les DELETE dans la même transaction (il regroupe par type d'opération, pas par ordre
+        // d'appel), ce qui viole la contrainte unique sur l'email si une même adresse réapparaît
+        // d'un import à l'autre.
         staffMemberRepository.deleteAll();
+        staffMemberRepository.flush();
         staffMemberRepository.saveAll(parsed);
         return parsed.size();
     }
