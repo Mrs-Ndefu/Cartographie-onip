@@ -52,10 +52,18 @@
   <section class="agents-messages">
     <div th:if="${success}" class="alert alert-success py-2" th:text="${success}">-</div>
     <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}">-</div>
-    <div th:if="${countIncomplet > 0 and currentAgent != null and (currentAgent.role.name() == 'ADMIN' or currentAgent.role.name() == 'SUPERVISEUR' or currentAgent.role.name() == 'SUPER_ADMIN')}"
-         class="alert alert-warning py-2 d-flex justify-content-between align-items-center">
-      <span th:text="${countIncomplet} + ' ménage(s) incomplet(s) en attente de validation — ils ne figurent pas dans le tableau ci-dessous tant qu\'ils ne sont pas validés.'">-</span>
-      <a th:href="@{/dashboard(statut='incomplet')}" class="btn btn-sm btn-outline-dark">Voir et valider</a>
+  </section>
+
+  <!-- En dehors de .agents-messages : ce bandeau ne doit pas disparaître tout seul après 2
+       secondes comme un toast normal (cf. app.js, .agents-messages .alert) — il a son propre
+       cycle (quelques secondes, puis revient toutes les minutes tant que la page reste ouverte
+       et qu'il reste des ménages non traités, cf. app.js, #pending-validation-toast). -->
+  <section th:if="${countIncomplet > 0 and currentAgent != null and (currentAgent.role.name() == 'ADMIN' or currentAgent.role.name() == 'SUPERVISEUR' or currentAgent.role.name() == 'SUPER_ADMIN')}">
+    <div id="pending-validation-toast" class="pending-toast" th:attr="data-pending-count=${countIncomplet}">
+      <span class="pending-toast-icon" aria-hidden="true">⏳</span>
+      <span class="pending-toast-text"
+            th:text="${countIncomplet} + ' ménage(s) incomplet(s) en attente de validation — ils ne figurent pas dans le tableau ci-dessous tant qu\'ils ne sont pas validés ou rejetés.'">-</span>
+      <a th:href="@{/dashboard(statut='incomplet')}" class="btn btn-sm btn-outline-dark pending-toast-btn">Consulter</a>
     </div>
   </section>
 
@@ -211,6 +219,16 @@
                     <button type="submit" class="btn btn-sm btn-outline-success btn-icon" title="Valider" aria-label="Valider">
                       <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                         <path d="M4 10.5l3.5 3.5L16 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                  <form th:if="${h.status.value != 'complet' and currentAgent != null and currentAgent.role.canEditHousehold(h.status)}"
+                        th:action="@{/dashboard/households/{id}/reject(id=${h.id})}" method="post"
+                        class="js-confirm-form" data-confirm-title="Rejeter ce ménage ?" data-confirm-label="Rejeter"
+                        th:data-confirm-detail="${h.codeMenage} + ' — il sera archivé (consultable dans les ménages retirés), pas supprimé.'">
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Rejeter" aria-label="Rejeter">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                       </svg>
                     </button>
                   </form>
@@ -500,6 +518,16 @@
                   + '<input type="hidden" name="' + csrfParam + '" value="' + csrfToken + '">'
                   + '<button type="submit" class="btn btn-sm btn-outline-success btn-icon" title="Valider" aria-label="Valider">'
                   + '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l3.5 3.5L16 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                  + '</button>'
+                  + '</form>'
+                : '')
+          +   (h.status !== 'complet' && canEdit && (canEditComplete || h.status !== 'complet')
+                ? '<form method="post" action="/dashboard/households/' + h.id + '/reject" class="js-confirm-form"'
+                  + ' data-confirm-title="Rejeter ce ménage ?" data-confirm-label="Rejeter"'
+                  + ' data-confirm-detail="' + escapeHtml(code).replace(/"/g, '&quot;') + ' — il sera archivé (consultable dans les ménages retirés), pas supprimé.">'
+                  + '<input type="hidden" name="' + csrfParam + '" value="' + csrfToken + '">'
+                  + '<button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Rejeter" aria-label="Rejeter">'
+                  + '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
                   + '</button>'
                   + '</form>'
                 : '')

@@ -10,6 +10,26 @@ document.querySelectorAll('.agents-messages .alert').forEach(function (el, i) {
   }, 2000 + i * 300);
 });
 
+// Bandeau "ménages incomplets en attente de validation" (dashboard.html,
+// #pending-validation-toast) : visible au chargement, disparaît après quelques secondes comme un
+// toast normal, puis revient toutes les minutes — tant que la page reste ouverte — pour rappeler
+// qu'il reste des ménages ni validés ni rejetés. Le nombre n'est pas revérifié auprès du serveur
+// entre deux apparitions : un ménage traité depuis un autre onglet ou un autre appareil continue
+// donc de déclencher le rappel jusqu'au prochain chargement de cette page.
+(function () {
+  var toast = document.getElementById('pending-validation-toast');
+  if (!toast) return;
+
+  function show() { toast.classList.remove('pending-toast-hidden'); }
+  function hide() { toast.classList.add('pending-toast-hidden'); }
+
+  setTimeout(hide, 6000);
+  setInterval(function () {
+    show();
+    setTimeout(hide, 6000);
+  }, 60000);
+})();
+
 // Confirmation stylée avant une action sensible (ex: retirer/restaurer un ménage) —
 // remplace window.confirm() par une vraie modale. Se déclenche sur tout
 // <form class="js-confirm-form">, y compris ceux ajoutés dynamiquement (recherche en direct),
