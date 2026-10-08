@@ -46,7 +46,7 @@ data class MemberInput(
 )
 
 // Chef + 14 membres au maximum, comme la fiche papier (même limite que l'app web).
-const val MAX_TOTAL_MEMBERS = 15
+const val MAX_TOTAL_MEMBERS = 20
 
 data class CaptureUiState(
     val householdId: String = UUID.randomUUID().toString(),

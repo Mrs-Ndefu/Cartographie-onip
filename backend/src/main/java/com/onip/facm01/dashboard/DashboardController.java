@@ -40,8 +40,9 @@ import java.util.UUID;
 @Controller
 public class DashboardController {
 
-    // 14 membres en plus du chef, comme la fiche papier (même limite que MAX_MEMBRES côté web).
-    private static final int MAX_MEMBRES = 14;
+    // 19 membres en plus du chef (20 personnes au total) — même limite que MAX_MEMBRES côté web
+    // et MAX_TOTAL_MEMBERS côté Android.
+    private static final int MAX_MEMBRES = 19;
 
     private final HouseholdRepository householdRepository;
     private final HouseholdService householdService;

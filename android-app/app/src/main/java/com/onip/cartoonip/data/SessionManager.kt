@@ -70,6 +70,20 @@ class SessionManager(context: Context) {
         get() = prefs.getString(KEY_ZONE_PLACE, null)
         set(value) = prefs.edit().putString(KEY_ZONE_PLACE, value).apply()
 
+    var zoneProvince: String?
+        get() = prefs.getString(KEY_ZONE_PROVINCE, null)
+        set(value) = prefs.edit().putString(KEY_ZONE_PROVINCE, value).apply()
+
+    var zoneVille: String?
+        get() = prefs.getString(KEY_ZONE_VILLE, null)
+        set(value) = prefs.edit().putString(KEY_ZONE_VILLE, value).apply()
+
+    // Communes de la zone : SharedPreferences ne stocke pas de liste directement, d'où le join
+    // sur un séparateur improbable dans un nom de commune.
+    var zoneCommunes: List<String>
+        get() = prefs.getString(KEY_ZONE_COMMUNES, null)?.split(ZONE_COMMUNES_SEPARATOR)?.filter { it.isNotBlank() } ?: emptyList()
+        set(value) = prefs.edit().putString(KEY_ZONE_COMMUNES, value.joinToString(ZONE_COMMUNES_SEPARATOR)).apply()
+
     fun save(baseUrl: String, token: String, agent: AgentDto) {
         prefs.edit()
             .putString(KEY_BASE_URL, baseUrl)
@@ -88,6 +102,7 @@ class SessionManager(context: Context) {
             .remove(KEY_BASE_URL).remove(KEY_TOKEN).remove(KEY_AGENT_ID)
             .remove(KEY_USERNAME).remove(KEY_FULL_NAME)
             .remove(KEY_ZONE_CODE).remove(KEY_ZONE_PLACE)
+            .remove(KEY_ZONE_PROVINCE).remove(KEY_ZONE_VILLE).remove(KEY_ZONE_COMMUNES)
             .apply()
         _session.value = null
     }
@@ -106,6 +121,10 @@ class SessionManager(context: Context) {
         private const val KEY_ZONE_CODE = "zone_code"
         private const val KEY_EXPIRED_USERNAME = "expired_username"
         private const val KEY_ZONE_PLACE = "zone_place"
+        private const val KEY_ZONE_PROVINCE = "zone_province"
+        private const val KEY_ZONE_VILLE = "zone_ville"
+        private const val KEY_ZONE_COMMUNES = "zone_communes"
+        private const val ZONE_COMMUNES_SEPARATOR = "|||"
         private const val KEY_TOKEN = "token"
         private const val KEY_AGENT_ID = "agent_id"
         private const val KEY_USERNAME = "username"
