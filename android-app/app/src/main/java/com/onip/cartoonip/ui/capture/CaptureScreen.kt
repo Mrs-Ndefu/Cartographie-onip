@@ -244,6 +244,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
 
             item {
                 StepCard(number = 3, title = "Adresse complète") {
+                    val agentZone by AppContainer.agentZone.collectAsState()
                     VilleCommuneFields(
                         province = uiState.province,
                         ville = uiState.ville,
@@ -251,6 +252,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         onProvinceChange = viewModel::onProvinceChange,
                         onVilleChange = viewModel::onVilleChange,
                         onCommuneChange = viewModel::onCommuneChange,
+                        zone = agentZone,
                     )
                     OutlinedTextField(
                         value = uiState.quartier, onValueChange = viewModel::onQuartierChange,
@@ -440,10 +442,16 @@ private fun VilleCommuneFields(
     onProvinceChange: (String) -> Unit,
     onVilleChange: (String) -> Unit,
     onCommuneChange: (String) -> Unit,
+    zone: AgentZone? = null,
 ) {
+    // Agent affecté à une zone : province, ville et communes limitées à celle-ci (pas de "Autre"
+    // de secours, le choix n'est pas censé sortir de la zone). Agent sans zone (compte de test,
+    // ou pas encore affecté) : listes complètes de la RDC, comportement d'avant.
+    val zoneRestricted = zone != null && !zone.province.isNullOrBlank() && !zone.ville.isNullOrBlank()
+    val provinceOptions = if (zoneRestricted) listOf(zone!!.province!!) else DRC_PROVINCES
     val allVilleNames = remember { DRC_VILLES.map { it.name } }
-    val villeNames = remember(province) { villesForProvince(province).map { it.name } }
-    var villeOther by remember { mutableStateOf(ville.isNotBlank() && allVilleNames.none { it.equals(ville, ignoreCase = true) }) }
+    val villeNames = if (zoneRestricted) listOf(zone!!.ville!!) else remember(province) { villesForProvince(province).map { it.name } }
+    var villeOther by remember { mutableStateOf(!zoneRestricted && ville.isNotBlank() && allVilleNames.none { it.equals(ville, ignoreCase = true) }) }
     var provinceExpanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
@@ -451,7 +459,7 @@ private fun VilleCommuneFields(
         modifier = Modifier.padding(bottom = 8.dp),
     ) {
         OutlinedTextField(
-            value = DRC_PROVINCES.firstOrNull { it.equals(province, ignoreCase = true) } ?: province,
+            value = provinceOptions.firstOrNull { it.equals(province, ignoreCase = true) } ?: province,
             onValueChange = {},
             readOnly = true,
             label = { Text("Province/Région*") },
@@ -459,7 +467,7 @@ private fun VilleCommuneFields(
             modifier = Modifier.fillMaxWidth().menuAnchor(),
         )
         ExposedDropdownMenu(expanded = provinceExpanded, onDismissRequest = { provinceExpanded = false }) {
-            DRC_PROVINCES.forEach { name ->
+            provinceOptions.forEach { name ->
                 DropdownMenuItem(text = { Text(name) }, onClick = {
                     villeOther = false
                     onProvinceChange(name)
@@ -469,7 +477,7 @@ private fun VilleCommuneFields(
         }
     }
 
-    val communeOptions = if (villeOther) emptyList() else communesForVille(ville)
+    val communeOptions = if (zoneRestricted) zone!!.communes else if (villeOther) emptyList() else communesForVille(ville)
     var communeOther by remember(ville) {
         mutableStateOf(commune.isNotBlank() && communeOptions.none { it.equals(commune, ignoreCase = true) })
     }
@@ -497,12 +505,14 @@ private fun VilleCommuneFields(
                     villeExpanded = false
                 })
             }
-            DropdownMenuItem(text = { Text("Autre (saisie libre)") }, onClick = {
-                villeOther = true
-                onVilleChange("")
-                onCommuneChange("")
-                villeExpanded = false
-            })
+            if (!zoneRestricted) {
+                DropdownMenuItem(text = { Text("Autre (saisie libre)") }, onClick = {
+                    villeOther = true
+                    onVilleChange("")
+                    onCommuneChange("")
+                    villeExpanded = false
+                })
+            }
         }
     }
     if (villeOther) {
@@ -544,11 +554,13 @@ private fun VilleCommuneFields(
                     communeExpanded = false
                 })
             }
-            DropdownMenuItem(text = { Text("Autre (saisie libre)") }, onClick = {
-                communeOther = true
-                onCommuneChange("")
-                communeExpanded = false
-            })
+            if (!zoneRestricted) {
+                DropdownMenuItem(text = { Text("Autre (saisie libre)") }, onClick = {
+                    communeOther = true
+                    onCommuneChange("")
+                    communeExpanded = false
+                })
+            }
         }
     }
     if (communeOther) {

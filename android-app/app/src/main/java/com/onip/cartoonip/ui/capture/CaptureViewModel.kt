@@ -45,8 +45,6 @@ data class MemberInput(
     val relation: String = "",
 )
 
-// Chef + 14 membres au maximum, comme la fiche papier (même limite que l'app web).
-const val MAX_TOTAL_MEMBERS = 15
 
 data class CaptureUiState(
     val householdId: String = UUID.randomUUID().toString(),
@@ -101,7 +99,9 @@ data class CaptureUiState(
     val totalMembers get() = 1 + members.size
 
     // null = pas encore saisi, ou hors limites.
-    val declaredMembers: Int? get() = declaredMembersText.toIntOrNull()?.takeIf { it in 1..MAX_TOTAL_MEMBERS }
+    // Aucun plafond : un ménage peut compter autant de membres que nécessaire, pas seulement
+    // jusqu'à la taille de la fiche papier.
+    val declaredMembers: Int? get() = declaredMembersText.toIntOrNull()?.takeIf { it >= 1 }
 
     // Remplir les fiches membres n'est pas obligatoire ; il ne faut simplement pas plus de fiches
     // que le nombre déclaré (cas où l'agent a baissé le nombre après avoir ajouté des fiches).
@@ -122,7 +122,7 @@ data class CaptureUiState(
             if (commune.isBlank()) add("la commune")
             val declared = declaredMembers
             when {
-                declared == null -> add("le nombre de membres (chef compris, 1 à $MAX_TOTAL_MEMBERS)")
+                declared == null -> add("le nombre de membres (chef compris, au moins 1)")
                 totalMembers > declared -> add("un nombre de membres d'au moins $totalMembers, ou retirez des fiches")
             }
         }
@@ -177,7 +177,9 @@ class CaptureViewModel : ViewModel() {
     fun toggleMembersExpanded() = update { copy(membersExpanded = !membersExpanded) }
 
     fun onDeclaredMembersChange(v: String) = update {
-        val text = v.filter { it.isDigit() }.take(2)
+        // Pas de plafond sur le nombre de membres : seule limite, la saisie reste à 4 chiffres
+        // (9999), largement suffisant, pour éviter un champ qui défile indéfiniment.
+        val text = v.filter { it.isDigit() }.take(4)
         copy(
             declaredMembersText = text,
             memberLimitMessage = null,

@@ -35,10 +35,13 @@ object AppContainer {
     private val _agentZone = MutableStateFlow<AgentZone?>(null)
     val agentZone: StateFlow<AgentZone?> = _agentZone.asStateFlow()
 
-    fun setAgentZone(code: String?, place: String?) {
-        _agentZone.value = if (code.isNullOrBlank()) null else AgentZone(code, place.orEmpty())
+    fun setAgentZone(code: String?, place: String?, province: String? = null, ville: String? = null, communes: List<String> = emptyList()) {
+        _agentZone.value = if (code.isNullOrBlank()) null else AgentZone(code, place.orEmpty(), province, ville, communes)
         sessionManager.zoneCode = code
         sessionManager.zonePlace = place
+        sessionManager.zoneProvince = province
+        sessionManager.zoneVille = ville
+        sessionManager.zoneCommunes = communes
     }
 
     // Jeton refusé par le serveur : on ferme la session (l'écran de connexion s'affiche, cf.
@@ -54,7 +57,7 @@ object AppContainer {
     /** Met à jour photo et zone d'après la fiche de l'agent renvoyée par le serveur. */
     fun applyAgent(agent: AgentDto) {
         setAgentPhoto(agent.photoDataUrl)
-        setAgentZone(agent.zoneCode, agent.zonePlace)
+        setAgentZone(agent.zoneCode, agent.zonePlace, agent.zoneProvince, agent.zoneVille, agent.zoneCommunes.orEmpty())
     }
 
     private var retrofit: Retrofit? = null
@@ -66,7 +69,12 @@ object AppContainer {
         appContext = context.applicationContext
         sessionManager = SessionManager(appContext)
         captureStore = CaptureStore(appContext)
-        sessionManager.zoneCode?.let { _agentZone.value = AgentZone(it, sessionManager.zonePlace.orEmpty()) }
+        sessionManager.zoneCode?.let {
+            _agentZone.value = AgentZone(
+                it, sessionManager.zonePlace.orEmpty(),
+                sessionManager.zoneProvince, sessionManager.zoneVille, sessionManager.zoneCommunes,
+            )
+        }
         initialized = true
     }
 

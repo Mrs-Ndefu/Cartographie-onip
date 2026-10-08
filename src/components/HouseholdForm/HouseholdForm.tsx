@@ -10,7 +10,7 @@ import {
   createEmptyPersonForm,
 } from '../../utils/validation'
 import type { HouseholdFormValues } from '../../utils/validation'
-import { MAX_MEMBRES, createEmptyAddress } from '../../types/household'
+import { createEmptyAddress } from '../../types/household'
 import type { Household, GeoLocation } from '../../types/household'
 import { useHouseholds } from '../../hooks/useHouseholds'
 import { generateCodeMenage } from '../../utils/idGenerator'
@@ -169,16 +169,10 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
             type="button"
             className="add-member-btn"
             onClick={() => append(createEmptyPersonForm())}
-            disabled={fields.length >= MAX_MEMBRES}
           >
             + Ajouter un membre
           </button>
         </div>
-        {fields.length >= MAX_MEMBRES && (
-          <p className="hint">
-            Maximum {MAX_MEMBRES} membres par fiche — utiliser une fiche complémentaire au-delà.
-          </p>
-        )}
         {errors.membres?.root && (
           <p className="field-error">{errors.membres.root.message}</p>
         )}

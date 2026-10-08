@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CODE_MENAGE_LENGTH, MAX_MEMBRES, createEmptyAddress } from '../types/household'
+import { CODE_MENAGE_LENGTH, createEmptyAddress } from '../types/household'
 import type { Sexe, Address, Relation } from '../types/household'
 
 export interface PersonFormValues {
@@ -75,9 +75,8 @@ export const householdSchema: z.ZodType<HouseholdFormValues> = z
       .min(1, 'Nombre de membres obligatoire')
       .regex(/^\d+$/, 'Nombre invalide'),
     chef: personSchema,
-    membres: z
-      .array(personSchema)
-      .max(MAX_MEMBRES, `Maximum ${MAX_MEMBRES} membres — utiliser une fiche complémentaire au-delà`),
+    // Pas de plafond : un ménage peut compter autant de membres que nécessaire.
+    membres: z.array(personSchema),
     address: addressSchema,
     faitA: z.string(),
     dateEncodage: dateField,

@@ -40,9 +40,6 @@ import java.util.UUID;
 @Controller
 public class DashboardController {
 
-    // 14 membres en plus du chef, comme la fiche papier (même limite que MAX_MEMBRES côté web).
-    private static final int MAX_MEMBRES = 14;
-
     private final HouseholdRepository householdRepository;
     private final HouseholdService householdService;
     private final DashboardService dashboardService;
@@ -230,7 +227,6 @@ public class DashboardController {
             model.addAttribute("form", HouseholdEditForm.from(household));
         }
         model.addAttribute("returnTo", isDashboardPath(returnTo) ? returnTo : null);
-        model.addAttribute("maxMembres", MAX_MEMBRES);
         addEditOptions(model, household);
     }
 
