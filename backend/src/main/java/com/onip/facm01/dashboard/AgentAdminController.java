@@ -80,14 +80,16 @@ public class AgentAdminController {
                 .map(s -> Map.of(
                         "fullName", s.getFullName(),
                         "email", s.getEmail(),
-                        "role", s.getRole() == null ? "" : s.getRole().name()))
+                        "role", s.getRole() == null ? "" : s.getRole().name(),
+                        "roleLabel", s.getRole() == null ? "" : s.getRole().label()))
                 .toList());
         return "agents";
     }
 
-    // Le mot de passe n'est plus saisi : généré automatiquement (cf. PasswordGenerator), un mot
-    // de passe différent par personne plutôt qu'une valeur par défaut partagée. Affiché une seule
-    // fois dans le message de confirmation ci-dessous — il n'est pas stocké en clair
+    // Le champ mot de passe reste visible (rempli automatiquement côté client dès que nom et
+    // email sont saisis, cf. app.js) mais n'est pas obligatoire : si laissé vide (JS désactivé,
+    // ou champ vidé à la main), un mot de passe est généré ici (cf. PasswordGenerator). Affiché
+    // une seule fois dans le message de confirmation ci-dessous — il n'est pas stocké en clair
     // (AgentService.createAgent le hache immédiatement), donc à communiquer tout de suite à la
     // personne concernée, qui devra le changer à sa première connexion (cf. /dashboard/profile).
     @PostMapping
@@ -95,11 +97,16 @@ public class AgentAdminController {
             @RequestParam String username,
             @RequestParam String fullName,
             @RequestParam AgentRole role,
+            @RequestParam(required = false) String password,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
         try {
             requireCanManage(authentication, role);
-            String password = PasswordGenerator.generate();
+            if (password == null || password.isBlank()) {
+                password = PasswordGenerator.generate();
+            } else if (password.length() < 5) {
+                throw new IllegalArgumentException("Le mot de passe doit contenir au moins 5 caractères");
+            }
             Agent created = agentService.createAgentFromStaffList(username, password, fullName, role);
             Agent actor = actor(authentication);
             if (actor.getRole() == AgentRole.SUPERVISEUR && role == AgentRole.AGENT) {
@@ -233,6 +240,31 @@ public class AgentAdminController {
             }
             agentService.resetPassword(id, newPassword);
             redirectAttributes.addFlashAttribute("success", "Mot de passe réinitialisé pour " + target.getUsername());
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/dashboard/agents";
+    }
+
+    // Suppression définitive — réservée à l'ADMIN/SUPER_ADMIN (cf. SecurityConfig, qui restreint
+    // cette route avant la règle générale sur /dashboard/agents/**, et le contrôle ci-dessous :
+    // même un SUPERVISEUR autorisé par requireCanManage à gérer ses AGENT ne doit pas pouvoir les
+    // supprimer, seulement les désactiver).
+    @PostMapping("/{id}/delete")
+    public String deleteAgent(
+            @PathVariable UUID id, Authentication authentication, RedirectAttributes redirectAttributes) {
+        try {
+            Agent actor = actor(authentication);
+            if (!actor.getRole().isAdminTier()) {
+                throw new IllegalArgumentException("Seul un administrateur peut supprimer un compte.");
+            }
+            Agent target = agentService.getAgent(id);
+            requireCanManage(authentication, target.getRole());
+            if (target.getUsername().equals(authentication.getName())) {
+                throw new IllegalArgumentException("Vous ne pouvez pas supprimer votre propre compte.");
+            }
+            agentService.deleteAgent(id);
+            redirectAttributes.addFlashAttribute("success", "Compte supprimé : " + target.getUsername());
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

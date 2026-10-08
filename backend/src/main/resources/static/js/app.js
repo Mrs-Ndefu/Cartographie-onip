@@ -466,19 +466,55 @@ document.addEventListener('click', function (e) {
   initGeo(document);
 })();
 
-// Formulaire "Créer un compte" (agents.html) : menu de suggestions stylé (pas un <datalist>
-// natif, dont l'apparence ne se personnalise pas) sur les champs Nom complet et Adresse mail,
-// filtré selon les lettres tapées, à partir de la liste du personnel importé (STAFF_SUGGESTIONS,
-// injectée par agents.html). Choisir une suggestion remplit nom + email + rôle (le rôle importé
-// n'est qu'une suggestion : cf. AgentService.createAgentFromStaffList, qui ne vérifie que
-// nom + email, pas le rôle).
+// Formulaire "Créer un compte" (agents.html) :
+// - menu de suggestions stylé (pas un <datalist> natif, dont l'apparence ne se personnalise
+//   pas) sur les champs Nom complet et Adresse mail, filtré selon les lettres tapées, à partir
+//   de la liste du personnel importé (STAFF_SUGGESTIONS, injectée par agents.html, avec le rôle
+//   affiché dans chaque suggestion s'il est connu) ;
+// - mot de passe rempli automatiquement dès que le nom ET l'email sont renseignés (saisie
+//   manuelle ou suggestion choisie), sans écraser un mot de passe déjà modifié à la main —
+//   fonctionne même sans personnel importé (STAFF_SUGGESTIONS vide), contrairement aux
+//   suggestions elles-mêmes.
+// Choisir une suggestion remplit nom + email + rôle ; le rôle importé n'est qu'indicatif (cf.
+// AgentService.createAgentFromStaffList, qui ne vérifie que nom + email, pas le rôle).
 (function () {
   var form = document.getElementById('create-agent-form');
-  if (!form || typeof STAFF_SUGGESTIONS === 'undefined' || !STAFF_SUGGESTIONS.length) return;
+  if (!form) return;
 
   var nameInput = document.getElementById('create-fullname');
   var emailInput = document.getElementById('create-username');
+  var passwordInput = document.getElementById('create-password');
   var roleSelect = form.querySelector('select[name="role"]');
+
+  function escapeHtml(value) {
+    var div = document.createElement('div');
+    div.textContent = value == null ? '' : String(value);
+    return div.innerHTML;
+  }
+
+  // Alphabet sans 0/O, 1/I/l (ambigus à l'écran) — même principe que PasswordGenerator côté
+  // serveur (qui reste le filet de sécurité si ce script échoue ou est désactivé).
+  var PASSWORD_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  function generatePassword() {
+    var bytes = new Uint8Array(5);
+    (window.crypto || window.msCrypto).getRandomValues(bytes);
+    var out = '';
+    for (var i = 0; i < bytes.length; i++) out += PASSWORD_CHARS.charAt(bytes[i] % PASSWORD_CHARS.length);
+    return out;
+  }
+
+  function maybeFillPassword() {
+    if (!passwordInput || passwordInput.value) return; // ne remplace pas une saisie manuelle
+    if (nameInput.value.trim() && emailInput.value.trim()) {
+      passwordInput.value = generatePassword();
+    }
+  }
+
+  nameInput.addEventListener('input', maybeFillPassword);
+  emailInput.addEventListener('input', maybeFillPassword);
+
+  if (typeof STAFF_SUGGESTIONS === 'undefined' || !STAFF_SUGGESTIONS.length) return;
+
   var combos = [
     { input: nameInput, field: 'fullName' },
     { input: emailInput, field: 'email' },
@@ -486,12 +522,6 @@ document.addEventListener('click', function (e) {
 
   function norm(value) {
     return (value || '').toLowerCase();
-  }
-
-  function escapeHtml(value) {
-    var div = document.createElement('div');
-    div.textContent = value == null ? '' : String(value);
-    return div.innerHTML;
   }
 
   function applySelection(staff) {
@@ -502,6 +532,7 @@ document.addEventListener('click', function (e) {
       if (known) roleSelect.value = staff.role;
     }
     combos.forEach(function (c) { c.menu.hidden = true; });
+    maybeFillPassword();
   }
 
   combos.forEach(function (combo) {
@@ -522,9 +553,13 @@ document.addEventListener('click', function (e) {
         return;
       }
       menu.innerHTML = matches.map(function (s) {
+        var roleBadge = s.roleLabel ? '<span class="combo-option-role">' + escapeHtml(s.roleLabel) + '</span>' : '';
         return '<button type="button" class="combo-option">'
-          + '<span class="combo-option-name">' + escapeHtml(s.fullName) + '</span>'
-          + '<span class="combo-option-email">' + escapeHtml(s.email) + '</span>'
+          + '<span class="combo-option-main">'
+          +   '<span class="combo-option-name">' + escapeHtml(s.fullName) + '</span>'
+          +   '<span class="combo-option-email">' + escapeHtml(s.email) + '</span>'
+          + '</span>'
+          + roleBadge
           + '</button>';
       }).join('');
       Array.prototype.forEach.call(menu.querySelectorAll('.combo-option'), function (el, i) {
