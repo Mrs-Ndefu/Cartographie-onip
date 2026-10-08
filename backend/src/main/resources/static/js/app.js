@@ -10,30 +10,20 @@ document.querySelectorAll('.agents-messages .alert').forEach(function (el, i) {
   }, 2000 + i * 300);
 });
 
-// Cloche de notification (dashboard.html, #pending-notif-bell) : point rouge avec le nombre de
-// ménages incomplets en attente, tant qu'ils n'ont pas été "consultés". Pas de suivi côté
-// serveur (ce n'est pas un vrai système de notifications par utilisateur) : le nombre déjà vu
-// est juste mémorisé dans ce navigateur, au moment où on clique sur la cloche. Le point
-// réapparaît automatiquement si de nouveaux ménages incomplets font monter le compte au-delà de
-// cette valeur mémorisée (donc aussi après un nouveau chargement de page si rien n'a changé).
+// Cloche de notification (dashboard.html, #pending-notif-bell) : affiche toujours le nombre réel
+// de ménages incomplets en attente (data-pending-count, calculé côté serveur à chaque chargement
+// de la page) tant qu'il y en a au moins un — pas de logique de "déjà vu" à retenir, pour rester
+// simple et fiable : le badge reflète directement l'état du serveur, sans surprise.
 (function () {
   var bell = document.getElementById('pending-notif-bell');
   var badge = document.getElementById('pending-notif-badge');
   if (!bell || !badge) return;
 
-  var STORAGE_KEY = 'facm01.pendingNotifAcknowledged';
   var count = parseInt(bell.dataset.pendingCount || '0', 10);
-  var acknowledged = 0;
-  try { acknowledged = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10); } catch (e) { /* stockage indisponible : traité comme "rien vu" */ }
-
-  if (count > acknowledged) {
+  if (count > 0) {
     badge.hidden = false;
     badge.textContent = count > 99 ? '99+' : String(count);
   }
-
-  bell.addEventListener('click', function () {
-    try { localStorage.setItem(STORAGE_KEY, String(count)); } catch (e) { /* tant pis, pas bloquant */ }
-  });
 })();
 
 // Confirmation stylée avant une action sensible (ex: retirer/restaurer un ménage) —
