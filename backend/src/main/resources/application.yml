@@ -40,9 +40,10 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   ai:
     address-check:
-      # Vérification par l'IA (Claude/Anthropic) de la plausibilité des adresses saisies
-      # (quartier/rue/numéro/immeuble) — cf. AddressAiCheckService. Sans clé (ANTHROPIC_API_KEY
-      # non définie), ce contrôle ne s'exécute simplement pas : aucun impact sur la synchro.
+      # Vérification de la plausibilité des adresses saisies (quartier/rue/immeuble) — cf.
+      # AddressAiCheckService. Active par défaut (enabled=true) via une heuristique locale, sans
+      # configuration ni coût. Si une clé ANTHROPIC_API_KEY est renseignée, l'IA (Claude) est
+      # utilisée à la place, pour un jugement plus fin.
       enabled: ${ADDRESS_AI_CHECK_ENABLED:true}
       anthropic-api-key: ${ANTHROPIC_API_KEY:}
       model: ${ANTHROPIC_MODEL:claude-haiku-4-5-20251001}

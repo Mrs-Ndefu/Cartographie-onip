@@ -19,12 +19,15 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
-// Vérifie, via l'API Claude (Anthropic), que le quartier/l'avenue/le numéro/l'immeuble saisis
-// pour un ménage ressemblent à une vraie adresse plutôt qu'à du texte au hasard. Si l'adresse
-// semble incohérente, le ménage passe en statut A_VERIFIER : il disparaît alors du tableau de
-// bord par défaut et déclenche la même notification (cloche) que les ménages incomplets (cf.
-// DashboardController, statut "incomplet" = tout statut différent de COMPLET), à charge pour un
-// ADMIN/SUPERVISEUR de valider ou rejeter depuis la page détail (AgentRole.canReviewHousehold).
+// Vérifie que le quartier/l'avenue/l'immeuble saisis pour un ménage ressemblent à une vraie
+// adresse plutôt qu'à du texte au hasard — via l'API Claude (Anthropic) si une clé est
+// configurée (cf. AnthropicClient), sinon via une heuristique locale sans dépendance externe ni
+// coût (cf. AddressPlausibilityHeuristic) : c'est le cas par défaut, et ça fonctionne
+// immédiatement sans aucune configuration. Si l'adresse semble incohérente, le ménage passe en
+// statut A_VERIFIER : il disparaît alors du tableau de bord par défaut et déclenche la même
+// notification (cloche) que les ménages incomplets (cf. DashboardController, statut "incomplet"
+// = tout statut différent de COMPLET), à charge pour un ADMIN/SUPERVISEUR de valider ou rejeter
+// depuis la page détail (AgentRole.canReviewHousehold).
 @Service
 public class AddressAiCheckService {
 
@@ -54,7 +57,7 @@ public class AddressAiCheckService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onAddressCheckRequested(AddressCheckRequestedEvent event) {
-        if (!enabled || !anthropicClient.hasApiKey()) {
+        if (!enabled) {
             return;
         }
         Household household = householdRepository.findById(event.householdId()).orElse(null);
@@ -76,20 +79,26 @@ public class AddressAiCheckService {
             return;
         }
 
+        boolean useAi = anthropicClient.hasApiKey();
         try {
-            boolean implausible = anthropicClient.ask(prompt(household.getAddress())).startsWith("NON");
+            AddressEmbeddable address = household.getAddress();
+            boolean implausible = useAi
+                    ? anthropicClient.ask(prompt(address)).startsWith("NON")
+                    : AddressPlausibilityHeuristic.isImplausible(
+                            address.getQuartier(), address.getRue(), address.getImmeuble());
             household.setAddressCheckedSignature(signature);
             if (implausible) {
                 household.setStatus(HouseholdStatus.A_VERIFIER);
-                log.warn("Adresse jugée peu plausible par l'IA pour le ménage {} : passé en 'à vérifier'",
-                        household.getId());
+                log.warn("Adresse jugée peu plausible ({}) pour le ménage {} : passé en 'à vérifier'",
+                        useAi ? "IA" : "heuristique locale", household.getId());
             }
             householdRepository.save(household);
         } catch (Exception e) {
-            // Panne réseau, clé invalide, quota dépassé... : on ne touche pas au ménage (la
-            // signature n'est pas enregistrée, un prochain essai retentera) et on ne bloque rien
-            // côté utilisateur puisqu'on est déjà dans un thread à part, après coup.
-            log.warn("Vérification IA de l'adresse impossible pour le ménage {} : {}",
+            // Panne réseau, clé invalide, quota dépassé... (seulement possible si useAi) : on ne
+            // touche pas au ménage (la signature n'est pas enregistrée, un prochain essai
+            // retentera) et on ne bloque rien côté utilisateur puisqu'on est déjà dans un thread à
+            // part, après coup. L'heuristique locale, elle, ne peut pas échouer de cette façon.
+            log.warn("Vérification de l'adresse impossible pour le ménage {} : {}",
                     event.householdId(), e.getMessage());
         }
     }
