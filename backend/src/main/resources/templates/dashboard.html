@@ -551,6 +551,27 @@
             });
         }, 200);
       });
+
+      // Rafraîchissement automatique toutes les 60 s, pour que les nouveaux enregistrements
+      // remontent sans action de l'utilisateur. Un simple rechargement de page (et non une mise à
+      // jour partielle en JS) : plus simple, et toujours cohérent avec le serveur (pagination,
+      // compteurs, cloche de notification...). Reporté — jamais annulé, juste retenté à la
+      // prochaine échéance — tant qu'une recherche est en cours de saisie ou qu'une fenêtre
+      // (édition, confirmation, notifications) est ouverte, pour ne jamais couper une action en
+      // cours de l'utilisateur.
+      var AUTO_REFRESH_DELAY_MS = 60000;
+      function isUserBusy() {
+        if (document.activeElement === searchInput || searchInput.value.trim()) return true;
+        return ['edit-modal', 'confirm-modal', 'pending-notif-popover'].some(function (id) {
+          var el = document.getElementById(id);
+          return el && !el.hidden;
+        });
+      }
+      setInterval(function () {
+        if (!isUserBusy()) {
+          window.location.reload();
+        }
+      }, AUTO_REFRESH_DELAY_MS);
     })();
     /*]]>*/
   </script>
