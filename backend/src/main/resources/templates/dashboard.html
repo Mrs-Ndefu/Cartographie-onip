@@ -203,7 +203,8 @@
               <td th:text="${h.address != null ? h.address.commune : '-'}">-</td>
               <td>
                 <span th:if="${h.status.value == 'complet'}" class="status-badge status-complet">Complet</span>
-                <span th:unless="${h.status.value == 'complet'}" class="status-badge status-incomplet">Incomplet</span>
+                <span th:if="${h.status.value == 'a_verifier'}" class="status-badge status-a-verifier">À vérifier</span>
+                <span th:if="${h.status.value == 'brouillon'}" class="status-badge status-incomplet">Incomplet</span>
               </td>
               <td th:text="${h.agentUsername ?: '—'}">-</td>
               <td class="cell-date" th:text="${#temporals.format(h.updatedAt, 'dd/MM/yyyy HH:mm')}">-</td>
@@ -476,8 +477,8 @@
         var ville = h.address && h.address.ville ? h.address.ville : '-';
         var addr = h.address && h.address.commune ? h.address.commune : '-';
         var code = h.codeMenage || '';
-        var statusClass = h.status === 'complet' ? 'status-complet' : 'status-incomplet';
-        var statusLabel = h.status === 'complet' ? 'Complet' : 'Incomplet';
+        var statusClass = h.status === 'complet' ? 'status-complet' : h.status === 'a_verifier' ? 'status-a-verifier' : 'status-incomplet';
+        var statusLabel = h.status === 'complet' ? 'Complet' : h.status === 'a_verifier' ? 'À vérifier' : 'Incomplet';
         return '<tr>'
           + '<td class="cell-code">' + escapeHtml(code || '-') + '</td>'
           + '<td>' + escapeHtml(chef) + '</td>'

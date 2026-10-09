@@ -2,6 +2,7 @@ package com.onip.facm01.household;
 
 import com.onip.facm01.agent.Agent;
 import com.onip.facm01.agent.AgentRole;
+import com.onip.facm01.ai.AddressCheckRequestedEvent;
 import com.onip.facm01.household.dto.AddressDto;
 import com.onip.facm01.household.dto.GeoLocationDto;
 import com.onip.facm01.household.dto.HouseholdDto;
@@ -10,6 +11,7 @@ import com.onip.facm01.household.dto.HouseholdSyncItem;
 import com.onip.facm01.household.dto.PersonDto;
 import com.onip.facm01.household.dto.SyncRejection;
 import com.onip.facm01.household.dto.SyncResponse;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,14 +33,17 @@ public class HouseholdService {
     private final HouseholdRepository householdRepository;
     private final HouseholdPhotoRepository householdPhotoRepository;
     private final HouseholdModificationRepository householdModificationRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public HouseholdService(
             HouseholdRepository householdRepository,
             HouseholdPhotoRepository householdPhotoRepository,
-            HouseholdModificationRepository householdModificationRepository) {
+            HouseholdModificationRepository householdModificationRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.householdRepository = householdRepository;
         this.householdPhotoRepository = householdPhotoRepository;
         this.householdModificationRepository = householdModificationRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -105,6 +110,18 @@ public class HouseholdService {
         household.replaceMembers(members);
 
         householdRepository.save(household);
+        requestAddressCheckIfComplet(household);
+    }
+
+    // Demande une vérification IA de l'adresse (quartier/rue/numéro/immeuble) dès qu'un ménage
+    // est enregistré "complet" — que ce soit par la synchro terrain (upsert) ou une correction
+    // depuis le tableau de bord (updateFromDashboard). Cf. AddressAiCheckService : traité après
+    // le commit, dans un thread à part, et sans effet si le texte n'a pas changé depuis la
+    // dernière vérification.
+    private void requestAddressCheckIfComplet(Household household) {
+        if (household.getStatus() == HouseholdStatus.COMPLET) {
+            eventPublisher.publishEvent(new AddressCheckRequestedEvent(household.getId()));
+        }
     }
 
     private HouseholdMember toEntity(PersonDto person, boolean chef, int position) {
@@ -264,6 +281,7 @@ public class HouseholdService {
         householdRepository.save(household);
         householdModificationRepository.save(new HouseholdModification(
                 household, author.getUsername(), author.getFullName(), author.getRole(), form.getMotif().trim()));
+        requestAddressCheckIfComplet(household);
     }
 
     @Transactional(readOnly = true)

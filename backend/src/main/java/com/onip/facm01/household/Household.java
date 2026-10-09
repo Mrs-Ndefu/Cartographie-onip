@@ -86,6 +86,14 @@ public class Household {
     @Column(name = "archived_at")
     private Instant archivedAt;
 
+    // Empreinte (SHA-256) du texte d'adresse (quartier/rue/numéro/immeuble) au moment de la
+    // dernière vérification de plausibilité par l'IA (cf. AddressAiCheckService) — null si jamais
+    // vérifié. Évite de rappeler l'IA, et surtout de re-signaler le ménage en "à vérifier", à
+    // chaque resynchronisation d'un texte déjà vérifié (y compris après qu'un ADMIN/SUPERVISEUR
+    // l'a validé malgré l'alerte : tant que le texte n'a pas changé, on respecte cette décision).
+    @Column(name = "address_checked_signature", length = 64)
+    private String addressCheckedSignature;
+
     protected Household() {
     }
 
@@ -211,5 +219,13 @@ public class Household {
 
     public void setArchivedAt(Instant archivedAt) {
         this.archivedAt = archivedAt;
+    }
+
+    public String getAddressCheckedSignature() {
+        return addressCheckedSignature;
+    }
+
+    public void setAddressCheckedSignature(String addressCheckedSignature) {
+        this.addressCheckedSignature = addressCheckedSignature;
     }
 }
