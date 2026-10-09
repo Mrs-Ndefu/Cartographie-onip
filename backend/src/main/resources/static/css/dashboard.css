@@ -885,6 +885,13 @@ h1, h2, h3 {
   background: var(--warning);
 }
 
+/* Ménage signalé par la vérification IA de l'adresse (quartier/rue incohérents) : couleur à
+   part de "Incomplet" pour que l'ADMIN/SUPERVISEUR comprenne qu'il s'agit d'une adresse douteuse
+   à relire, pas juste d'une fiche en brouillon (cf. AddressAiCheckService). */
+.status-a-verifier {
+  background: var(--danger);
+}
+
 /* ---------- Détail du ménage (fiche professionnelle) ---------- */
 
 .detail-page {

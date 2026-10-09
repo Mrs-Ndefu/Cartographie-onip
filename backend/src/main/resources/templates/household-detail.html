@@ -48,6 +48,10 @@
       ⚠ Ce foyer a été modifié par un superviseur
       (<span th:text="${modifications.?[bySuperviseur].size()}">1</span> modification(s)) — voir l'historique ci-dessous.
     </div>
+    <div class="modification-banner" th:if="${household.status.value == 'a_verifier'}">
+      ⚠ L'adresse saisie (quartier/avenue/numéro/immeuble) a été jugée incohérente par la
+      vérification automatique — relisez-la avant de valider ou de rejeter ce foyer.
+    </div>
 
     <div class="detail-hero">
       <div class="detail-hero-avatar"
@@ -58,7 +62,8 @@
         <span class="detail-hero-code" th:text="${household.codeMenage ?: '(sans code)'}">-</span>
         <div class="detail-hero-badges">
           <span th:if="${household.status.value == 'complet'}" class="status-badge status-complet">Complet</span>
-          <span th:unless="${household.status.value == 'complet'}" class="status-badge status-incomplet">Incomplet</span>
+          <span th:if="${household.status.value == 'a_verifier'}" class="status-badge status-a-verifier">À vérifier</span>
+          <span th:if="${household.status.value == 'brouillon'}" class="status-badge status-incomplet">Incomplet</span>
           <span th:if="${household.archived}" class="status-badge status-incomplet">Retiré</span>
         </div>
         <div class="detail-hero-meta">
