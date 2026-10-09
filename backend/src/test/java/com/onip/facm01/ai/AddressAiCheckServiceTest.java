@@ -83,12 +83,28 @@ class AddressAiCheckServiceTest {
     }
 
     @Test
-    void doesNothingWithoutApiKey() {
+    void usesLocalHeuristicWithoutApiKey() {
         HouseholdRepository repository = mock(HouseholdRepository.class);
         AnthropicClient client = mock(AnthropicClient.class);
+        Household household = householdWithAddress("qsdqsd", "aaaaa");
+        when(repository.findById(household.getId())).thenReturn(Optional.of(household));
         when(client.hasApiKey()).thenReturn(false);
 
         AddressAiCheckService service = new AddressAiCheckService(repository, client, true);
+        service.onAddressCheckRequested(new AddressCheckRequestedEvent(household.getId()));
+
+        // Sans clé API : jugé par l'heuristique locale (pas d'appel IA), qui doit flaguer ce
+        // charabia tout comme l'IA l'aurait fait.
+        verify(client, never()).ask(any());
+        assertEquals(HouseholdStatus.A_VERIFIER, household.getStatus());
+    }
+
+    @Test
+    void doesNothingWhenDisabled() {
+        HouseholdRepository repository = mock(HouseholdRepository.class);
+        AnthropicClient client = mock(AnthropicClient.class);
+
+        AddressAiCheckService service = new AddressAiCheckService(repository, client, false);
         service.onAddressCheckRequested(new AddressCheckRequestedEvent(UUID.randomUUID()));
 
         verify(repository, never()).findById(any());
