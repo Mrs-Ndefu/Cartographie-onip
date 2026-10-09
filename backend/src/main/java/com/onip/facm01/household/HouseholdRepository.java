@@ -40,6 +40,13 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
     @Query("SELECT h FROM Household h WHERE h.address.province IS NULL AND h.address.ville IS NOT NULL")
     List<Household> findWithoutProvince();
 
+    // Ménages "complet" enregistrés avant l'ajout de la vérification d'adresse (ou jamais encore
+    // vérifiés pour une autre raison) : rattrapés au démarrage (cf. ExistingAddressCheckBackfill).
+    // Un ménage déjà vérifié une fois (signature non nulle) n'est pas re-scanné ici — un
+    // changement d'adresse ultérieur redéclenche la vérification via upsert/updateFromDashboard,
+    // pas par ce backfill.
+    List<Household> findByStatusAndArchivedFalseAndAddressCheckedSignatureIsNull(HouseholdStatus status);
+
     // Listes des provinces / villes / communes réellement présentes en base (ménages non retirés)
     // — alimentent les filtres du tableau de bord. Chaque liste se restreint selon les autres
     // filtres déjà choisis (":x" vide = pas de restriction), pour ne proposer que des choix qui

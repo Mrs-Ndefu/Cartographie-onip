@@ -201,6 +201,17 @@ public class HouseholdService {
         return value == null ? "" : value;
     }
 
+    // Ménages "complet" jamais encore soumis à la vérification d'adresse (cf.
+    // ExistingAddressCheckBackfill) — typiquement ceux enregistrés avant l'ajout de ce contrôle.
+    @Transactional(readOnly = true)
+    public List<UUID> householdIdsPendingAddressCheck() {
+        return householdRepository
+                .findByStatusAndArchivedFalseAndAddressCheckedSignatureIsNull(HouseholdStatus.COMPLET)
+                .stream()
+                .map(Household::getId)
+                .toList();
+    }
+
     // Complète la province des ménages enregistrés avant son ajout, à partir de la ville.
     // Renvoie le nombre de ménages mis à jour.
     @Transactional
