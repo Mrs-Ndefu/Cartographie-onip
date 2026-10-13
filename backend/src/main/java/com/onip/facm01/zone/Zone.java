@@ -1,5 +1,6 @@
 package com.onip.facm01.zone;
 
+import com.onip.facm01.household.DrcProvinces;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -78,6 +79,14 @@ public class Zone {
 
     public String getProvince() {
         return province;
+    }
+
+    // Numéro de la province sur 2 chiffres (01 = Kinshasa, puis les 25 autres par ordre
+    // alphabétique — cf. DrcProvinces.numberOf), pour l'affichage dans la page Zones à côté du
+    // nom de la province. '' si la province n'est pas reconnue (ne devrait pas arriver, la
+    // création d'une zone impose une province de la liste).
+    public String getProvinceNumber() {
+        return DrcProvinces.numberOf(province).orElse("");
     }
 
     public String getVille() {

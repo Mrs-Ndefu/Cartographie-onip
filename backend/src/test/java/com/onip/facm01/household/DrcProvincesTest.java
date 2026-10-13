@@ -28,4 +28,18 @@ class DrcProvincesTest {
         assertEquals(Optional.empty(), DrcProvinces.letterOf("PAS UNE PROVINCE"));
         assertEquals(Optional.empty(), DrcProvinces.letterOf(""));
     }
+
+    @Test
+    void kinshasaIs01ThenAlphabeticalOrder() {
+        assertEquals(Optional.of("01"), DrcProvinces.numberOf("KINSHASA"));
+        assertEquals(Optional.of("02"), DrcProvinces.numberOf("BAS-UELE"));
+        assertEquals(Optional.of("03"), DrcProvinces.numberOf("ÉQUATEUR"));
+        assertEquals(Optional.of("26"), DrcProvinces.numberOf("TSHUAPA"));
+    }
+
+    @Test
+    void unknownProvinceHasNoNumber() {
+        assertEquals(Optional.empty(), DrcProvinces.numberOf("PAS UNE PROVINCE"));
+        assertEquals(Optional.empty(), DrcProvinces.numberOf(""));
+    }
 }

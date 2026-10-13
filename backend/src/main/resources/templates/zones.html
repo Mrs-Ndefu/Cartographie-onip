@@ -97,7 +97,8 @@
           <tbody>
             <tr th:each="z : ${zones}">
               <td><span class="zone-letter" th:text="${z.code ?: '?'}">A</span></td>
-              <td class="cell-code" th:text="${z.province}">-</td>
+              <td class="cell-code"
+                  th:text="${z.provinceNumber != '' ? z.provinceNumber + ' - ' + z.province : z.province}">-</td>
               <td th:text="${z.ville}">-</td>
               <td>
                 <span class="zones-communes">

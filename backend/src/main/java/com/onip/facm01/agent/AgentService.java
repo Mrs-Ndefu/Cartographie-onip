@@ -44,7 +44,40 @@ public class AgentService {
             throw new IllegalArgumentException("Un agent avec ce nom d'utilisateur existe déjà");
         }
         Agent agent = new Agent(UUID.randomUUID(), username, passwordEncoder.encode(rawPassword), fullName, role);
+        agent.setGeneratedPassword(rawPassword);
         return agentRepository.save(agent);
+    }
+
+    // Création en masse de tous les comptes du personnel importé qui n'en ont pas encore (cf.
+    // AgentAdminController, bouton "Créer tous les comptes" sur la liste importée) : un mot de
+    // passe différent est généré automatiquement pour chacun (jamais le même pour tout le monde,
+    // même en masse — cf. PasswordGenerator), consultable ensuite depuis "Gérer" (cf.
+    // Agent.generatedPassword). Le rôle suggéré par le fichier Excel est utilisé s'il est défini,
+    // sinon AGENT par défaut. Une ligne déjà pourvue d'un compte (même email) est simplement
+    // ignorée, pas remontée en erreur — importer plusieurs fois ne doit jamais faire échouer le
+    // reste du lot.
+    public record BulkCreationResult(int created, int skipped) {
+    }
+
+    public BulkCreationResult createAllFromStaffList() {
+        int created = 0;
+        int skipped = 0;
+        for (StaffMember staff : staffMemberRepository.findAll()) {
+            if (agentRepository.existsByUsername(staff.getEmail())) {
+                skipped++;
+                continue;
+            }
+            AgentRole role = staff.getRole() != null ? staff.getRole() : AgentRole.AGENT;
+            try {
+                createAgent(staff.getEmail(), PasswordGenerator.generate(), staff.getFullName(), role);
+                created++;
+            } catch (IllegalArgumentException e) {
+                // Email mal formé dans le fichier Excel, par exemple : on ignore cette ligne
+                // plutôt que de faire échouer tout le lot.
+                skipped++;
+            }
+        }
+        return new BulkCreationResult(created, skipped);
     }
 
     // Variante utilisée par la création d'un compte depuis le tableau de bord/l'API (pas par le
@@ -70,13 +103,15 @@ public class AgentService {
         return agentRepository.findAll();
     }
 
-    public Page<Agent> listAgents(Pageable pageable) {
-        return agentRepository.findAll(pageable);
+    // search vide = pas de filtre (cf. AgentRepository.search) ; la zone de recherche de
+    // agents.html passe toujours une chaîne non nulle (possiblement vide).
+    public Page<Agent> listAgents(String search, Pageable pageable) {
+        return agentRepository.search(search, pageable);
     }
 
     // Agents affectés à un superviseur donné (la page "Gérer les agents" d'un SUPERVISEUR).
-    public Page<Agent> listAgentsOf(UUID superviseurId, Pageable pageable) {
-        return agentRepository.findBySuperviseur_Id(superviseurId, pageable);
+    public Page<Agent> listAgentsOf(UUID superviseurId, String search, Pageable pageable) {
+        return agentRepository.searchBySuperviseur(superviseurId, search, pageable);
     }
 
     public List<Agent> listSupervisors() {
@@ -147,6 +182,7 @@ public class AgentService {
     public Agent resetPassword(UUID id, String newPassword) {
         Agent agent = getAgent(id);
         agent.setPasswordHash(passwordEncoder.encode(newPassword));
+        agent.setGeneratedPassword(newPassword);
         return agentRepository.save(agent);
     }
 
@@ -156,6 +192,10 @@ public class AgentService {
             throw new IllegalArgumentException("Mot de passe actuel incorrect");
         }
         agent.setPasswordHash(passwordEncoder.encode(newPassword));
+        // Choisi par la personne elle-même, pas par un ADMIN : on ne le garde pas en clair (et le
+        // dernier mot de passe généré automatiquement, affiché dans "Gérer", n'est plus valide —
+        // on l'efface plutôt que de laisser un ADMIN croire qu'il fonctionne encore).
+        agent.setGeneratedPassword(null);
         return agentRepository.save(agent);
     }
 

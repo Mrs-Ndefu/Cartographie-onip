@@ -234,6 +234,8 @@ class CaptureViewModel : ViewModel() {
                     latitude = newState.latitude!!,
                     longitude = newState.longitude!!,
                     chefNom = newState.chefNom,
+                    province = newState.province,
+                    ville = newState.ville,
                     commune = newState.commune,
                     quartier = newState.quartier,
                 ),

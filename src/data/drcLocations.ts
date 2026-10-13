@@ -86,3 +86,16 @@ export const DRC_PROVINCES: string[] = [
 export function provinceForVille(ville: string): string {
   return DRC_VILLES.find((v) => v.name.toUpperCase() === ville.toUpperCase())?.province.toUpperCase() ?? ''
 }
+
+// Numéro de la province sur 2 chiffres (01 = Kinshasa, puis les 25 autres par ordre
+// alphabétique) — même convention que backend/.../DrcProvinces.numberOf, répliquée ici car le
+// code ménage se génère côté client (cf. idGenerator.ts), sans appel au serveur.
+const DRC_PROVINCES_BY_LETTER: string[] = [
+  'Kinshasa',
+  ...DRC_PROVINCES.filter((p) => p.toUpperCase() !== 'KINSHASA'),
+]
+
+export function provinceCode(province: string): string {
+  const index = DRC_PROVINCES_BY_LETTER.findIndex((p) => p.toUpperCase() === province.toUpperCase())
+  return index < 0 ? '00' : String(index + 1).padStart(2, '0')
+}

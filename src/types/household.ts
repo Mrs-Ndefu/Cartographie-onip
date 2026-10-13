@@ -1,4 +1,7 @@
-export const CODE_MENAGE_LENGTH = 6
+// "VC00-XXXXXX" : Ville (1 lettre) + Commune (1 lettre) + Province (2 chiffres, 01 = Kinshasa),
+// puis un tiret et 6 caractères aléatoires (cf. idGenerator.ts).
+export const CODE_MENAGE_LENGTH = 11
+export const CODE_MENAGE_PATTERN = /^[A-Z]{2}\d{2}-[A-Z0-9]{6}$/
 export const NAME_FIELD_LENGTH = 19 // Nom / Postnom / Prénom — compté sur le scan (chef et membres)
 
 export type Sexe = 'M' | 'F'

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CODE_MENAGE_LENGTH, createEmptyAddress } from '../types/household'
+import { CODE_MENAGE_LENGTH, CODE_MENAGE_PATTERN, createEmptyAddress } from '../types/household'
 import type { Sexe, Address, Relation } from '../types/household'
 
 export interface PersonFormValues {
@@ -67,8 +67,8 @@ export const householdSchema: z.ZodType<HouseholdFormValues> = z
     codeMenage: z
       .string()
       .refine(
-        (v) => v === '' || (v.length === CODE_MENAGE_LENGTH && /^[A-Z0-9]+$/.test(v)),
-        `Laisser vide (génération automatique) ou saisir exactement ${CODE_MENAGE_LENGTH} caractères (majuscules/chiffres)`,
+        (v) => v === '' || CODE_MENAGE_PATTERN.test(v),
+        `Laisser vide (génération automatique) ou saisir le format Ville+Commune+Province puis le code, ex. "KG01-A1B2C3" (${CODE_MENAGE_LENGTH} caractères)`,
       ),
     nombreMembres: z
       .string()

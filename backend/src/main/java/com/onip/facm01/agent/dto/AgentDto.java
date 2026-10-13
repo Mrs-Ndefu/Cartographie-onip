@@ -27,9 +27,24 @@ public record AgentDto(
         String zoneVille,
         List<String> zoneCommunes,
         UUID superviseurId,
-        String superviseurName) {
+        String superviseurName,
+        // Jamais rempli par from(Agent) ci-dessous (toujours null) — seule
+        // withGeneratedPassword(Agent) le renseigne. Ce DTO est renvoyé par l'API REST (login,
+        // /me...) et pour afficher sa PROPRE fiche (profil, topbar) ; un mot de passe en clair
+        // n'a rien à faire dans ces réponses-là. Ne circule que dans "Gérer" (cf.
+        // AgentAdminController.list, agents.html), la seule page où un ADMIN consulte le dernier
+        // mot de passe généré pour un AUTRE compte.
+        String generatedPassword) {
 
     public static AgentDto from(Agent agent) {
+        return build(agent, null);
+    }
+
+    public static AgentDto withGeneratedPassword(Agent agent) {
+        return build(agent, agent.getGeneratedPassword());
+    }
+
+    private static AgentDto build(Agent agent, String generatedPassword) {
         String photoDataUrl = null;
         if (agent.getPhoto() != null && agent.getPhoto().length > 0 && agent.getPhotoContentType() != null) {
             photoDataUrl = "data:" + agent.getPhotoContentType() + ";base64,"
@@ -51,6 +66,7 @@ public record AgentDto(
                 agent.getZone() == null ? null : agent.getZone().getVille(),
                 agent.getZone() == null ? null : agent.getZone().getCommunes(),
                 agent.getSuperviseur() == null ? null : agent.getSuperviseur().getId(),
-                agent.getSuperviseur() == null ? null : agent.getSuperviseur().getFullName());
+                agent.getSuperviseur() == null ? null : agent.getSuperviseur().getFullName(),
+                generatedPassword);
     }
 }

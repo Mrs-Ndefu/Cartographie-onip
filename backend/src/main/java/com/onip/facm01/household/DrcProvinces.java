@@ -42,6 +42,19 @@ public final class DrcProvinces {
         return index < 0 ? Optional.empty() : Optional.of(String.valueOf((char) ('A' + index)));
     }
 
+    // Numéro de la province sur 2 chiffres (01 = Kinshasa...), même ordre que PROVINCES_BY_LETTER
+    // (lettres ci-dessus) — utilisé pour le préfixe du code ménage "VC00-XXXXXX" (Ville+Commune+
+    // Province) côté Android et web (cf. CodeGenerator.kt / idGenerator.ts, même convention
+    // répliquée dans ces deux clients car le code se génère hors ligne, sans appel au backend).
+    public static Optional<String> numberOf(String province) {
+        if (province == null || province.isBlank()) {
+            return Optional.empty();
+        }
+        String normalized = normalize(province);
+        int index = PROVINCES_BY_LETTER.indexOf(normalized);
+        return index < 0 ? Optional.empty() : Optional.of(String.format("%02d", index + 1));
+    }
+
     public static Optional<String> fromVille(String ville) {
         if (ville == null || ville.isBlank()) {
             return Optional.empty();
