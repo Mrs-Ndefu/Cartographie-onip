@@ -103,13 +103,15 @@ public class AgentService {
         return agentRepository.findAll();
     }
 
-    public Page<Agent> listAgents(Pageable pageable) {
-        return agentRepository.findAll(pageable);
+    // search vide = pas de filtre (cf. AgentRepository.search) ; la zone de recherche de
+    // agents.html passe toujours une chaîne non nulle (possiblement vide).
+    public Page<Agent> listAgents(String search, Pageable pageable) {
+        return agentRepository.search(search, pageable);
     }
 
     // Agents affectés à un superviseur donné (la page "Gérer les agents" d'un SUPERVISEUR).
-    public Page<Agent> listAgentsOf(UUID superviseurId, Pageable pageable) {
-        return agentRepository.findBySuperviseur_Id(superviseurId, pageable);
+    public Page<Agent> listAgentsOf(UUID superviseurId, String search, Pageable pageable) {
+        return agentRepository.searchBySuperviseur(superviseurId, search, pageable);
     }
 
     public List<Agent> listSupervisors() {

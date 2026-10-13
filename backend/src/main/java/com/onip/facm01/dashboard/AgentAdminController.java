@@ -53,19 +53,25 @@ public class AgentAdminController {
     // Un SUPERVISEUR ne voit que les agents que l'ADMIN lui a affectés ; les autres rôles
     // voient tous les comptes.
     @GetMapping
-    public String list(@RequestParam(defaultValue = "0") int page, Authentication authentication, Model model) {
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String search,
+            Authentication authentication,
+            Model model) {
         Agent actor = actor(authentication);
         AgentRole actorRole = actor.getRole();
         PageRequest pageRequest = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+        String searchTerm = search == null ? "" : search.trim();
         // withGeneratedPassword (pas from) : cette liste est la seule page où un ADMIN doit
         // pouvoir consulter le dernier mot de passe généré automatiquement pour un AUTRE compte
         // (cf. "Gérer" dans agents.html) — cf. le commentaire sur AgentDto.generatedPassword.
         Page<AgentDto> agentPage = (actorRole == AgentRole.SUPERVISEUR
-                ? agentService.listAgentsOf(actor.getId(), pageRequest)
-                : agentService.listAgents(pageRequest))
+                ? agentService.listAgentsOf(actor.getId(), searchTerm, pageRequest)
+                : agentService.listAgents(searchTerm, pageRequest))
                 .map(AgentDto::withGeneratedPassword);
         model.addAttribute("agents", agentPage.getContent());
         model.addAttribute("page", agentPage);
+        model.addAttribute("search", search);
 
         model.addAttribute("actorRole", actorRole);
         model.addAttribute("actorId", actor.getId());

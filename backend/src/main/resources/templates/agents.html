@@ -118,6 +118,16 @@
           <h2>Comptes</h2>
           <span class="table-card-count" th:text="${page.totalElements} + ' compte(s)'">0 compte(s)</span>
         </div>
+        <form th:action="@{/dashboard/agents}" method="get" class="table-filters" role="search">
+          <div class="table-search-form">
+            <svg class="table-search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <input type="search" name="search" class="table-search-input"
+                   placeholder="Nom ou adresse mail…" th:value="${search}">
+          </div>
+        </form>
       </div>
       <div class="table-scroll">
         <table class="households-table agents-table">
@@ -223,7 +233,7 @@
             </tr>
             <tr th:if="${agents.isEmpty()}">
               <td colspan="7" class="table-empty"
-                  th:text="${actorRole.name() == 'SUPERVISEUR'} ? 'Aucun agent ne vous est encore affecté.' : 'Aucun compte.'">Aucun compte.</td>
+                  th:text="${search != null and !search.isBlank()} ? 'Aucun compte ne correspond à cette recherche.' : (${actorRole.name() == 'SUPERVISEUR'} ? 'Aucun agent ne vous est encore affecté.' : 'Aucun compte.')">Aucun compte.</td>
             </tr>
           </tbody>
         </table>
@@ -232,13 +242,13 @@
       <nav th:if="${page.totalPages > 1}" aria-label="Pagination des agents" class="table-card-footer">
         <ul class="pagination pagination-sm mb-1">
           <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard/agents(page=${page.number - 1})}">Précédent</a>
+            <a class="page-link" th:href="@{/dashboard/agents(page=${page.number - 1}, search=${search})}">Précédent</a>
           </li>
           <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
-            <a class="page-link" th:href="@{/dashboard/agents(page=${i})}" th:text="${i + 1}">1</a>
+            <a class="page-link" th:href="@{/dashboard/agents(page=${i}, search=${search})}" th:text="${i + 1}">1</a>
           </li>
           <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard/agents(page=${page.number + 1})}">Suivant</a>
+            <a class="page-link" th:href="@{/dashboard/agents(page=${page.number + 1}, search=${search})}">Suivant</a>
           </li>
         </ul>
       </nav>
