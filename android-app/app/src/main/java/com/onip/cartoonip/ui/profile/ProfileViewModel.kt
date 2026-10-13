@@ -101,8 +101,11 @@ class ProfileViewModel : ViewModel() {
 
     fun changePassword() {
         val state = _uiState.value
-        if (state.newPassword.length < 6) {
-            _uiState.value = state.copy(passwordError = "Le nouveau mot de passe doit contenir au moins 6 caractères.")
+        // Même minimum que côté serveur (PasswordGenerator, mots de passe générés
+        // automatiquement à la création d'un compte : 5 caractères) — sinon un agent ne peut
+        // pas retaper un mot de passe de cette longueur pour confirmer son changement.
+        if (state.newPassword.length < 5) {
+            _uiState.value = state.copy(passwordError = "Le nouveau mot de passe doit contenir au moins 5 caractères.")
             return
         }
         if (state.newPassword != state.confirmPassword) {

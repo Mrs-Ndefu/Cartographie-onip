@@ -30,8 +30,10 @@ export function SettingsPanel({ session, onClose, onAgentUpdated, onLogout }: Se
     setPasswordError(null)
     setPasswordSuccess(null)
 
-    if (newPassword.length < 6) {
-      setPasswordError('Le nouveau mot de passe doit contenir au moins 6 caractères.')
+    // Même minimum que côté serveur (PasswordGenerator, mots de passe générés automatiquement
+    // à la création d'un compte : 5 caractères).
+    if (newPassword.length < 5) {
+      setPasswordError('Le nouveau mot de passe doit contenir au moins 5 caractères.')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -151,7 +153,7 @@ export function SettingsPanel({ session, onClose, onAgentUpdated, onLogout }: Se
               className="text-input"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              minLength={6}
+              minLength={5}
               required
             />
           </label>
@@ -162,7 +164,7 @@ export function SettingsPanel({ session, onClose, onAgentUpdated, onLogout }: Se
               className="text-input"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              minLength={6}
+              minLength={5}
               required
             />
           </label>

@@ -260,8 +260,11 @@ public class AgentAdminController {
         try {
             Agent target = agentService.getAgent(id);
             requireCanManage(authentication, target);
-            if (newPassword == null || newPassword.length() < 6) {
-                throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères");
+            // Même minimum que PasswordGenerator (mots de passe générés automatiquement, 5
+            // caractères) : sans ça, retaper le mot de passe déjà généré pour quelqu'un (ou un
+            // nouveau de la même longueur) échouait ici alors qu'il était accepté à la création.
+            if (newPassword == null || newPassword.length() < 5) {
+                throw new IllegalArgumentException("Le mot de passe doit contenir au moins 5 caractères");
             }
             agentService.resetPassword(id, newPassword);
             redirectAttributes.addFlashAttribute("success", "Mot de passe réinitialisé pour " + target.getUsername());

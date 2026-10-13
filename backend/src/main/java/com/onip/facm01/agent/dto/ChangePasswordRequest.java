@@ -5,5 +5,8 @@ import jakarta.validation.constraints.Size;
 
 public record ChangePasswordRequest(
         @NotBlank String currentPassword,
-        @NotBlank @Size(min = 6, message = "Le mot de passe doit contenir au moins 6 caractères") String newPassword) {
+        // Même minimum que la création/réinitialisation d'un compte (cf. PasswordGenerator,
+        // CreateAgentRequest, ResetPasswordRequest) : un agent doit pouvoir reprendre un mot de
+        // passe de la même longueur que celui généré automatiquement pour lui.
+        @NotBlank @Size(min = 5, message = "Le mot de passe doit contenir au moins 5 caractères") String newPassword) {
 }
