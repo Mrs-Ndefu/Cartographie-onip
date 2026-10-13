@@ -118,6 +118,7 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                     title = {},
                     actions = {
                         val agentPhoto by AppContainer.agentPhoto.collectAsState()
+                        TextButton(onClick = { onNavigate(Routes.HOME) }) { Text("Accueil") }
                         TextButton(onClick = { onNavigate(Routes.OVERVIEW) }) { Text("Aperçu") }
                         TextButton(onClick = { onNavigate(Routes.JOURNAL) }) { Text("Journal") }
                         IconButton(onClick = { onNavigate(Routes.PROFILE) }) {
