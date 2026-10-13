@@ -118,14 +118,25 @@ public class AgentService {
         return agentRepository.findByRoleAndActiveTrueOrderByFullNameAsc(AgentRole.SUPERVISEUR);
     }
 
-    // superviseur == null retire l'affectation.
+    // Chefs d'équipe actifs : alimente le menu déroulant "Encadrant" des comptes AGENT (cf.
+    // agents.html) — même rôle que listSupervisors() pour les comptes CHEF_EQUIPE.
+    public List<Agent> listChefsEquipe() {
+        return agentRepository.findByRoleAndActiveTrueOrderByFullNameAsc(AgentRole.CHEF_EQUIPE);
+    }
+
+    // Affecte un compte à son encadrant direct : un AGENT à un CHEF_EQUIPE, un CHEF_EQUIPE à un
+    // SUPERVISEUR (cf. Agent.superviseur, réutilisé pour les deux niveaux). superviseur == null
+    // retire l'affectation.
     public Agent assignSupervisor(UUID id, Agent superviseur) {
         Agent agent = getAgent(id);
-        if (agent.getRole() != AgentRole.AGENT) {
-            throw new IllegalArgumentException("Seul un compte AGENT peut être affecté à un superviseur");
-        }
-        if (superviseur != null && superviseur.getRole() != AgentRole.SUPERVISEUR) {
-            throw new IllegalArgumentException("Le compte choisi n'est pas un superviseur");
+        AgentRole expectedRole = switch (agent.getRole()) {
+            case AGENT -> AgentRole.CHEF_EQUIPE;
+            case CHEF_EQUIPE -> AgentRole.SUPERVISEUR;
+            default -> throw new IllegalArgumentException(
+                    "Seul un compte AGENT ou CHEF_EQUIPE peut être affecté à un encadrant");
+        };
+        if (superviseur != null && superviseur.getRole() != expectedRole) {
+            throw new IllegalArgumentException("Le compte choisi n'a pas le bon rôle pour encadrer ce compte");
         }
         agent.setSuperviseur(superviseur);
         return agentRepository.save(agent);
@@ -155,11 +166,16 @@ public class AgentService {
         if (!role.canHaveZone()) {
             agent.setZone(null);
         }
-        if (role != AgentRole.AGENT) {
+        // Le lien vers l'encadrant (cf. assignSupervisor) n'a de sens que pour le rôle d'origine
+        // (AGENT→CHEF_EQUIPE ou CHEF_EQUIPE→SUPERVISEUR) : un changement de rôle réel l'efface,
+        // l'ancien encadrant n'étant plus forcément du bon rôle pour le nouveau niveau — à
+        // réaffecter explicitement si besoin. Rien ne change si le rôle soumis est déjà le sien
+        // (ex. formulaire resoumis sans modification).
+        if (role != previous) {
             agent.setSuperviseur(null);
         }
-        // Un superviseur qui change de rôle n'encadre plus personne.
-        if (previous == AgentRole.SUPERVISEUR && role != AgentRole.SUPERVISEUR) {
+        // Un superviseur ou un chef d'équipe qui change de rôle n'encadre plus personne.
+        if ((previous == AgentRole.SUPERVISEUR || previous == AgentRole.CHEF_EQUIPE) && role != previous) {
             agentRepository.findBySuperviseur_Id(id).forEach(a -> {
                 a.setSuperviseur(null);
                 agentRepository.save(a);

@@ -8,6 +8,15 @@ public enum AgentRole {
     SUPER_ADMIN,
     ADMIN,
     SUPERVISEUR,
+    // Rôle intermédiaire entre le superviseur et l'agent : le superviseur crée un chef d'équipe
+    // et lui affecte des agents (cf. Agent.superviseur, réutilisé pour ce niveau aussi — un
+    // agent est affecté à un chef d'équipe, un chef d'équipe à un superviseur). Remplace le lien
+    // direct superviseur→agent : un superviseur n'affecte plus d'agents à lui-même, seulement à
+    // un chef d'équipe. Rôle purement structurel — pas de pouvoir sur les ménages (valider/
+    // rejeter, historique restent réservés au superviseur), juste la gestion de son équipe
+    // (créer un compte AGENT, activer/désactiver, réinitialiser son mot de passe — cf.
+    // canBeManagedBy).
+    CHEF_EQUIPE,
     DIRECTION_GENERALE,
     AGENT;
 
@@ -17,13 +26,14 @@ public enum AgentRole {
             case SUPER_ADMIN -> "Super admin";
             case ADMIN -> "Admin";
             case SUPERVISEUR -> "Superviseur";
+            case CHEF_EQUIPE -> "Chef d'équipe";
             case DIRECTION_GENERALE -> "Direction générale";
             case AGENT -> "Agent";
         };
     }
 
     // Comptes affectés à une zone de terrain : l'agent (zone où il enregistre) et le superviseur
-    // (zone qu'il encadre).
+    // (zone qu'il encadre). Le chef d'équipe n'en a pas (rôle structurel, pas de terrain propre).
     public boolean canHaveZone() {
         return this == AGENT || this == SUPERVISEUR;
     }
@@ -39,7 +49,8 @@ public enum AgentRole {
 
     // Tableau de bord des ménages (liste, carte, détail, ménages retirés). Le SUPER_ADMIN voit
     // tout mais ne pose aucune action sur les ménages ; la DIRECTION_GENERALE n'a accès qu'à la
-    // page de statistiques.
+    // page de statistiques ; le CHEF_EQUIPE n'y a pas accès du tout (rôle structurel, cf. plus
+    // haut) — sa seule page est "Gérer les agents" (cf. AgentRole.homePath, SecurityConfig).
     public boolean canViewHouseholds() {
         return this == SUPER_ADMIN || this == ADMIN || this == SUPERVISEUR;
     }
@@ -54,6 +65,7 @@ public enum AgentRole {
     // Valider ou rejeter un ménage incomplet (pas en modifier les champs) : l'ADMIN peut agir sur
     // n'importe quel ménage, le SUPERVISEUR seulement sur les siens qui ne sont pas encore
     // complets — cf. household-detail.html (page détail, seul endroit où ces actions existent).
+    // Le CHEF_EQUIPE n'a volontairement pas ce pouvoir (rôle structurel uniquement).
     public boolean canReviewHousehold(HouseholdStatus status) {
         return this == ADMIN || (this == SUPERVISEUR && status != HouseholdStatus.COMPLET);
     }
@@ -67,7 +79,10 @@ public enum AgentRole {
         return this == ADMIN || this == SUPERVISEUR;
     }
 
-    // Affecter un agent à un superviseur : réservé aux comptes admin-tier.
+    // Affecter un compte à son encadrant (agent→chef d'équipe, chef d'équipe→superviseur) depuis
+    // le tableau "Comptes" (menu déroulant "Encadrant", cf. agents.html) : réservé aux comptes
+    // admin-tier. Un SUPERVISEUR/CHEF_EQUIPE qui crée un compte se l'affecte automatiquement
+    // (cf. AgentAdminController#create), mais ne peut pas réaffecter un compte existant ici.
     public boolean canAssignSupervisors() {
         return isAdminTier();
     }
@@ -87,18 +102,27 @@ public enum AgentRole {
         return this == SUPER_ADMIN || this == ADMIN || this == SUPERVISEUR;
     }
 
-    // Page d'accueil après connexion au tableau de bord web.
+    // Page d'accueil après connexion au tableau de bord web (cf. SecurityConfig#dashboardFilterChain,
+    // qui applique la même logique dans son successHandler — ce booléen y sert de référence).
     public String homePath() {
-        return this == DIRECTION_GENERALE ? "/dashboard/stats" : "/dashboard";
+        if (this == DIRECTION_GENERALE) {
+            return "/dashboard/stats";
+        }
+        if (this == CHEF_EQUIPE) {
+            return "/dashboard/agents";
+        }
+        return "/dashboard";
     }
 
     // Rôles que cet acteur peut assigner (à la création d'un agent, ou en changeant son rôle) —
-    // alimente le menu déroulant "Rôle" côté agents.html.
+    // alimente le menu déroulant "Rôle" côté agents.html. Un SUPERVISEUR crée désormais des
+    // CHEF_EQUIPE (plus directement des AGENT) ; un CHEF_EQUIPE crée des AGENT.
     public List<AgentRole> assignableRoles() {
         return switch (this) {
-            case SUPER_ADMIN -> List.of(SUPER_ADMIN, ADMIN, SUPERVISEUR, DIRECTION_GENERALE, AGENT);
-            case ADMIN -> List.of(SUPERVISEUR, DIRECTION_GENERALE, AGENT);
-            case SUPERVISEUR -> List.of(AGENT);
+            case SUPER_ADMIN -> List.of(SUPER_ADMIN, ADMIN, SUPERVISEUR, CHEF_EQUIPE, DIRECTION_GENERALE, AGENT);
+            case ADMIN -> List.of(SUPERVISEUR, CHEF_EQUIPE, DIRECTION_GENERALE, AGENT);
+            case SUPERVISEUR -> List.of(CHEF_EQUIPE);
+            case CHEF_EQUIPE -> List.of(AGENT);
             case DIRECTION_GENERALE, AGENT -> List.of();
         };
     }
@@ -106,7 +130,8 @@ public enum AgentRole {
     // Un compte de ce rôle (this = la cible) peut-il être géré (activer/désactiver, changer de
     // rôle, réinitialiser le mot de passe, affecter à une zone) par un acteur du rôle donné ?
     // Seul un SUPER_ADMIN gère les comptes admin-tier ; un ADMIN gère tous les autres ; un
-    // SUPERVISEUR gère uniquement les AGENT.
+    // SUPERVISEUR gère uniquement ses CHEF_EQUIPE, un CHEF_EQUIPE uniquement ses AGENT (cf.
+    // AgentAdminController#requireCanManage, qui vérifie en plus l'affectation réelle).
     public boolean canBeManagedBy(AgentRole actorRole) {
         if (actorRole == SUPER_ADMIN) {
             return true;
@@ -117,6 +142,9 @@ public enum AgentRole {
         if (actorRole == ADMIN) {
             return true;
         }
-        return actorRole == SUPERVISEUR && this == AGENT;
+        if (actorRole == SUPERVISEUR) {
+            return this == CHEF_EQUIPE;
+        }
+        return actorRole == CHEF_EQUIPE && this == AGENT;
     }
 }

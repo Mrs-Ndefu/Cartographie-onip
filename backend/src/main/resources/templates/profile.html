@@ -18,6 +18,7 @@
     <nav class="topbar-nav">
       <a th:if="${agent.role.canViewHouseholds()}" th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <a th:if="${agent.role.name() == 'DIRECTION_GENERALE'}" th:href="@{/dashboard/stats}" class="link-btn">← Statistiques</a>
+      <a th:if="${agent.role.name() == 'CHEF_EQUIPE'}" th:href="@{/dashboard/agents}" class="link-btn">← Mes agents</a>
       <form th:action="@{/logout}" method="post">
         <button type="submit" class="logout-btn">Se déconnecter</button>
       </form>
