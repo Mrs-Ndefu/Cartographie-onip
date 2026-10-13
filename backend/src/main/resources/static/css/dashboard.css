@@ -1286,6 +1286,13 @@ h1, h2, h3 {
   height: 31px;
 }
 
+/* Le formulaire "Créer tous les comptes" (cf. agents.html) n'a qu'un seul champ : en grille
+   (.agents-create-form, pensée pour plusieurs champs côte à côte), ce bouton seul s'étire sur
+   toute la largeur de la carte. En ligne plutôt qu'en grille, il garde sa largeur naturelle. */
+.agents-create-form--single {
+  display: inline-flex;
+}
+
 /* Menu de suggestions (champs Nom complet / Adresse mail du formulaire "Créer un compte"),
    alimenté par le personnel importé (cf. app.js, STAFF_SUGGESTIONS). Remplace le <datalist>
    natif, dont l'apparence ne se personnalise pas selon le navigateur. */
