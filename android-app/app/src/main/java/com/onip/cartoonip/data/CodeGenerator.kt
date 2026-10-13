@@ -14,9 +14,19 @@ private const val CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
  * bruit naturel du capteur GPS entre deux relevés au même endroit.
  *
  * Un hash (SHA-256) de ces champs est réencodé sur l'alphabet majuscules/chiffres pour garder
- * exactement CODE_LENGTH caractères (contrainte de la colonne code_menage côté serveur).
+ * exactement CODE_LENGTH caractères, précédé d'un préfixe géographique lisible
+ * "Ville+Commune+Province" (ex. "KG01-" pour Gombe, Kinshasa) — cf. [codePrefix]. Le préfixe ne
+ * fait pas partie du hash : seuls GPS/chef/commune/quartier déterminent la partie après le tiret.
  */
-fun generateCodeMenage(latitude: Double, longitude: Double, chefNom: String, commune: String, quartier: String): String {
+fun generateCodeMenage(
+    latitude: Double,
+    longitude: Double,
+    chefNom: String,
+    province: String,
+    ville: String,
+    commune: String,
+    quartier: String,
+): String {
     val input = buildString {
         append(String.format(Locale.US, "%.4f", latitude))
         append('|')
@@ -29,7 +39,22 @@ fun generateCodeMenage(latitude: Double, longitude: Double, chefNom: String, com
         append(quartier.trim().uppercase())
     }
     val digest = MessageDigest.getInstance("SHA-256").digest(input.toByteArray(Charsets.UTF_8))
-    return (0 until CODE_LENGTH)
+    val hash = (0 until CODE_LENGTH)
         .map { CODE_CHARS[(digest[it].toInt() and 0xFF) % CODE_CHARS.length] }
         .joinToString("")
+    return "${codePrefix(province, ville, commune)}-$hash"
+}
+
+/**
+ * Préfixe géographique du code ménage : 1ère lettre de la ville + 1ère lettre de la commune +
+ * numéro de la province sur 2 chiffres (cf. [provinceCode] — 01 = Kinshasa, puis les 25 autres
+ * par ordre alphabétique). "X" remplace une initiale manquante (en pratique jamais déclenché ici
+ * puisque [generateCodeMenage] n'est appelée qu'une fois l'adresse renseignée, cf.
+ * CaptureUiState.canGenerateCode) — gardé par cohérence avec l'équivalent web (idGenerator.ts),
+ * où cette garde n'existe pas.
+ */
+private fun codePrefix(province: String, ville: String, commune: String): String {
+    val villeInitial = ville.trim().firstOrNull()?.uppercaseChar() ?: 'X'
+    val communeInitial = commune.trim().firstOrNull()?.uppercaseChar() ?: 'X'
+    return "$villeInitial$communeInitial${provinceCode(province)}"
 }

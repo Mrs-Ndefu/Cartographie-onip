@@ -13,7 +13,7 @@ export function CodeMenageInput({ value, onChange, error }: CodeMenageInputProps
       length={CODE_MENAGE_LENGTH}
       value={value}
       onChange={onChange}
-      pattern={/[A-Z0-9]/}
+      pattern={/[A-Z0-9-]/}
       error={error}
       ariaLabel="Code Foyer"
     />

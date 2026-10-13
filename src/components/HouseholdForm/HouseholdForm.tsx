@@ -75,6 +75,7 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
     handleSubmit,
     setValue,
     watch,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<HouseholdFormValues>({
     resolver: zodResolver(householdSchema),
@@ -91,7 +92,12 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
       onSaved?.({ ...household, ...changes })
     } else {
       // Code foyer non saisi par l'agent : généré automatiquement au moment de l'enregistrement.
-      const finalValues = values.codeMenage ? values : { ...values, codeMenage: generateCodeMenage() }
+      const finalValues = values.codeMenage
+        ? values
+        : {
+            ...values,
+            codeMenage: generateCodeMenage(values.address.province, values.address.ville, values.address.commune),
+          }
       const saved = await addHousehold(toHousehold(finalValues, location))
       onSaved?.(saved)
     }
@@ -127,7 +133,14 @@ export function HouseholdForm({ location = null, household = null, onSaved, onCa
             <button
               type="button"
               className="generate-code-btn"
-              onClick={() => setValue('codeMenage', generateCodeMenage(), { shouldValidate: true })}
+              onClick={() => {
+                const address = getValues('address')
+                setValue(
+                  'codeMenage',
+                  generateCodeMenage(address.province, address.ville, address.commune),
+                  { shouldValidate: true },
+                )
+              }}
             >
               Générer un code
             </button>

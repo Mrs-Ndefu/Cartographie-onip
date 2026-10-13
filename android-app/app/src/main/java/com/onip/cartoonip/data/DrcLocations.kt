@@ -85,3 +85,15 @@ fun provinceForVille(ville: String): String? =
 fun villesForProvince(province: String): List<VilleEntry> =
     if (province.isBlank()) DRC_VILLES
     else DRC_VILLES.filter { it.province.equals(province, ignoreCase = true) }
+
+// Numéro de la province sur 2 chiffres (01 = Kinshasa, puis les 25 autres par ordre
+// alphabétique) — même convention que backend/.../DrcProvinces.numberOf (répliquée ici car le
+// code ménage se génère hors ligne, sur le téléphone, sans appel au serveur). Utilisé pour le
+// préfixe du code ménage "VC00-XXXXXX" (cf. CodeGenerator.generateCodeMenage).
+private val DRC_PROVINCES_BY_LETTER: List<String> =
+    listOf("Kinshasa") + DRC_PROVINCES.filter { !it.equals("Kinshasa", ignoreCase = true) }
+
+fun provinceCode(province: String): String {
+    val index = DRC_PROVINCES_BY_LETTER.indexOfFirst { it.equals(province, ignoreCase = true) }
+    return if (index < 0) "00" else String.format("%02d", index + 1)
+}
