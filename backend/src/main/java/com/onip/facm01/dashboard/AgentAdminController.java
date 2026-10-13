@@ -57,10 +57,13 @@ public class AgentAdminController {
         Agent actor = actor(authentication);
         AgentRole actorRole = actor.getRole();
         PageRequest pageRequest = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+        // withGeneratedPassword (pas from) : cette liste est la seule page où un ADMIN doit
+        // pouvoir consulter le dernier mot de passe généré automatiquement pour un AUTRE compte
+        // (cf. "Gérer" dans agents.html) — cf. le commentaire sur AgentDto.generatedPassword.
         Page<AgentDto> agentPage = (actorRole == AgentRole.SUPERVISEUR
                 ? agentService.listAgentsOf(actor.getId(), pageRequest)
                 : agentService.listAgents(pageRequest))
-                .map(AgentDto::from);
+                .map(AgentDto::withGeneratedPassword);
         model.addAttribute("agents", agentPage.getContent());
         model.addAttribute("page", agentPage);
 
@@ -132,6 +135,22 @@ public class AgentAdminController {
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
+        return "redirect:/dashboard/agents";
+    }
+
+    // Crée en une seule fois un compte (rôle AGENT par défaut, ou celui suggéré par le fichier
+    // Excel) pour chaque personne importée qui n'en a pas déjà un, avec un mot de passe généré
+    // automatiquement pour chacune (jamais le même pour tout le monde — cf.
+    // AgentService.createAllFromStaffList). Les mots de passe se consultent ensuite depuis
+    // "Gérer" (cf. list ci-dessus, AgentDto.withGeneratedPassword) : pas la peine de tous les
+    // afficher ici. Réservé à l'ADMIN/SUPER_ADMIN, comme l'import lui-même.
+    @PostMapping("/create-all")
+    public String createAll(RedirectAttributes redirectAttributes) {
+        AgentService.BulkCreationResult result = agentService.createAllFromStaffList();
+        redirectAttributes.addFlashAttribute("success",
+                result.created() + " compte(s) créé(s)"
+                        + (result.skipped() > 0 ? ", " + result.skipped() + " déjà existant(s) ignoré(s)" : "")
+                        + ". Mots de passe consultables dans \"Gérer\" pour chaque compte.");
         return "redirect:/dashboard/agents";
     }
 

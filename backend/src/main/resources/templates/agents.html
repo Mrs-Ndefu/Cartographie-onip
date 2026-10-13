@@ -50,6 +50,16 @@
         </label>
         <button type="submit" class="btn btn-primary btn-sm agents-create-btn">Importer (remplace la liste actuelle)</button>
       </form>
+      <!-- Crée en une fois un compte pour chaque personne importée qui n'en a pas déjà un (cf.
+           AgentAdminController#createAll) : un mot de passe différent par personne, consultable
+           ensuite dans "Gérer" ci-dessous (AgentDto.generatedPassword). -->
+      <form th:if="${staffCount > 0}" th:action="@{/dashboard/agents/create-all}" method="post"
+            class="agents-create-form js-confirm-form"
+            data-confirm-title="Créer un compte pour tout le personnel importé ?"
+            data-confirm-label="Créer les comptes"
+            th:data-confirm-detail="'Un compte sera créé (rôle AGENT par défaut, ou celui suggéré par le fichier) pour chaque personne importée sans compte existant (sur ' + ${staffCount} + ' personne(s) au total). Les personnes ayant déjà un compte sont ignorées.'">
+        <button type="submit" class="btn btn-outline-primary btn-sm agents-create-btn">Créer tous les comptes</button>
+      </form>
     </div>
 
     <div class="table-card table-card--allow-overflow" th:unless="${roles.isEmpty()}">
@@ -169,6 +179,16 @@
                 <details class="agent-manage" th:if="${a.role.canBeManagedBy(actorRole)}">
                   <summary class="btn btn-sm btn-outline-secondary">Gérer</summary>
                   <div class="agent-manage-panel">
+                    <!-- Dernier mot de passe généré automatiquement pour ce compte (création ou
+                         réinitialisation) — vide si la personne a changé elle-même son mot de
+                         passe depuis (cf. AgentService.changeOwnPassword), auquel cas il n'est
+                         plus connu. -->
+                    <p th:if="${a.generatedPassword != null}" class="agent-generated-password">
+                      Mot de passe généré : <strong th:text="${a.generatedPassword}">-</strong>
+                    </p>
+                    <p th:if="${a.generatedPassword == null}" class="agent-generated-password agent-muted">
+                      Mot de passe inconnu (modifié par la personne elle-même).
+                    </p>
                     <form th:action="@{/dashboard/agents/{id}/role(id=${a.id})}" method="post" class="agents-inline-form">
                       <select name="role" class="form-select form-select-sm" aria-label="Rôle">
                         <option th:each="r : ${roles}" th:value="${r}" th:text="${r.label()}" th:selected="${r == a.role}">Rôle</option>

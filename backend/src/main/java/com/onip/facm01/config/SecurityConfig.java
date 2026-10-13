@@ -110,7 +110,8 @@ public class SecurityConfig {
                         // Import du personnel et suppression d'un compte : réservés à l'ADMIN/SUPER_ADMIN,
                         // donc listés avant la règle générale sur /dashboard/agents/** (ouverte en plus
                         // au SUPERVISEUR, qui ne doit pouvoir que désactiver ses agents, pas les supprimer).
-                        .requestMatchers(HttpMethod.POST, "/dashboard/agents/import-staff", "/dashboard/agents/*/delete")
+                        .requestMatchers(HttpMethod.POST,
+                                "/dashboard/agents/import-staff", "/dashboard/agents/create-all", "/dashboard/agents/*/delete")
                         .hasAnyRole("SUPER_ADMIN", "ADMIN")
                         .requestMatchers("/dashboard/agents", "/dashboard/agents/**")
                         .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR")

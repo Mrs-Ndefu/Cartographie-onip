@@ -28,6 +28,16 @@ public class Agent {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    // Dernier mot de passe généré automatiquement pour ce compte, en clair — choix délibéré
+    // (déjà le cas pour les mots de passe de démarrage, cf. DataSeeder) pour qu'un ADMIN puisse
+    // le retrouver depuis "Gérer" (cf. agents.html) sans avoir à le redonner lui-même ni à le
+    // réinitialiser. Remis à jour à chaque (re)génération automatique (création, réinitialisation
+    // par un ADMIN) ; remis à null si la personne change elle-même son mot de passe (cf.
+    // AgentService.changeOwnPassword) — on ne le connaît alors plus, inutile d'afficher une
+    // valeur devenue fausse.
+    @Column(name = "generated_password")
+    private String generatedPassword;
+
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
@@ -87,6 +97,14 @@ public class Agent {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public String getGeneratedPassword() {
+        return generatedPassword;
+    }
+
+    public void setGeneratedPassword(String generatedPassword) {
+        this.generatedPassword = generatedPassword;
     }
 
     public String getFullName() {

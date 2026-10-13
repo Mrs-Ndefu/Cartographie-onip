@@ -1452,6 +1452,11 @@ h1, h2, h3 {
   white-space: normal;
 }
 
+.agent-generated-password {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
 /* ---------- Zones ---------- */
 
 .zones-create-form {
