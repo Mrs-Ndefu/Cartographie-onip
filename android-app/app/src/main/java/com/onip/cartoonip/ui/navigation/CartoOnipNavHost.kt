@@ -12,15 +12,17 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.onip.cartoonip.data.AppContainer
 import com.onip.cartoonip.ui.capture.CaptureScreen
+import com.onip.cartoonip.ui.home.HomeScreen
 import com.onip.cartoonip.ui.journal.JournalScreen
 import com.onip.cartoonip.ui.login.LoginScreen
 import com.onip.cartoonip.ui.overview.OverviewScreen
 import com.onip.cartoonip.ui.profile.ProfileScreen
+import com.onip.cartoonip.ui.reperage.ReperageScreen
 
 @Composable
 fun CartoOnipNavHost(navController: NavHostController = rememberNavController()) {
     val session by AppContainer.sessionManager.session.collectAsState()
-    val startDestination = if (session != null) Routes.CAPTURE else Routes.LOGIN
+    val startDestination = if (session != null) Routes.HOME else Routes.LOGIN
 
     val onNavigate: (String) -> Unit = { route ->
         if (route == Routes.LOGIN) {
@@ -41,14 +43,20 @@ fun CartoOnipNavHost(navController: NavHostController = rememberNavController())
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Routes.CAPTURE) {
+                    navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
             )
         }
+        composable(Routes.HOME) {
+            HomeScreen(onNavigate = onNavigate)
+        }
         composable(Routes.CAPTURE) {
             CaptureScreen(onNavigate = onNavigate)
+        }
+        composable(Routes.REPERAGE) {
+            ReperageScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.CAPTURE_EDIT,

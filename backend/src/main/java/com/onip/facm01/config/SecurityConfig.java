@@ -87,14 +87,18 @@ public class SecurityConfig {
                 // - SUPER_ADMIN : voit tout, ne pose aucune action sur les ménages ; garde la
                 //   gestion des comptes.
                 // - ADMIN : tout, dont retirer/restaurer un ménage et définir les zones.
-                // - SUPERVISEUR : voit, modifie et restaure les ménages ; gère les agents qui
-                //   lui sont affectés et leurs zones ; seul à voir l'historique de ses agents.
+                // - SUPERVISEUR : voit, modifie et restaure les ménages ; gère les chefs d'équipe
+                //   qui lui sont affectés ; seul à voir l'historique de ses agents.
+                // - CHEF_EQUIPE : rôle structurel, pas d'accès aux ménages — seulement "Gérer les
+                //   agents" (crée/gère les AGENT qui lui sont affectés) et son profil.
                 // - DIRECTION_GENERALE : uniquement la page de statistiques.
                 // - AGENT : pas d'accès au tableau de bord web (app terrain uniquement).
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").permitAll()
-                        .requestMatchers("/dashboard/stats", "/dashboard/profile", "/dashboard/profile/**")
+                        .requestMatchers("/dashboard/stats")
                         .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR", "DIRECTION_GENERALE")
+                        .requestMatchers("/dashboard/profile", "/dashboard/profile/**")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR", "CHEF_EQUIPE", "DIRECTION_GENERALE")
                         .requestMatchers(HttpMethod.POST, "/dashboard/households/*/archive")
                         .hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/dashboard/households/*/restore")
@@ -114,18 +118,22 @@ public class SecurityConfig {
                                 "/dashboard/agents/import-staff", "/dashboard/agents/create-all", "/dashboard/agents/*/delete")
                         .hasAnyRole("SUPER_ADMIN", "ADMIN")
                         .requestMatchers("/dashboard/agents", "/dashboard/agents/**")
-                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR", "CHEF_EQUIPE")
                         .requestMatchers(HttpMethod.GET, "/dashboard", "/dashboard/**")
                         .hasAnyRole("SUPER_ADMIN", "ADMIN", "SUPERVISEUR")
                         .anyRequest().denyAll())
                 .formLogin(form -> form
                         .loginPage("/login")
-                        // Page d'accueil selon le rôle : la DIRECTION_GENERALE n'a accès qu'aux
-                        // statistiques, les autres rôles arrivent sur le tableau de bord.
+                        // Page d'accueil selon le rôle (cf. AgentRole.homePath, même logique) : la
+                        // DIRECTION_GENERALE n'a accès qu'aux statistiques, le CHEF_EQUIPE qu'à la
+                        // gestion des agents, les autres rôles arrivent sur le tableau de bord.
                         .successHandler((request, response, authentication) -> {
                             boolean statsOnly = authentication.getAuthorities().stream()
                                     .anyMatch(a -> a.getAuthority().equals("ROLE_DIRECTION_GENERALE"));
-                            response.sendRedirect(statsOnly ? "/dashboard/stats" : "/dashboard");
+                            boolean agentsOnly = authentication.getAuthorities().stream()
+                                    .anyMatch(a -> a.getAuthority().equals("ROLE_CHEF_EQUIPE"));
+                            String target = statsOnly ? "/dashboard/stats" : agentsOnly ? "/dashboard/agents" : "/dashboard";
+                            response.sendRedirect(target);
                         })
                         .permitAll())
                 .logout(logout -> logout

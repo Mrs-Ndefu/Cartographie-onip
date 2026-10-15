@@ -17,7 +17,9 @@
     <h1>Adressage de Foyers — Gestion des agents</h1>
     <nav class="topbar-nav">
       <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}" th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
-      <a th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
+      <!-- Même droit que la page Zones elle-même (SUPER_ADMIN/ADMIN/SUPERVISEUR, cf.
+           SecurityConfig) : le CHEF_EQUIPE n'y a pas accès, pas de lien mort pour lui. -->
+      <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}" th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
       <a th:if="${currentAgent != null and currentAgent.role.canViewSupervisorHistory()}"
          th:href="@{/dashboard/historique}" class="link-btn">Historique</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
@@ -136,7 +138,7 @@
               <th>Compte</th>
               <th>Rôle</th>
               <th>Zone</th>
-              <th>Superviseur</th>
+              <th>Encadrant</th>
               <th>Statut</th>
               <th>Créé le</th>
               <th class="col-actions">Actions</th>
@@ -168,7 +170,24 @@
                       class="agent-muted" th:text="${a.zoneLabel ?: '—'}">—</span>
               </td>
               <td>
-                <form th:if="${a.role.name() == 'AGENT' and actorRole.canAssignSupervisors()}"
+                <!-- Un AGENT est affecté à un CHEF_EQUIPE, un CHEF_EQUIPE à un SUPERVISEUR (cf.
+                     AgentRole, Agent.superviseur réutilisé pour les deux niveaux) : la liste
+                     proposée dépend du rôle de la ligne. Un SUPERVISEUR affecte aussi ses agents
+                     (pas seulement l'ADMIN-tier), mais uniquement à SES propres chefs d'équipe —
+                     ${chefsEquipe} est déjà scopé en conséquence côté contrôleur
+                     (AgentAdminController#list) ; la vérification réelle se fait côté serveur
+                     (AgentAdminController#assignSupervisor), ce "th:if" n'est qu'un confort
+                     d'affichage. -->
+                <form th:if="${a.role.name() == 'AGENT' and (actorRole.canAssignSupervisors() or actorRole.name() == 'SUPERVISEUR')}"
+                      th:action="@{/dashboard/agents/{id}/superviseur(id=${a.id})}" method="post" class="agents-inline-form">
+                  <select name="superviseurId" class="form-select form-select-sm" aria-label="Chef d'équipe">
+                    <option value="">— Aucun —</option>
+                    <option th:each="c : ${chefsEquipe}" th:value="${c.id}" th:text="${c.fullName + ' (' + c.username + ')'}"
+                            th:selected="${a.superviseurId != null and c.id == a.superviseurId}">Chef d'équipe</option>
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-outline-primary">OK</button>
+                </form>
+                <form th:if="${a.role.name() == 'CHEF_EQUIPE' and actorRole.canAssignSupervisors()}"
                       th:action="@{/dashboard/agents/{id}/superviseur(id=${a.id})}" method="post" class="agents-inline-form">
                   <select name="superviseurId" class="form-select form-select-sm" aria-label="Superviseur">
                     <option value="">— Aucun —</option>
@@ -177,7 +196,7 @@
                   </select>
                   <button type="submit" class="btn btn-sm btn-outline-primary">OK</button>
                 </form>
-                <span th:unless="${a.role.name() == 'AGENT' and actorRole.canAssignSupervisors()}"
+                <span th:unless="${(a.role.name() == 'AGENT' and (actorRole.canAssignSupervisors() or actorRole.name() == 'SUPERVISEUR')) or (a.role.name() == 'CHEF_EQUIPE' and actorRole.canAssignSupervisors())}"
                       class="agent-muted" th:text="${a.superviseurName ?: '—'}">—</span>
               </td>
               <td>

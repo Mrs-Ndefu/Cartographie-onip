@@ -18,6 +18,9 @@ object AppContainer {
     lateinit var captureStore: CaptureStore
         private set
 
+    lateinit var reperageStore: ReperageStore
+        private set
+
     lateinit var appContext: Context
         private set
 
@@ -69,6 +72,7 @@ object AppContainer {
         appContext = context.applicationContext
         sessionManager = SessionManager(appContext)
         captureStore = CaptureStore(appContext)
+        reperageStore = ReperageStore(appContext)
         sessionManager.zoneCode?.let {
             _agentZone.value = AgentZone(
                 it, sessionManager.zonePlace.orEmpty(),
