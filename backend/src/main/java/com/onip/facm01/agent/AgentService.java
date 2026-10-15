@@ -109,9 +109,17 @@ public class AgentService {
         return agentRepository.search(search, pageable);
     }
 
-    // Agents affectés à un superviseur donné (la page "Gérer les agents" d'un SUPERVISEUR).
+    // Comptes affectés directement à un superviseur ou un chef d'équipe donné (un seul niveau) —
+    // la page "Gérer les agents" d'un CHEF_EQUIPE (ses AGENT).
     public Page<Agent> listAgentsOf(UUID superviseurId, String search, Pageable pageable) {
         return agentRepository.searchBySuperviseur(superviseurId, search, pageable);
+    }
+
+    // Équipe complète d'un superviseur (ses chefs d'équipe ET les agents de chacun) — la page
+    // "Gérer les agents" d'un SUPERVISEUR : il doit voir les agents pour pouvoir les affecter à
+    // un de ses chefs d'équipe (cf. AgentAdminController#assignSupervisor).
+    public Page<Agent> listTeamOf(UUID superviseurId, String search, Pageable pageable) {
+        return agentRepository.searchByTeamOf(superviseurId, search, pageable);
     }
 
     public List<Agent> listSupervisors() {
@@ -119,9 +127,16 @@ public class AgentService {
     }
 
     // Chefs d'équipe actifs : alimente le menu déroulant "Encadrant" des comptes AGENT (cf.
-    // agents.html) — même rôle que listSupervisors() pour les comptes CHEF_EQUIPE.
+    // agents.html) — même rôle que listSupervisors() pour les comptes CHEF_EQUIPE. Vue ADMIN-tier
+    // (tous les chefs d'équipe) ; cf. listChefsEquipeOf pour la vue restreinte d'un superviseur.
     public List<Agent> listChefsEquipe() {
         return agentRepository.findByRoleAndActiveTrueOrderByFullNameAsc(AgentRole.CHEF_EQUIPE);
+    }
+
+    // Chefs d'équipe d'un superviseur donné uniquement : un superviseur n'affecte un agent qu'à
+    // SES propres chefs d'équipe, pas à ceux d'un autre superviseur.
+    public List<Agent> listChefsEquipeOf(UUID superviseurId) {
+        return agentRepository.findBySuperviseur_IdAndRoleAndActiveTrueOrderByFullNameAsc(superviseurId, AgentRole.CHEF_EQUIPE);
     }
 
     // Affecte un compte à son encadrant direct : un AGENT à un CHEF_EQUIPE, un CHEF_EQUIPE à un

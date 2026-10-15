@@ -32,10 +32,11 @@ public enum AgentRole {
         };
     }
 
-    // Comptes affectés à une zone de terrain : l'agent (zone où il enregistre) et le superviseur
-    // (zone qu'il encadre). Le chef d'équipe n'en a pas (rôle structurel, pas de terrain propre).
+    // Comptes affectés à une zone de terrain : l'agent (zone où il enregistre), le superviseur
+    // (zone qu'il encadre) et le chef d'équipe (zone de l'équipe qu'il dirige) — le superviseur
+    // affecte ses agents à un chef d'équipe en fonction de cette zone (cf. agents.html).
     public boolean canHaveZone() {
-        return this == AGENT || this == SUPERVISEUR;
+        return this == AGENT || this == SUPERVISEUR || this == CHEF_EQUIPE;
     }
 
     // Réservé à la gestion des comptes ADMIN/SUPER_ADMIN eux-mêmes (AgentAdminController) : un

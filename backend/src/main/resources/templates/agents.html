@@ -172,8 +172,13 @@
               <td>
                 <!-- Un AGENT est affecté à un CHEF_EQUIPE, un CHEF_EQUIPE à un SUPERVISEUR (cf.
                      AgentRole, Agent.superviseur réutilisé pour les deux niveaux) : la liste
-                     proposée dépend du rôle de la ligne. -->
-                <form th:if="${a.role.name() == 'AGENT' and actorRole.canAssignSupervisors()}"
+                     proposée dépend du rôle de la ligne. Un SUPERVISEUR affecte aussi ses agents
+                     (pas seulement l'ADMIN-tier), mais uniquement à SES propres chefs d'équipe —
+                     ${chefsEquipe} est déjà scopé en conséquence côté contrôleur
+                     (AgentAdminController#list) ; la vérification réelle se fait côté serveur
+                     (AgentAdminController#assignSupervisor), ce "th:if" n'est qu'un confort
+                     d'affichage. -->
+                <form th:if="${a.role.name() == 'AGENT' and (actorRole.canAssignSupervisors() or actorRole.name() == 'SUPERVISEUR')}"
                       th:action="@{/dashboard/agents/{id}/superviseur(id=${a.id})}" method="post" class="agents-inline-form">
                   <select name="superviseurId" class="form-select form-select-sm" aria-label="Chef d'équipe">
                     <option value="">— Aucun —</option>
@@ -191,7 +196,7 @@
                   </select>
                   <button type="submit" class="btn btn-sm btn-outline-primary">OK</button>
                 </form>
-                <span th:unless="${(a.role.name() == 'AGENT' or a.role.name() == 'CHEF_EQUIPE') and actorRole.canAssignSupervisors()}"
+                <span th:unless="${(a.role.name() == 'AGENT' and (actorRole.canAssignSupervisors() or actorRole.name() == 'SUPERVISEUR')) or (a.role.name() == 'CHEF_EQUIPE' and actorRole.canAssignSupervisors())}"
                       class="agent-muted" th:text="${a.superviseurName ?: '—'}">—</span>
               </td>
               <td>

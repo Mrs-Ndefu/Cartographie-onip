@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,9 +51,9 @@ public class AgentAdminController {
         this.staffMemberRepository = staffMemberRepository;
     }
 
-    // Un SUPERVISEUR ne voit que ses chefs d'équipe, un CHEF_EQUIPE que ses agents (dans les deux
-    // cas, les comptes qui lui sont affectés — cf. Agent.superviseur) ; les autres rôles voient
-    // tous les comptes.
+    // Un SUPERVISEUR voit toute son équipe (ses chefs d'équipe ET les agents de chacun — il doit
+    // voir les agents pour pouvoir les affecter à un chef d'équipe, cf. assignSupervisor), un
+    // CHEF_EQUIPE seulement ses agents ; les autres rôles voient tous les comptes.
     @GetMapping
     public String list(
             @RequestParam(defaultValue = "0") int page,
@@ -66,10 +67,11 @@ public class AgentAdminController {
         // withGeneratedPassword (pas from) : cette liste est la seule page où un ADMIN doit
         // pouvoir consulter le dernier mot de passe généré automatiquement pour un AUTRE compte
         // (cf. "Gérer" dans agents.html) — cf. le commentaire sur AgentDto.generatedPassword.
-        Page<AgentDto> agentPage = (actorRole == AgentRole.SUPERVISEUR || actorRole == AgentRole.CHEF_EQUIPE
-                ? agentService.listAgentsOf(actor.getId(), searchTerm, pageRequest)
-                : agentService.listAgents(searchTerm, pageRequest))
-                .map(AgentDto::withGeneratedPassword);
+        Page<AgentDto> agentPage = (switch (actorRole) {
+            case SUPERVISEUR -> agentService.listTeamOf(actor.getId(), searchTerm, pageRequest);
+            case CHEF_EQUIPE -> agentService.listAgentsOf(actor.getId(), searchTerm, pageRequest);
+            default -> agentService.listAgents(searchTerm, pageRequest);
+        }).map(AgentDto::withGeneratedPassword);
         model.addAttribute("agents", agentPage.getContent());
         model.addAttribute("page", agentPage);
         model.addAttribute("search", search);
@@ -79,7 +81,13 @@ public class AgentAdminController {
         model.addAttribute("roles", actorRole.assignableRoles());
         model.addAttribute("zones", zoneService.list());
         model.addAttribute("supervisors", agentService.listSupervisors().stream().map(AgentDto::from).toList());
-        model.addAttribute("chefsEquipe", agentService.listChefsEquipe().stream().map(AgentDto::from).toList());
+        // Un superviseur n'affecte un agent qu'à SES propres chefs d'équipe ; un ADMIN-tier (seul
+        // habilité par ailleurs à réaffecter un CHEF_EQUIPE à un autre superviseur) voit tous les
+        // chefs d'équipe.
+        List<Agent> chefsEquipeOptions = actorRole == AgentRole.SUPERVISEUR
+                ? agentService.listChefsEquipeOf(actor.getId())
+                : agentService.listChefsEquipe();
+        model.addAttribute("chefsEquipe", chefsEquipeOptions.stream().map(AgentDto::from).toList());
         model.addAttribute("currentAgent", AgentDto.from(actor));
         model.addAttribute("staffCount", staffMemberRepository.count());
         // Alimente la liste déroulante filtrée du formulaire "Créer un compte" (cf. agents.html,
@@ -234,7 +242,9 @@ public class AgentAdminController {
     }
 
     // Affectation d'un compte à son encadrant (agent→chef d'équipe, chef d'équipe→superviseur),
-    // par l'ADMIN (ou le SUPER_ADMIN, qui gère les comptes). superviseurId vide = retirer
+    // par l'ADMIN (ou le SUPER_ADMIN, qui gère les comptes) sans restriction, ou par un
+    // SUPERVISEUR — qui n'affecte que des AGENT, et seulement à l'un de SES chefs d'équipe (cf.
+    // le menu "Encadrant" scopé par listChefsEquipeOf, agents.html). superviseurId vide = retirer
     // l'affectation.
     @PostMapping("/{id}/superviseur")
     public String assignSupervisor(
@@ -243,11 +253,20 @@ public class AgentAdminController {
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
         try {
-            if (!actor(authentication).getRole().canAssignSupervisors()) {
-                throw new IllegalArgumentException("Seul un administrateur peut affecter ce compte à un encadrant.");
-            }
+            Agent actor = actor(authentication);
             Agent target = agentService.getAgent(id);
             Agent superviseur = superviseurId == null ? null : agentService.getAgent(superviseurId);
+            if (actor.getRole() == AgentRole.SUPERVISEUR) {
+                if (target.getRole() != AgentRole.AGENT) {
+                    throw new IllegalArgumentException("Vous ne pouvez affecter que des agents à un chef d'équipe.");
+                }
+                if (superviseur != null && (superviseur.getSuperviseur() == null
+                        || !superviseur.getSuperviseur().getId().equals(actor.getId()))) {
+                    throw new IllegalArgumentException("Ce chef d'équipe ne vous est pas affecté.");
+                }
+            } else if (!actor.getRole().canAssignSupervisors()) {
+                throw new IllegalArgumentException("Vous n'avez pas les droits pour affecter ce compte à un encadrant.");
+            }
             agentService.assignSupervisor(id, superviseur);
             redirectAttributes.addFlashAttribute("success", superviseur == null
                     ? "Affectation retirée pour " + target.getUsername()
