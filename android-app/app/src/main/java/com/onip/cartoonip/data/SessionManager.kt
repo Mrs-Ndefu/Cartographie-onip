@@ -66,6 +66,13 @@ class SessionManager(context: Context) {
         get() = prefs.getString(KEY_ZONE_CODE, null)
         set(value) = prefs.edit().putString(KEY_ZONE_CODE, value).apply()
 
+    // Rôle de l'agent connecté (ex. "CHEF_EQUIPE") — sert à restreindre l'accès au Repérage de
+    // site sur la page d'accueil (cf. HomeScreen) : réservé au chef d'équipe (et aux comptes
+    // admin-tier de test), un AGENT ne voit que l'Adressage.
+    var role: String?
+        get() = prefs.getString(KEY_ROLE, null)
+        set(value) = prefs.edit().putString(KEY_ROLE, value).apply()
+
     var zonePlace: String?
         get() = prefs.getString(KEY_ZONE_PLACE, null)
         set(value) = prefs.edit().putString(KEY_ZONE_PLACE, value).apply()
@@ -103,6 +110,7 @@ class SessionManager(context: Context) {
             .remove(KEY_USERNAME).remove(KEY_FULL_NAME)
             .remove(KEY_ZONE_CODE).remove(KEY_ZONE_PLACE)
             .remove(KEY_ZONE_PROVINCE).remove(KEY_ZONE_VILLE).remove(KEY_ZONE_COMMUNES)
+            .remove(KEY_ROLE)
             .apply()
         _session.value = null
     }
@@ -124,6 +132,7 @@ class SessionManager(context: Context) {
         private const val KEY_ZONE_PROVINCE = "zone_province"
         private const val KEY_ZONE_VILLE = "zone_ville"
         private const val KEY_ZONE_COMMUNES = "zone_communes"
+        private const val KEY_ROLE = "role"
         private const val ZONE_COMMUNES_SEPARATOR = "|||"
         private const val KEY_TOKEN = "token"
         private const val KEY_AGENT_ID = "agent_id"

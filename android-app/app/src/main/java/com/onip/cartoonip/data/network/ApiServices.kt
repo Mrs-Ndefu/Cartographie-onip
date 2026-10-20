@@ -5,6 +5,7 @@ import com.onip.cartoonip.data.model.ChangePasswordRequest
 import com.onip.cartoonip.data.model.HouseholdSyncRequest
 import com.onip.cartoonip.data.model.LoginRequest
 import com.onip.cartoonip.data.model.LoginResponse
+import com.onip.cartoonip.data.model.SiteSyncRequest
 import com.onip.cartoonip.data.model.SyncResponse
 import okhttp3.MultipartBody
 import retrofit2.Retrofit
@@ -44,8 +45,14 @@ interface HouseholdApi {
     suspend fun uploadPhotos(@Path("id") id: String, @Part files: List<MultipartBody.Part>)
 }
 
+interface SiteApi {
+    @POST("api/sites/sync")
+    suspend fun sync(@Body request: SiteSyncRequest): SyncResponse
+}
+
 class ApiServices(retrofit: Retrofit) {
     val auth: AuthApi by lazy { retrofit.create(AuthApi::class.java) }
     val households: HouseholdApi by lazy { retrofit.create(HouseholdApi::class.java) }
     val agent: AgentApi by lazy { retrofit.create(AgentApi::class.java) }
+    val sites: SiteApi by lazy { retrofit.create(SiteApi::class.java) }
 }

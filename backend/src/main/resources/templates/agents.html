@@ -22,6 +22,8 @@
       <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}" th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
       <a th:if="${currentAgent != null and currentAgent.role.canViewSupervisorHistory()}"
          th:href="@{/dashboard/historique}" class="link-btn">Historique</a>
+      <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}"
+         th:href="@{/dashboard/sites}" class="link-btn">Repérage</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
              th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">

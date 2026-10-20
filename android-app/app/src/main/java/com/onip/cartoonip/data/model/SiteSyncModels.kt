@@ -1,0 +1,58 @@
+package com.onip.cartoonip.data.model
+
+// Miroir du contrat JSON attendu par POST /api/sites/sync côté backend (SiteSyncItem) — les
+// champs à choix envoient le nom de la constante de l'enum backend (ex. "BATIMENT_EXISTANT").
+// SyncResponse / SyncRejection sont réutilisés depuis HouseholdSyncModels.kt (contrat générique,
+// identique pour les deux synchronisations).
+
+data class SiteSyncRequest(val sites: List<SiteSyncItem>)
+
+data class SiteSyncItem(
+    val id: String,
+    val province: String?,
+    val ville: String?,
+    val commune: String?,
+    val quartierGroupement: String?,
+    val villageAvenueRue: String?,
+    val nomSite: String?,
+    val numeroTelephone: String?,
+    val serieTelephoneGps: String?,
+    val latitude: Double?,
+    val longitude: Double?,
+    val altitude: Double?,
+    val gpsPrecision: Double?,
+    val typeSite: String?,
+    val typeSiteAutre: String?,
+    val proprieteStatut: String?,
+    val optionOccupation: String?,
+    val disponibiliteImmediate: Boolean?,
+    val delaiEstime: String?,
+    val proprietaireNomContact: String?,
+    val typeInfrastructure: String?,
+    val typeInfrastructureAutre: String?,
+    val superficieBatimentM2: Double?,
+    val superficieTerrainM2: Double?,
+    val nombrePieces: Int?,
+    val etatBatiment: String?,
+    val etatBatimentObservations: String?,
+    val accesRoutier: String?,
+    val raccordeSnel: Boolean?,
+    val stabiliteSnel: String?,
+    val groupeElectrogeneSolaire: Boolean?,
+    val nonElectrifie: Boolean?,
+    val regideso: Boolean?,
+    val sanitaires: Boolean?,
+    val connectiviteInternet: String?,
+    val reseauxDisponibles: String?,
+    val clotureSecurise: Boolean?,
+    val proximitePolice: Boolean?,
+    val distancePoliceMetres: Int?,
+    val avisGlobal: String?,
+    val travauxAmenagement: String?,
+    val motifDefavorable: String?,
+    val observationsParticulieres: String?,
+    val nomSignatureEnqueteur: String?,
+    val dateEvaluation: String?,
+    val createdAt: String,
+    val updatedAt: String,
+)

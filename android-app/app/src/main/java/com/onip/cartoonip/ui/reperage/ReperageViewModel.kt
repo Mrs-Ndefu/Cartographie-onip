@@ -3,56 +3,53 @@ package com.onip.cartoonip.ui.reperage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onip.cartoonip.data.AppContainer
-import com.onip.cartoonip.data.GpsResult
-import com.onip.cartoonip.data.LocationHelper
-import com.onip.cartoonip.data.model.ReperagePoint
-import java.time.Instant
-import java.util.UUID
+import com.onip.cartoonip.data.SiteSyncRepository
+import com.onip.cartoonip.data.model.CapturedSite
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class ReperageUiState(
-    val locating: Boolean = false,
-    val locationError: String? = null,
-)
-
+/** Liste des fiches de repérage de site enregistrées sur l'appareil — même principe que
+ * JournalViewModel (ménages), sans filtre "aujourd'hui" : une fiche de site reste pertinente
+ * tant qu'elle n'a pas été traitée. */
 class ReperageViewModel : ViewModel() {
 
-    private val locationHelper = LocationHelper(AppContainer.appContext)
+    val sites: StateFlow<List<CapturedSite>> = AppContainer.siteStore.sites
+        .map { list -> list.sortedByDescending { it.createdAt } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private val _uiState = MutableStateFlow(ReperageUiState())
-    val uiState: StateFlow<ReperageUiState> = _uiState.asStateFlow()
+    private val _syncingIds = MutableStateFlow<Set<String>>(emptySet())
+    val syncingIds: StateFlow<Set<String>> = _syncingIds.asStateFlow()
 
-    val points = AppContainer.reperageStore.points
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    /** Relève la position actuelle et l'ajoute à la liste des points à visiter. */
-    fun markHere() {
-        if (_uiState.value.locating) return
-        _uiState.value = _uiState.value.copy(locating = true, locationError = null)
+    fun retrySync(site: CapturedSite) {
+        _syncingIds.value = _syncingIds.value + site.id
         viewModelScope.launch {
-            val fix: GpsResult? = locationHelper.bestFix() ?: locationHelper.recentLastKnown()
-            if (fix == null) {
-                _uiState.value = _uiState.value.copy(locating = false, locationError = "Position GPS indisponible — réessayez à l'extérieur.")
-                return@launch
+            try {
+                SiteSyncRepository.sync(site)
+            } catch (e: Exception) {
+                _errorMessage.value = "Échec de la synchronisation pour ${site.displayName} : vérifiez la connexion."
+            } finally {
+                _syncingIds.value = _syncingIds.value - site.id
             }
-            AppContainer.reperageStore.add(
-                ReperagePoint(
-                    id = UUID.randomUUID().toString(),
-                    latitude = fix.latitude,
-                    longitude = fix.longitude,
-                    locationPrecision = fix.accuracyMeters.toDouble(),
-                    createdAt = Instant.now().toString(),
-                ),
-            )
-            _uiState.value = _uiState.value.copy(locating = false)
         }
     }
 
-    fun setVisite(id: String, visite: Boolean) = AppContainer.reperageStore.setVisite(id, visite)
+    fun syncAllPending() {
+        sites.value.filter { it.syncedAt == null }.forEach { retrySync(it) }
+    }
 
-    fun updateNote(id: String, note: String) = AppContainer.reperageStore.updateNote(id, note)
+    fun delete(site: CapturedSite) {
+        AppContainer.siteStore.delete(site.id)
+    }
 
-    fun delete(id: String) = AppContainer.reperageStore.delete(id)
+    fun clearError() {
+        _errorMessage.value = null
+    }
 }

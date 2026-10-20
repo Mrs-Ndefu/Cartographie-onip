@@ -280,8 +280,8 @@ document.addEventListener('click', function (e) {
 //   référence n'est pas exhaustive) ou affichée d'office quand la liste est vide (ville sans
 //   commune connue, ville saisie librement) ;
 // - .js-geo-multi : à la place de .js-geo-commune, choix de plusieurs communes (zones) — liste
-//   .js-geo-commune-pick + bouton .js-geo-commune-add ; chaque commune ajoutée devient une
-//   étiquette dans .js-geo-communes-chosen (champ caché name="communes").
+//   .js-geo-commune-pick (ajout dès le choix, ou par Entrée en saisie libre) ; chaque commune
+//   ajoutée devient une étiquette dans .js-geo-communes-chosen (champ caché name="communes").
 // Les données viennent de /dashboard/geo (mêmes listes que les apps de saisie), chargées une fois.
 (function () {
   var AUTRE = '__autre__';
@@ -466,7 +466,6 @@ document.addEventListener('click', function (e) {
         if (isOther) pickOther.focus();
         else addPicked();
       });
-      multi.querySelector('.js-geo-commune-add').addEventListener('click', addPicked);
       // Entrée dans la saisie libre : ajoute la commune au lieu d'envoyer le formulaire.
       pickOther.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {

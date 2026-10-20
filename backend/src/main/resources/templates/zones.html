@@ -19,6 +19,8 @@
       <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
       <a th:if="${currentAgent != null and currentAgent.role.canAccessAgents()}"
          th:href="@{/dashboard/agents}" class="link-btn">Gérer les agents</a>
+      <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}"
+         th:href="@{/dashboard/sites}" class="link-btn">Repérage</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
              th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
@@ -58,7 +60,6 @@
           <span>Communes/Secteurs/Chefferies *</span>
           <div class="agents-inline-form">
             <select class="form-select form-select-sm js-geo-commune-pick" aria-label="Commune à ajouter"></select>
-            <button type="button" class="btn btn-sm btn-outline-primary js-geo-commune-add">Ajouter</button>
           </div>
           <input type="text" class="form-control form-control-sm js-geo-commune-pick-other" placeholder="Commune, secteur ou chefferie" hidden>
           <div class="zones-chosen js-geo-communes-chosen"></div>

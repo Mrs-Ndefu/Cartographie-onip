@@ -20,6 +20,8 @@
     <h1>Adressage de Foyers — Foyers retirés</h1>
     <nav class="topbar-nav">
       <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
+      <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}"
+         th:href="@{/dashboard/sites}" class="link-btn">Repérage</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
              th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">

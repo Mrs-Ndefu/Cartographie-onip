@@ -17,6 +17,7 @@ import com.onip.cartoonip.ui.journal.JournalScreen
 import com.onip.cartoonip.ui.login.LoginScreen
 import com.onip.cartoonip.ui.overview.OverviewScreen
 import com.onip.cartoonip.ui.profile.ProfileScreen
+import com.onip.cartoonip.ui.reperage.ReperageFormScreen
 import com.onip.cartoonip.ui.reperage.ReperageScreen
 
 @Composable
@@ -56,7 +57,21 @@ fun CartoOnipNavHost(navController: NavHostController = rememberNavController())
             CaptureScreen(onNavigate = onNavigate)
         }
         composable(Routes.REPERAGE) {
-            ReperageScreen(onBack = { navController.popBackStack() })
+            ReperageScreen(
+                onBack = { navController.popBackStack() },
+                onNew = { navController.navigate(Routes.REPERAGE_FORM) },
+                onEdit = { id -> navController.navigate(Routes.reperageFormEdit(id)) },
+            )
+        }
+        composable(Routes.REPERAGE_FORM) {
+            ReperageFormScreen(onBack = { navController.popBackStack() })
+        }
+        composable(
+            route = Routes.REPERAGE_FORM_EDIT,
+            arguments = listOf(navArgument("siteId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("siteId")
+            ReperageFormScreen(onBack = { navController.popBackStack() }, editId = id)
         }
         composable(
             route = Routes.CAPTURE_EDIT,

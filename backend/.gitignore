@@ -5,3 +5,7 @@ target/
 
 # Base de données H2 locale (profil dev) — données de test, jamais versionnées
 data/
+
+# APK de test servi par /download (cf. static/download/index.html) : artefact de build, pas du
+# code source — à reconstruire et recopier localement (gradlew assembleDebug), jamais versionné.
+src/main/resources/static/download/*.apk

@@ -12,8 +12,15 @@ import androidx.core.content.ContextCompat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** [stale] = position reprise du cache du téléphone, et non relevée à l'instant. */
-data class GpsResult(val latitude: Double, val longitude: Double, val accuracyMeters: Float, val stale: Boolean = false)
+/** [stale] = position reprise du cache du téléphone, et non relevée à l'instant. [altitude] est
+ * null quand le relevé n'en contient pas (fréquent sur le provider réseau). */
+data class GpsResult(
+    val latitude: Double,
+    val longitude: Double,
+    val accuracyMeters: Float,
+    val altitude: Double? = null,
+    val stale: Boolean = false,
+)
 
 /**
  * GPS via l'API Android native (LocationManager) plutôt que Play Services Location — évite une
@@ -53,7 +60,7 @@ class LocationHelper(private val context: Context) {
         } finally {
             manager.removeUpdates(listener)
         }
-        return best?.let { GpsResult(it.latitude, it.longitude, it.accuracy) }
+        return best?.let { loc -> GpsResult(loc.latitude, loc.longitude, loc.accuracy, if (loc.hasAltitude()) loc.altitude else null) }
     }
 
     /**
@@ -73,6 +80,8 @@ class LocationHelper(private val context: Context) {
             }
             .filter { SystemClock.elapsedRealtimeNanos() - it.elapsedRealtimeNanos <= maxAgeMs * 1_000_000 }
             .minByOrNull { it.accuracy }
-        return location?.let { GpsResult(it.latitude, it.longitude, it.accuracy, stale = true) }
+        return location?.let { loc ->
+            GpsResult(loc.latitude, loc.longitude, loc.accuracy, if (loc.hasAltitude()) loc.altitude else null, stale = true)
+        }
     }
 }

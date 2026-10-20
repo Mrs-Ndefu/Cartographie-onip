@@ -1,6 +1,7 @@
 package com.onip.facm01.agent;
 
 import com.onip.facm01.household.HouseholdRepository;
+import com.onip.facm01.site.SiteRepository;
 import com.onip.facm01.zone.Zone;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,16 +24,19 @@ public class AgentService {
     private final AgentRepository agentRepository;
     private final StaffMemberRepository staffMemberRepository;
     private final HouseholdRepository householdRepository;
+    private final SiteRepository siteRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AgentService(
             AgentRepository agentRepository,
             StaffMemberRepository staffMemberRepository,
             HouseholdRepository householdRepository,
+            SiteRepository siteRepository,
             PasswordEncoder passwordEncoder) {
         this.agentRepository = agentRepository;
         this.staffMemberRepository = staffMemberRepository;
         this.householdRepository = householdRepository;
+        this.siteRepository = siteRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -240,6 +244,10 @@ public class AgentService {
         if (householdRepository.existsByAgent_Id(id)) {
             throw new IllegalArgumentException(
                     "Impossible de supprimer : ce compte a des ménages enregistrés. Désactivez-le plutôt.");
+        }
+        if (siteRepository.existsByAgent_Id(id)) {
+            throw new IllegalArgumentException(
+                    "Impossible de supprimer : ce compte a des fiches de repérage de site. Désactivez-le plutôt.");
         }
         if (agentRepository.existsBySuperviseur_Id(id)) {
             throw new IllegalArgumentException(

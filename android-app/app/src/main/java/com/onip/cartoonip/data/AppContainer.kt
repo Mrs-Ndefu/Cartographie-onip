@@ -18,7 +18,7 @@ object AppContainer {
     lateinit var captureStore: CaptureStore
         private set
 
-    lateinit var reperageStore: ReperageStore
+    lateinit var siteStore: SiteStore
         private set
 
     lateinit var appContext: Context
@@ -31,6 +31,16 @@ object AppContainer {
 
     fun setAgentPhoto(photoDataUrl: String?) {
         _agentPhoto.value = photoDataUrl
+    }
+
+    // Rôle de l'agent connecté — restreint l'accès au Repérage de site sur la page d'accueil
+    // (cf. HomeScreen) : CHEF_EQUIPE (et admin-tier) y a accès, un AGENT non.
+    private val _agentRole = MutableStateFlow<String?>(null)
+    val agentRole: StateFlow<String?> = _agentRole.asStateFlow()
+
+    fun setAgentRole(role: String?) {
+        _agentRole.value = role
+        sessionManager.role = role
     }
 
     // Zone d'affectation de l'agent connecté : rechargée depuis /api/me (l'ADMIN ou le superviseur
@@ -55,12 +65,14 @@ object AppContainer {
         sessionManager.expire()
         _agentPhoto.value = null
         _agentZone.value = null
+        _agentRole.value = null
     }
 
-    /** Met à jour photo et zone d'après la fiche de l'agent renvoyée par le serveur. */
+    /** Met à jour photo, zone et rôle d'après la fiche de l'agent renvoyée par le serveur. */
     fun applyAgent(agent: AgentDto) {
         setAgentPhoto(agent.photoDataUrl)
         setAgentZone(agent.zoneCode, agent.zonePlace, agent.zoneProvince, agent.zoneVille, agent.zoneCommunes.orEmpty())
+        setAgentRole(agent.role)
     }
 
     private var retrofit: Retrofit? = null
@@ -72,13 +84,14 @@ object AppContainer {
         appContext = context.applicationContext
         sessionManager = SessionManager(appContext)
         captureStore = CaptureStore(appContext)
-        reperageStore = ReperageStore(appContext)
+        siteStore = SiteStore(appContext)
         sessionManager.zoneCode?.let {
             _agentZone.value = AgentZone(
                 it, sessionManager.zonePlace.orEmpty(),
                 sessionManager.zoneProvince, sessionManager.zoneVille, sessionManager.zoneCommunes,
             )
         }
+        _agentRole.value = sessionManager.role
         initialized = true
     }
 

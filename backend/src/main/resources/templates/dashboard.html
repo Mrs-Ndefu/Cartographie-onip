@@ -24,6 +24,8 @@
       <a th:if="${currentAgent != null and currentAgent.role.canViewSupervisorHistory()}"
          th:href="@{/dashboard/historique}" class="link-btn">Historique</a>
       <a th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
+      <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}"
+         th:href="@{/dashboard/sites}" class="link-btn">Repérage</a>
       <a th:if="${currentAgent != null and currentAgent.role.canAccessAgents()}"
          th:href="@{/dashboard/agents}" class="link-btn">Gérer les agents</a>
       <div class="agent-summary" th:if="${currentAgent != null}">

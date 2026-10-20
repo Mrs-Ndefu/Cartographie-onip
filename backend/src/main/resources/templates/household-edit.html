@@ -17,6 +17,8 @@
     <h1>Modifier le foyer <span th:text="${household.codeMenage ?: '(sans code)'}"></span></h1>
     <nav class="topbar-nav">
       <a th:href="${returnTo != null ? returnTo : '/dashboard/households/' + household.id}" class="link-btn">← Retour</a>
+      <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}"
+         th:href="@{/dashboard/sites}" class="link-btn">Repérage</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
              th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">

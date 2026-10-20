@@ -36,8 +36,13 @@ import com.onip.cartoonip.ui.theme.OnipBlue
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit) {
     val households by AppContainer.captureStore.households.collectAsState()
-    val reperagePoints by AppContainer.reperageStore.points.collectAsState()
-    val aVisiter = reperagePoints.count { !it.visite }
+    val sites by AppContainer.siteStore.sites.collectAsState()
+    val pendingSites = sites.count { it.syncedAt == null }
+    val role by AppContainer.agentRole.collectAsState()
+    // Le Repérage de site est réservé au chef d'équipe (et aux comptes admin-tier de test) —
+    // un AGENT n'a accès qu'à l'Adressage, cf. SiteService#sync côté backend qui applique la
+    // même règle si jamais cet écran était contourné.
+    val canAccessReperage = role != null && role != "AGENT"
 
     Scaffold(
         topBar = {
@@ -63,14 +68,23 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                 icon = Icons.Filled.Add,
                 onClick = { onNavigate(Routes.CAPTURE) },
             )
-            HomeActionCard(
-                title = "Repérage",
-                subtitle = "Marquer des positions à visiter plus tard",
-                count = aVisiter,
-                countLabel = if (aVisiter > 1) "points à visiter" else "point à visiter",
-                icon = Icons.Filled.LocationOn,
-                onClick = { onNavigate(Routes.REPERAGE) },
-            )
+            if (canAccessReperage) {
+                HomeActionCard(
+                    title = "Repérage",
+                    subtitle = "Évaluer un site candidat (bâtiment, terrain)",
+                    count = sites.size,
+                    countLabel = if (sites.size > 1) "fiches de site" else "fiche de site",
+                    icon = Icons.Filled.LocationOn,
+                    onClick = { onNavigate(Routes.REPERAGE) },
+                )
+                if (pendingSites > 0) {
+                    Text(
+                        "$pendingSites fiche(s) de site en attente de synchronisation",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
         }
     }
 }

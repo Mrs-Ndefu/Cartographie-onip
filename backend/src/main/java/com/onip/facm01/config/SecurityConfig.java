@@ -163,7 +163,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // /error : page vers laquelle Spring renvoie en cas d'erreur serveur. Interdite,
                         // elle transformait n'importe quelle erreur en "403 accès refusé".
-                        .requestMatchers("/", "/css/**", "/js/**", "/img/**", "/favicon.ico", "/error").permitAll()
+                        // /download/** : page d'installation + APK de test, servis pour que les personnes
+                        // sur le même réseau local puissent télécharger l'app sans compte — contenu public,
+                        // pas de donnée sensible (cf. demande explicite de l'utilisateur).
+                        .requestMatchers("/", "/css/**", "/js/**", "/img/**", "/download/**", "/favicon.ico", "/error").permitAll()
                         .anyRequest().denyAll())
                 .csrf(csrf -> csrf.disable());
         return http.build();
