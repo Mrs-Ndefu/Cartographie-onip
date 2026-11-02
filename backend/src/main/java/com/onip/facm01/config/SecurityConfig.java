@@ -107,6 +107,14 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/dashboard/households/*/validate", "/dashboard/households/*/reject")
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
+                        // Fiches de repérage : modification réservée à l'ADMIN, le reste des actions
+                        // ouvert aussi au SUPERVISEUR (cf. AgentRole.canEditSites/canManageSites).
+                        .requestMatchers("/dashboard/sites/*/edit")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST,
+                                "/dashboard/sites/*/validate", "/dashboard/sites/*/reject",
+                                "/dashboard/sites/*/archive", "/dashboard/sites/*/restore")
+                        .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .requestMatchers(HttpMethod.POST, "/dashboard/zones", "/dashboard/zones/**")
                         .hasRole("ADMIN")
                         .requestMatchers("/dashboard/historique")

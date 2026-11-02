@@ -27,6 +27,10 @@ public interface AgentRepository extends JpaRepository<Agent, UUID> {
     // SES chefs d'équipe (cf. AgentAdminController, menu "Encadrant" côté superviseur).
     List<Agent> findBySuperviseur_IdAndRoleAndActiveTrueOrderByFullNameAsc(UUID superviseurId, AgentRole role);
 
+    // Chefs d'équipe actifs rattachés à aucun superviseur : un superviseur peut les prendre dans
+    // son équipe en leur affectant un agent (cf. AgentService.assignAgentToChefForSupervisor).
+    List<Agent> findBySuperviseurIsNullAndRoleAndActiveTrueOrderByFullNameAsc(AgentRole role);
+
     List<Agent> findBySuperviseur_Id(UUID superviseurId);
 
     boolean existsBySuperviseur_Id(UUID superviseurId);

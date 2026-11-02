@@ -16,7 +16,37 @@
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
     <h1>Site <span th:text="${site.nomSite ?: '(sans nom)'}"></span></h1>
     <nav class="topbar-nav">
-      <a th:href="@{/dashboard/sites}" class="link-btn">← Repérage de sites</a>
+      <a th:href="${site.archived} ? @{/dashboard/sites(retirees=true)} : @{/dashboard/sites}" class="link-btn">← Repérage de sites</a>
+      <!-- Actions : modifier (ADMIN seul), valider/rejeter et retirer/restaurer (ADMIN et
+           SUPERVISEUR), cf. AgentRole.canEditSites/canManageSites et SecurityConfig. -->
+      <a th:if="${currentAgent != null and currentAgent.role.canEditSites()}"
+         th:href="@{/dashboard/sites/{id}/edit(id=${site.id})}" class="link-btn">Modifier la fiche</a>
+      <th:block th:if="${currentAgent != null and currentAgent.role.canManageSites()}">
+        <form th:if="${!site.archived and site.validation.name() != 'VALIDE'}"
+              th:action="@{/dashboard/sites/{id}/validate(id=${site.id})}" method="post" style="display:inline">
+          <button type="submit" class="btn btn-sm btn-success">Valider</button>
+        </form>
+        <form th:if="${!site.archived}"
+              th:action="@{/dashboard/sites/{id}/reject(id=${site.id})}" method="post" style="display:inline"
+              class="js-confirm-form" data-confirm-title="Rejeter cette fiche ?" data-confirm-label="Rejeter"
+              th:data-confirm-detail="${site.nomSite ?: '(sans nom)'} + ' — elle sera retirée (consultable dans les fiches retirées), pas supprimée.'">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Rejeter</button>
+        </form>
+        <form th:if="${!site.archived}"
+              th:action="@{/dashboard/sites/{id}/archive(id=${site.id})}" method="post" style="display:inline"
+              class="js-confirm-form" data-confirm-title="Retirer cette fiche ?" data-confirm-label="Retirer"
+              th:data-confirm-detail="${site.nomSite ?: '(sans nom)'} + ' — elle ne sera plus visible dans la liste ni sur la carte, mais reste consultable dans les fiches retirées.'">
+          <button type="submit" class="btn btn-sm btn-outline-secondary">Retirer</button>
+        </form>
+        <form th:if="${site.archived}"
+              th:action="@{/dashboard/sites/{id}/restore(id=${site.id})}" method="post" style="display:inline"
+              class="js-confirm-form" data-confirm-title="Restaurer cette fiche ?" data-confirm-label="Restaurer"
+              data-confirm-variant="success"
+              th:data-confirm-detail="${site.nomSite ?: '(sans nom)'} + ' — elle redeviendra visible dans la liste et sur la carte.'">
+          <button type="submit" class="btn btn-sm btn-outline-success">Restaurer</button>
+        </form>
+      </th:block>
+      <div th:replace="~{fragments/notif-bell :: bell}"></div>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
              th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
@@ -26,6 +56,24 @@
     </nav>
   </header>
 
+  <section class="agents-messages">
+    <div th:if="${success}" class="alert alert-success py-2" th:text="${success}">-</div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}">-</div>
+    <!-- Fiche signalée par la cloche (champs obligatoires manquants, cf. Site.champsManquants) :
+         l'ADMIN la complète (Modifier), ou l'ADMIN/SUPERVISEUR la valide, la rejette ou la retire.
+         Pas dans .agents-messages > .alert seul : ce message ne doit pas disparaître tout seul. -->
+    <div th:if="${site.enAttenteIncomplete()}" class="alert alert-warning py-2 alert-persistent">
+      <strong>Fiche incomplète.</strong> Champs obligatoires manquants :
+      <ul class="missing-fields">
+        <li th:each="champ : ${site.champsManquants}" th:text="${champ}">-</li>
+      </ul>
+    </div>
+    <div th:if="${site.archived}" class="alert alert-secondary py-2 alert-persistent">
+      Fiche retirée le <strong th:text="${#temporals.format(site.archivedAt, 'dd/MM/yyyy HH:mm')}">-</strong> :
+      elle n'apparaît plus dans la liste principale ni sur la carte.
+    </div>
+  </section>
+
   <div class="detail-page">
     <div class="detail-hero">
       <div class="detail-hero-avatar" th:text="${#strings.substring(site.nomSite ?: '?', 0, 1)}">?</div>
@@ -33,9 +81,12 @@
         <p class="detail-hero-name" th:text="${site.nomSite ?: 'Site sans nom'}">-</p>
         <span class="detail-hero-code" th:text="${site.commune ?: '-'} + ' / ' + (${site.ville} ?: '-')">-</span>
         <div class="detail-hero-badges">
+          <span class="status-badge"
+                th:classappend="${site.validation.name() == 'VALIDE'} ? 'status-complet' : (${site.validation.name() == 'REJETE'} ? 'status-a-verifier' : 'status-incomplet')"
+                th:text="${site.validation.label()}">En attente</span>
           <span th:if="${site.avisGlobal != null and site.avisGlobal.name() == 'FAVORABLE'}" class="status-badge status-complet">Favorable</span>
-          <span th:if="${site.avisGlobal != null and site.avisGlobal.name() == 'FAVORABLE_SOUS_RESERVE'}" class="status-badge status-a-verifier">Favorable sous réserve</span>
-          <span th:if="${site.avisGlobal != null and site.avisGlobal.name() == 'DEFAVORABLE'}" class="status-badge status-incomplet">Défavorable</span>
+          <span th:if="${site.avisGlobal != null and site.avisGlobal.name() == 'FAVORABLE_SOUS_RESERVE'}" class="status-badge status-incomplet">Favorable sous réserve</span>
+          <span th:if="${site.avisGlobal != null and site.avisGlobal.name() == 'DEFAVORABLE'}" class="status-badge status-a-verifier">Défavorable</span>
         </div>
         <div class="detail-hero-meta">
           <span>Agent : <strong th:text="${site.agentUsername ?: '—'}">-</strong></span>
@@ -150,5 +201,18 @@
       </div>
     </div>
   </div>
+
+  <div id="confirm-modal" class="confirm-overlay" hidden>
+    <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+      <h3 id="confirm-title" class="confirm-title">Confirmer ?</h3>
+      <p class="confirm-message"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary confirm-cancel">Annuler</button>
+        <button type="button" class="btn btn-sm btn-danger confirm-ok">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/app.js}"></script>
 </body>
 </html>

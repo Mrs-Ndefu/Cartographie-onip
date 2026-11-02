@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -141,6 +142,40 @@ public class AgentService {
     // SES propres chefs d'équipe, pas à ceux d'un autre superviseur.
     public List<Agent> listChefsEquipeOf(UUID superviseurId) {
         return agentRepository.findBySuperviseur_IdAndRoleAndActiveTrueOrderByFullNameAsc(superviseurId, AgentRole.CHEF_EQUIPE);
+    }
+
+    // Chefs d'équipe libres (rattachés à aucun superviseur) : proposés au superviseur en plus des
+    // siens dans le menu "Responsable" d'un agent.
+    public List<Agent> listChefsEquipeLibres() {
+        return agentRepository.findBySuperviseurIsNullAndRoleAndActiveTrueOrderByFullNameAsc(AgentRole.CHEF_EQUIPE);
+    }
+
+    // Affectation d'un AGENT à un chef d'équipe par un SUPERVISEUR : le chef doit être le sien, ou
+    // libre — auquel cas il est rattaché au superviseur dans la même transaction (le superviseur
+    // le prend dans son équipe en lui confiant un agent). chef == null retire l'affectation.
+    @Transactional
+    public Agent assignAgentToChefForSupervisor(UUID agentId, UUID chefId, Agent supervisor) {
+        Agent target = getAgent(agentId);
+        if (target.getRole() != AgentRole.AGENT) {
+            throw new IllegalArgumentException("Vous ne pouvez affecter que des agents à un chef d'équipe.");
+        }
+        if (chefId == null) {
+            return assignSupervisor(agentId, null);
+        }
+        Agent chef = getAgent(chefId);
+        if (chef.getRole() != AgentRole.CHEF_EQUIPE) {
+            throw new IllegalArgumentException("Le compte choisi n'est pas un chef d'équipe.");
+        }
+        if (chef.getSuperviseur() == null) {
+            if (!chef.isActive()) {
+                throw new IllegalArgumentException("Ce chef d'équipe est désactivé.");
+            }
+            chef.setSuperviseur(supervisor);
+            agentRepository.save(chef);
+        } else if (!chef.getSuperviseur().getId().equals(supervisor.getId())) {
+            throw new IllegalArgumentException("Ce chef d'équipe est déjà rattaché à un autre superviseur.");
+        }
+        return assignSupervisor(agentId, chef);
     }
 
     // Affecte un compte à son encadrant direct : un AGENT à un CHEF_EQUIPE, un CHEF_EQUIPE à un

@@ -12,6 +12,7 @@ import com.onip.facm01.household.HouseholdStatus;
 import com.onip.facm01.household.Sexe;
 import com.onip.facm01.household.dto.HouseholdDto;
 import com.onip.facm01.household.dto.HouseholdEditForm;
+import com.onip.facm01.site.SiteService;
 import com.onip.facm01.zone.Zone;
 import com.onip.facm01.zone.ZoneService;
 import org.springframework.data.domain.Page;
@@ -46,6 +47,7 @@ public class DashboardController {
     private final AgentRepository agentRepository;
     private final ZoneService zoneService;
     private final DemographicsService demographicsService;
+    private final SiteService siteService;
 
     public DashboardController(
             HouseholdRepository householdRepository,
@@ -53,7 +55,9 @@ public class DashboardController {
             DashboardService dashboardService,
             AgentRepository agentRepository,
             ZoneService zoneService,
-            DemographicsService demographicsService) {
+            DemographicsService demographicsService,
+            SiteService siteService) {
+        this.siteService = siteService;
         this.householdRepository = householdRepository;
         this.householdService = householdService;
         this.dashboardService = dashboardService;
@@ -117,6 +121,8 @@ public class DashboardController {
         // filtre géographique (province, ville, commune ou zone) est choisi.
         model.addAttribute("mapPoints", householdService.mapPoints(filter));
         model.addAttribute("zoomToPoints", filter.hasPlaceFilter());
+        // Sites de repérage, affichés sur la même carte (couche distincte, filtrable côté page).
+        model.addAttribute("sitePoints", siteService.mapPoints(province, ville, commune));
 
         long totalActive = householdRepository.countByArchivedFalse();
         long countComplet = householdRepository.countByStatusAndArchivedFalse(HouseholdStatus.COMPLET);
@@ -127,6 +133,7 @@ public class DashboardController {
         model.addAttribute("population", dashboardService.populationTotal());
         model.addAttribute("countComplet", countComplet);
         model.addAttribute("countIncomplet", totalActive - countComplet);
+        model.addAttribute("countSitesIncomplets", siteService.countPendingIncomplete());
         model.addAttribute("countArchived", householdRepository.countByArchivedTrue());
 
         model.addAttribute("registrationCounts", dashboardService.registrationCounts());

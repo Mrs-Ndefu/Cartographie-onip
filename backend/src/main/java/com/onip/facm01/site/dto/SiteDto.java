@@ -7,12 +7,14 @@ import com.onip.facm01.site.EtatBatiment;
 import com.onip.facm01.site.OptionOccupation;
 import com.onip.facm01.site.ProprieteStatut;
 import com.onip.facm01.site.Site;
+import com.onip.facm01.site.SiteValidation;
 import com.onip.facm01.site.StabiliteSnel;
 import com.onip.facm01.site.TypeInfrastructure;
 import com.onip.facm01.site.TypeSite;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -65,7 +67,16 @@ public record SiteDto(
         String agentUsername,
         Instant createdAt,
         Instant updatedAt,
-        Instant syncedAt) {
+        Instant syncedAt,
+        SiteValidation validation,
+        boolean archived,
+        Instant archivedAt,
+        List<String> champsManquants) {
+
+    // Fiche à signaler : active, sans décision de l'ADMIN/SUPERVISEUR, et incomplète.
+    public boolean enAttenteIncomplete() {
+        return !archived && validation == SiteValidation.EN_ATTENTE && !champsManquants.isEmpty();
+    }
 
     public static SiteDto from(Site s) {
         return new SiteDto(
@@ -83,6 +94,7 @@ public record SiteDto(
                 s.getAvisGlobal(), s.getTravauxAmenagement(), s.getMotifDefavorable(), s.getObservationsParticulieres(),
                 s.getNomSignatureEnqueteur(), s.getDateEvaluation(),
                 Optional.ofNullable(s.getAgent()).map(a -> a.getUsername()).orElse(null),
-                s.getCreatedAt(), s.getUpdatedAt(), s.getSyncedAt());
+                s.getCreatedAt(), s.getUpdatedAt(), s.getSyncedAt(),
+                s.getValidation(), s.isArchived(), s.getArchivedAt(), s.champsManquants());
     }
 }

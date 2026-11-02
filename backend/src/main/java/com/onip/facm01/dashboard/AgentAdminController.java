@@ -88,6 +88,11 @@ public class AgentAdminController {
                 ? agentService.listChefsEquipeOf(actor.getId())
                 : agentService.listChefsEquipe();
         model.addAttribute("chefsEquipe", chefsEquipeOptions.stream().map(AgentDto::from).toList());
+        // Le superviseur peut aussi choisir un chef d'équipe libre (rattaché à personne) : il le
+        // prend alors dans son équipe (cf. AgentService.assignAgentToChefForSupervisor).
+        model.addAttribute("chefsEquipeLibres", actorRole == AgentRole.SUPERVISEUR
+                ? agentService.listChefsEquipeLibres().stream().map(AgentDto::from).toList()
+                : List.of());
         model.addAttribute("currentAgent", AgentDto.from(actor));
         model.addAttribute("staffCount", staffMemberRepository.count());
         // Alimente la liste déroulante filtrée du formulaire "Créer un compte" (cf. agents.html,
@@ -243,9 +248,9 @@ public class AgentAdminController {
 
     // Affectation d'un compte à son encadrant (agent→chef d'équipe, chef d'équipe→superviseur),
     // par l'ADMIN (ou le SUPER_ADMIN, qui gère les comptes) sans restriction, ou par un
-    // SUPERVISEUR — qui n'affecte que des AGENT, et seulement à l'un de SES chefs d'équipe (cf.
-    // le menu "Encadrant" scopé par listChefsEquipeOf, agents.html). superviseurId vide = retirer
-    // l'affectation.
+    // SUPERVISEUR — qui n'affecte que des AGENT, à l'un de SES chefs d'équipe ou à un chef
+    // d'équipe libre qu'il rattache ainsi à son équipe (cf. listChefsEquipeOf/listChefsEquipeLibres,
+    // agents.html). superviseurId vide = retirer l'affectation.
     @PostMapping("/{id}/superviseur")
     public String assignSupervisor(
             @PathVariable UUID id,
@@ -257,17 +262,13 @@ public class AgentAdminController {
             Agent target = agentService.getAgent(id);
             Agent superviseur = superviseurId == null ? null : agentService.getAgent(superviseurId);
             if (actor.getRole() == AgentRole.SUPERVISEUR) {
-                if (target.getRole() != AgentRole.AGENT) {
-                    throw new IllegalArgumentException("Vous ne pouvez affecter que des agents à un chef d'équipe.");
-                }
-                if (superviseur != null && (superviseur.getSuperviseur() == null
-                        || !superviseur.getSuperviseur().getId().equals(actor.getId()))) {
-                    throw new IllegalArgumentException("Ce chef d'équipe ne vous est pas affecté.");
-                }
+                // Ses chefs d'équipe, ou un chef libre qu'il rattache alors à son équipe.
+                agentService.assignAgentToChefForSupervisor(id, superviseurId, actor);
             } else if (!actor.getRole().canAssignSupervisors()) {
                 throw new IllegalArgumentException("Vous n'avez pas les droits pour affecter ce compte à un encadrant.");
+            } else {
+                agentService.assignSupervisor(id, superviseur);
             }
-            agentService.assignSupervisor(id, superviseur);
             redirectAttributes.addFlashAttribute("success", superviseur == null
                     ? "Affectation retirée pour " + target.getUsername()
                     : target.getUsername() + " affecté à " + superviseur.getFullName());

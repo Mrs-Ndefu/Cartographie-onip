@@ -75,6 +75,16 @@ public enum AgentRole {
         return this == ADMIN;
     }
 
+    // Fiches de repérage de site : valider/rejeter et retirer/restaurer sont ouverts à l'ADMIN
+    // et au SUPERVISEUR ; modifier les champs de la fiche est réservé à l'ADMIN seul.
+    public boolean canManageSites() {
+        return this == ADMIN || this == SUPERVISEUR;
+    }
+
+    public boolean canEditSites() {
+        return this == ADMIN;
+    }
+
     // Restaurer un ménage retiré : l'ADMIN, et aussi le SUPERVISEUR.
     public boolean canRestoreHouseholds() {
         return this == ADMIN || this == SUPERVISEUR;

@@ -184,8 +184,18 @@
                       th:action="@{/dashboard/agents/{id}/superviseur(id=${a.id})}" method="post" class="agents-inline-form">
                   <select name="superviseurId" class="form-select form-select-sm" aria-label="Chef d'équipe">
                     <option value="">— Aucun —</option>
-                    <option th:each="c : ${chefsEquipe}" th:value="${c.id}" th:text="${c.fullName + ' (' + c.username + ')'}"
-                            th:selected="${a.superviseurId != null and c.id == a.superviseurId}">Chef d'équipe</option>
+                    <!-- Superviseur : ses chefs d'équipe, puis les chefs libres (avec leur zone pour
+                         choisir) — en choisir un le rattache à son équipe. Admin : tous les chefs. -->
+                    <optgroup th:if="${!chefsEquipe.isEmpty()}"
+                              th:attr="label=${chefsEquipeLibres.isEmpty()} ? 'Chefs d\'équipe' : 'Mes chefs d\'équipe'">
+                      <option th:each="c : ${chefsEquipe}" th:value="${c.id}"
+                              th:text="${c.fullName + ' (' + c.username + ')' + (c.zoneCode != null ? ' — ' + c.zoneCode : '')}"
+                              th:selected="${a.superviseurId != null and c.id == a.superviseurId}">Chef d'équipe</option>
+                    </optgroup>
+                    <optgroup th:if="${!chefsEquipeLibres.isEmpty()}" label="Chefs d'équipe libres (rejoindront votre équipe)">
+                      <option th:each="c : ${chefsEquipeLibres}" th:value="${c.id}"
+                              th:text="${c.fullName + ' (' + c.username + ')' + (c.zoneCode != null ? ' — ' + c.zoneCode : '')}">Chef libre</option>
+                    </optgroup>
                   </select>
                   <button type="submit" class="btn btn-sm btn-outline-primary">OK</button>
                 </form>

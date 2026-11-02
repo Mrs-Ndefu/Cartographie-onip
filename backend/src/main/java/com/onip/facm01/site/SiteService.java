@@ -5,6 +5,7 @@ import com.onip.facm01.agent.AgentRole;
 import com.onip.facm01.household.dto.SyncRejection;
 import com.onip.facm01.household.dto.SyncResponse;
 import com.onip.facm01.site.dto.SiteDto;
+import com.onip.facm01.site.dto.SiteEditForm;
 import com.onip.facm01.site.dto.SiteSyncItem;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class SiteService {
@@ -123,8 +126,97 @@ public class SiteService {
     // Tableau de bord (ADMIN/SUPER_ADMIN/SUPERVISEUR, cf. SecurityConfig) : toutes les fiches,
     // sans scope agent, avec recherche — même principe que HouseholdService.searchAdmin.
     @Transactional(readOnly = true)
-    public Page<SiteDto> listAdmin(String search, Pageable pageable) {
-        return siteRepository.searchAdmin(search == null ? "" : search, pageable).map(SiteDto::from);
+    public Page<SiteDto> listAdmin(String search, boolean archived, boolean incompletes, Pageable pageable) {
+        return siteRepository.searchAdmin(search == null ? "" : search, archived, incompletes, pageable)
+                .map(SiteDto::from);
+    }
+
+    // Fiches incomplètes en attente d'une action de l'ADMIN/SUPERVISEUR (cloche de notification).
+    @Transactional(readOnly = true)
+    public long countPendingIncomplete() {
+        return siteRepository.countPendingIncomplete();
+    }
+
+    // Points GPS des fiches de repérage pour la carte du tableau de bord, restreints aux mêmes
+    // filtres de lieu (province/ville/commune) que les ménages quand ils sont renseignés.
+    @Transactional(readOnly = true)
+    public List<SiteMapPoint> mapPoints(String province, String ville, String commune) {
+        return siteRepository.findByArchivedFalseAndLatitudeIsNotNullAndLongitudeIsNotNull().stream()
+                .filter(s -> matches(province, s.getProvince())
+                        && matches(ville, s.getVille())
+                        && matches(commune, s.getCommune()))
+                .map(s -> new SiteMapPoint(
+                        s.getId(),
+                        s.getLatitude(),
+                        s.getLongitude(),
+                        s.getNomSite(),
+                        Stream.of(s.getCommune(), s.getVille())
+                                .filter(v -> v != null && !v.isBlank())
+                                .collect(Collectors.joining(", "))))
+                .toList();
+    }
+
+    private static boolean matches(String filter, String value) {
+        return filter == null || filter.isBlank() || filter.equalsIgnoreCase(value);
+    }
+
+    public record SiteMapPoint(UUID id, double latitude, double longitude, String nomSite, String lieu) {
+    }
+
+    // Actions du tableau de bord (rôles vérifiés par SecurityConfig). Validation et retrait ne
+    // touchent que des colonnes que la tablette n'envoie jamais ; la modification avance
+    // updatedAt pour qu'une version plus ancienne renvoyée ensuite par la tablette ne l'écrase pas
+    // (cf. upsert ci-dessus).
+
+    @Transactional
+    public void validate(UUID id) {
+        Site site = find(id);
+        site.setValidation(SiteValidation.VALIDE);
+        siteRepository.save(site);
+    }
+
+    // Rejet = statut REJETE + retrait (même principe que le rejet d'un ménage) : la fiche reste
+    // consultable dans les fiches retirées et peut être restaurée.
+    @Transactional
+    public void reject(UUID id) {
+        Site site = find(id);
+        site.setValidation(SiteValidation.REJETE);
+        site.setArchived(true);
+        site.setArchivedAt(Instant.now());
+        siteRepository.save(site);
+    }
+
+    @Transactional
+    public void archive(UUID id) {
+        Site site = find(id);
+        site.setArchived(true);
+        site.setArchivedAt(Instant.now());
+        siteRepository.save(site);
+    }
+
+    // Une fiche rejetée puis restaurée repasse en attente de décision.
+    @Transactional
+    public void restore(UUID id) {
+        Site site = find(id);
+        site.setArchived(false);
+        site.setArchivedAt(null);
+        if (site.getValidation() == SiteValidation.REJETE) {
+            site.setValidation(SiteValidation.EN_ATTENTE);
+        }
+        siteRepository.save(site);
+    }
+
+    @Transactional
+    public void updateFromDashboard(UUID id, SiteEditForm form) {
+        Site site = find(id);
+        form.applyTo(site);
+        site.setUpdatedAt(Instant.now());
+        siteRepository.save(site);
+    }
+
+    private Site find(UUID id) {
+        return siteRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Fiche de repérage introuvable : " + id));
     }
 
     @Transactional(readOnly = true)

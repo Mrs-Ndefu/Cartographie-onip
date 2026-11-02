@@ -13,6 +13,8 @@ import jakarta.persistence.Table;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 // Fiche de repérage d'un site candidat (bâtiment ou terrain) pour un bureau ONIP — remplace
@@ -143,7 +145,71 @@ public class Site {
     @Column(name = "date_evaluation")
     private LocalDate dateEvaluation;
 
+    // Gestion depuis le tableau de bord (cf. SiteValidation) : jamais envoyé par la tablette, donc
+    // jamais écrasé par une synchronisation. Colonne nullable pour les fiches déjà en base (null =
+    // en attente, cf. getValidation).
+    @Enumerated(EnumType.STRING)
+    @Column(name = "validation")
+    private SiteValidation validation;
+
+    // Retrait réversible, même principe que Household.archived.
+    @Column(name = "archived", nullable = false, columnDefinition = "boolean default false")
+    private boolean archived = false;
+
+    @Column(name = "archived_at")
+    private Instant archivedAt;
+
     protected Site() {
+    }
+
+    // Champs obligatoires côté tableau de bord (la tablette, elle, accepte une fiche à tout stade
+    // de remplissage) : identification, GPS, type de site/propriété/infrastructure. Une fiche
+    // active, encore en attente, à laquelle il en manque un est signalée à l'ADMIN/SUPERVISEUR
+    // (cloche de notification). Même règle en JPQL dans SiteRepository.PENDING_INCOMPLETE — à
+    // garder alignées.
+    public List<String> champsManquants() {
+        List<String> missing = new ArrayList<>();
+        if (isBlank(nomSite)) missing.add("Nom du site");
+        if (isBlank(province)) missing.add("Province");
+        if (isBlank(ville)) missing.add("Ville");
+        if (isBlank(commune)) missing.add("Commune");
+        if (latitude == null || longitude == null) missing.add("Coordonnées GPS");
+        if (typeSite == null) missing.add("Type de site");
+        else if (typeSite == TypeSite.AUTRE && isBlank(typeSiteAutre)) missing.add("Type de site (préciser)");
+        if (proprieteStatut == null) missing.add("Statut de propriété");
+        if (typeInfrastructure == null) missing.add("Type d'infrastructure");
+        else if (typeInfrastructure == TypeInfrastructure.AUTRE && isBlank(typeInfrastructureAutre)) {
+            missing.add("Type d'infrastructure (préciser)");
+        }
+        return missing;
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    public SiteValidation getValidation() {
+        return validation == null ? SiteValidation.EN_ATTENTE : validation;
+    }
+
+    public void setValidation(SiteValidation validation) {
+        this.validation = validation;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
+    }
+
+    public Instant getArchivedAt() {
+        return archivedAt;
+    }
+
+    public void setArchivedAt(Instant archivedAt) {
+        this.archivedAt = archivedAt;
     }
 
     public Site(UUID id) {
