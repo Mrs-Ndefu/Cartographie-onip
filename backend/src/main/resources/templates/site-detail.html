@@ -62,7 +62,7 @@
     <!-- Fiche signalée par la cloche (champs obligatoires manquants, cf. Site.champsManquants) :
          l'ADMIN la complète (Modifier), ou l'ADMIN/SUPERVISEUR la valide, la rejette ou la retire.
          Pas dans .agents-messages > .alert seul : ce message ne doit pas disparaître tout seul. -->
-    <div th:if="${site.enAttenteIncomplete()}" class="alert alert-warning py-2 alert-persistent">
+    <div th:if="${site.enAttenteIncomplete()}" class="alert alert-warning py-2 alert-reminder">
       <strong>Fiche incomplète.</strong> Champs obligatoires manquants :
       <ul class="missing-fields">
         <li th:each="champ : ${site.champsManquants}" th:text="${champ}">-</li>

@@ -2,14 +2,43 @@
 // secondes au lieu de rester affichés indéfiniment dans la page. Exception : le message qui
 // contient le mot de passe généré automatiquement (cf. AgentAdminController#create) reste
 // affiché, le temps de le copier — il ne sera plus jamais montré une fois la page quittée. Les
-// avis d'état (.alert-persistent, ex. fiche de repérage incomplète ou retirée) restent aussi.
-document.querySelectorAll('.agents-messages .alert:not(.alert-persistent)').forEach(function (el, i) {
+// avis d'état (.alert-persistent, ex. fiche de repérage retirée) restent aussi ; les rappels
+// (.alert-reminder) sont traités juste après.
+document.querySelectorAll('.agents-messages .alert:not(.alert-persistent):not(.alert-reminder)').forEach(function (el, i) {
   if (el.textContent.indexOf('Mot de passe :') !== -1) return;
   setTimeout(function () {
     el.classList.add('alert-fade-out');
     el.addEventListener('transitionend', function () { el.remove(); }, { once: true });
   }, 2000 + i * 300);
 });
+
+// Rappels (.alert-reminder, ex. fiche de repérage incomplète) : visibles quelques secondes, puis
+// masqués, et réaffichés toutes les minutes tant que la page reste ouverte — le rappel ne fige
+// pas l'écran, mais ne se fait pas oublier non plus.
+(function () {
+  var VISIBLE_MS = 6000;
+  var REPEAT_MS = 60000;
+
+  document.querySelectorAll('.agents-messages .alert.alert-reminder').forEach(function (el) {
+    function hide() {
+      el.classList.add('alert-fade-out');
+      setTimeout(function () { el.hidden = true; }, 400);
+      setTimeout(show, REPEAT_MS);
+    }
+
+    function show() {
+      el.classList.remove('alert-fade-out');
+      el.hidden = false;
+      // Relance l'animation d'entrée (toast-in) à chaque réapparition.
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+      setTimeout(hide, VISIBLE_MS);
+    }
+
+    setTimeout(hide, VISIBLE_MS);
+  });
+})();
 
 // Cloche de notification (dashboard.html, #pending-notif-bell) : le badge affiche toujours le
 // nombre réel de ménages incomplets en attente (data-pending-count, calculé côté serveur à
