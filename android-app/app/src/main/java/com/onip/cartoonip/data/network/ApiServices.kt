@@ -7,6 +7,7 @@ import com.onip.cartoonip.data.model.LoginRequest
 import com.onip.cartoonip.data.model.LoginResponse
 import com.onip.cartoonip.data.model.SiteSyncRequest
 import com.onip.cartoonip.data.model.SyncResponse
+import com.onip.cartoonip.data.model.ZoneSiteOption
 import okhttp3.MultipartBody
 import retrofit2.Retrofit
 import retrofit2.http.Body
@@ -25,6 +26,10 @@ interface AuthApi {
 interface AgentApi {
     @GET("api/me")
     suspend fun me(): AgentDto
+
+    // Sites de la zone d'affectation de l'agent connecté (cf. ZoneSiteOption).
+    @GET("api/me/zone-sites")
+    suspend fun zoneSites(): List<ZoneSiteOption>
 
     @PUT("api/me/password")
     suspend fun changePassword(@Body request: ChangePasswordRequest): AgentDto

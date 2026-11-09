@@ -18,10 +18,12 @@ public class ZoneService {
 
     private final ZoneRepository zoneRepository;
     private final AgentRepository agentRepository;
+    private final ZoneSiteService zoneSiteService;
 
-    public ZoneService(ZoneRepository zoneRepository, AgentRepository agentRepository) {
+    public ZoneService(ZoneRepository zoneRepository, AgentRepository agentRepository, ZoneSiteService zoneSiteService) {
         this.zoneRepository = zoneRepository;
         this.agentRepository = agentRepository;
+        this.zoneSiteService = zoneSiteService;
     }
 
     // Triées par code : A1, A2, ..., B1... (zones sans code en dernier).
@@ -122,6 +124,8 @@ public class ZoneService {
     public void delete(UUID id) {
         Zone zone = get(id);
         agentRepository.findByZone_Id(id).forEach(agent -> agent.setZone(null));
+        // Ses sites importés redeviennent « non affectés ».
+        zoneSiteService.detachZone(id);
         zoneRepository.delete(zone);
     }
 
@@ -131,6 +135,7 @@ public class ZoneService {
     public int deleteAll() {
         List<Zone> zones = zoneRepository.findAll();
         zones.forEach(zone -> agentRepository.findByZone_Id(zone.getId()).forEach(agent -> agent.setZone(null)));
+        zones.forEach(zone -> zoneSiteService.detachZone(zone.getId()));
         zoneRepository.deleteAll(zones);
         return zones.size();
     }

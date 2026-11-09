@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modifier le site — Adressage de Foyers</title>
+  <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+  <header class="topbar">
+    <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
+    <h1>Adressage de Foyers — Modifier le site</h1>
+    <nav class="topbar-nav">
+      <a th:href="@{${returnTo}}" class="link-btn">← Sites</a>
+      <a th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
+      <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
+        <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
+             th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
+        <span th:unless="${currentAgent != null and currentAgent.photoDataUrl != null}" class="avatar-placeholder-lg"
+              th:text="${currentAgent != null ? #strings.substring(currentAgent.fullName,0,1) : '?'}">?</span>
+      </a>
+    </nav>
+  </header>
+
+  <section class="agents-messages">
+    <div th:if="${error}" class="alert alert-danger py-2 alert-persistent" th:text="${error}">-</div>
+  </section>
+
+  <section class="table-section agents-page">
+    <div class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2 th:text="${site.nom}">Site</h2>
+          <span class="table-card-count" th:if="${site.zoneManuelle}"
+                th:text="'Zone choisie à la main (' + (${site.zone != null} ? ${site.zone.name} : 'non affecté') + ') : elle est conservée après modification.'">Zone manuelle</span>
+          <span class="table-card-count" th:unless="${site.zoneManuelle}"
+                th:text="'Zone actuelle : ' + (${site.zone != null} ? ${site.zone.label} : 'non affecté') + '. Elle sera recalculée d\'après la province et la ville/territoire enregistrées.'">Zone automatique</span>
+        </div>
+      </div>
+      <form th:action="@{/dashboard/zones/sites/{id}/edit(id=${site.id})}" method="post" class="agents-create-form zone-site-edit-form">
+        <input type="hidden" name="returnTo" th:value="${returnTo}">
+        <label class="agents-field zone-site-edit-wide">
+          <span>Nom du site *</span>
+          <input type="text" name="nom" class="form-control form-control-sm" th:value="${site.nom}" required maxlength="255">
+        </label>
+        <label class="agents-field zone-site-edit-wide">
+          <span>Adresse</span>
+          <input type="text" name="adresse" class="form-control form-control-sm" th:value="${site.adresse}" maxlength="255">
+        </label>
+        <label class="agents-field">
+          <span>Province</span>
+          <select name="province" class="form-select form-select-sm">
+            <option value="">—</option>
+            <option th:if="${site.province != null and !provinces.contains(site.province)}"
+                    th:value="${site.province}" th:text="${site.province}" selected>AUTRE</option>
+            <option th:each="p : ${provinces}" th:value="${p}" th:text="${p}" th:selected="${p == site.province}">PROVINCE</option>
+          </select>
+        </label>
+        <label class="agents-field">
+          <span>Ville</span>
+          <input type="text" name="ville" class="form-control form-control-sm text-uppercase" th:value="${site.ville}" maxlength="255">
+        </label>
+        <label class="agents-field">
+          <span>Territoire</span>
+          <input type="text" name="territoire" class="form-control form-control-sm text-uppercase" th:value="${site.territoire}" maxlength="255">
+        </label>
+        <div class="zone-site-edit-actions">
+          <a th:href="@{${returnTo}}" class="btn btn-sm btn-outline-secondary">Annuler</a>
+          <button type="submit" class="btn btn-sm btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

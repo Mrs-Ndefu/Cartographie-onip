@@ -4,6 +4,7 @@ import com.onip.facm01.agent.AgentRepository;
 import com.onip.facm01.agent.dto.AgentDto;
 import com.onip.facm01.zone.Zone;
 import com.onip.facm01.zone.ZoneService;
+import com.onip.facm01.zone.ZoneSiteService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,10 +28,12 @@ public class ZoneAdminController {
 
     private final ZoneService zoneService;
     private final AgentRepository agentRepository;
+    private final ZoneSiteService zoneSiteService;
 
-    public ZoneAdminController(ZoneService zoneService, AgentRepository agentRepository) {
+    public ZoneAdminController(ZoneService zoneService, AgentRepository agentRepository, ZoneSiteService zoneSiteService) {
         this.zoneService = zoneService;
         this.agentRepository = agentRepository;
+        this.zoneSiteService = zoneSiteService;
     }
 
     @GetMapping
@@ -40,6 +43,7 @@ public class ZoneAdminController {
                 .collect(Collectors.toMap(Zone::getId, zone -> zoneService.agentCount(zone.getId())));
         model.addAttribute("zones", zones);
         model.addAttribute("agentCounts", agentCounts);
+        model.addAttribute("siteCounts", zoneSiteService.countsByZone());
         agentRepository.findByUsername(authentication.getName())
                 .ifPresent(agent -> model.addAttribute("currentAgent", AgentDto.from(agent)));
         return "zones";

@@ -21,6 +21,7 @@
          th:href="@{/dashboard/agents}" class="link-btn">Gérer les agents</a>
       <a th:if="${currentAgent != null and currentAgent.role.canViewHouseholds()}"
          th:href="@{/dashboard/sites}" class="link-btn">Repérage</a>
+      <a th:href="@{/dashboard/zones/sites}" class="link-btn">Sites</a>
       <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
         <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
              th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
@@ -74,6 +75,10 @@
           <h2>Zones d'affectation</h2>
           <span class="table-card-count" th:text="${zones.size()} + ' zone(s)'">0 zone(s)</span>
         </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+        <!-- Sites importés depuis Excel et affectés aux zones (cf. ZoneSiteController). -->
+        <a th:href="@{/dashboard/zones/sites}" class="btn btn-sm btn-primary"
+           th:text="${currentAgent != null and currentAgent.role.canManageZones()} ? '+ Ajout site' : 'Voir les sites'">+ Ajout site</a>
         <form th:if="${currentAgent != null and currentAgent.role.canManageZones() and !zones.isEmpty()}"
               th:action="@{/dashboard/zones/delete-all}" method="post"
               class="js-confirm-form"
@@ -82,6 +87,7 @@
               th:data-confirm-detail="${zones.size()} + ' zone(s) seront supprimées et les comptes affectés n\'auront plus de zone. Cette action est définitive.'">
           <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer toutes les zones</button>
         </form>
+        </div>
       </div>
       <div class="table-scroll">
         <table class="households-table zones-table">
@@ -92,6 +98,7 @@
               <th>Ville/Territoire</th>
               <th>Communes/Secteurs/Chefferies</th>
               <th>Comptes affectés</th>
+              <th>Sites</th>
               <th class="col-actions" th:if="${currentAgent != null and currentAgent.role.canManageZones()}">Actions</th>
             </tr>
           </thead>
@@ -109,6 +116,10 @@
               <td>
                 <span class="agent-role-badge" th:text="${agentCounts[z.id]}">0</span>
               </td>
+              <td>
+                <a th:href="@{/dashboard/zones/sites(zone=${z.id})}" class="agent-role-badge zone-sites-count"
+                   th:title="'Voir les sites de la ' + ${z.name}" th:text="${siteCounts[z.id] ?: 0}">0</a>
+              </td>
               <td class="col-actions" th:if="${currentAgent != null and currentAgent.role.canManageZones()}">
                 <form th:action="@{/dashboard/zones/{id}/delete(id=${z.id})}" method="post"
                       class="js-confirm-form"
@@ -124,7 +135,7 @@
               </td>
             </tr>
             <tr th:if="${zones.isEmpty()}">
-              <td colspan="6" class="table-empty">Aucune zone définie pour l'instant.</td>
+              <td colspan="7" class="table-empty">Aucune zone définie pour l'instant.</td>
             </tr>
           </tbody>
         </table>

@@ -61,6 +61,12 @@ class SessionManager(context: Context) {
         clear()
     }
 
+    // Derniers sites connus de la zone (JSON de List<ZoneSiteOption>), pour remplir la fiche de
+    // repérage hors connexion.
+    var zoneSitesJson: String?
+        get() = prefs.getString(KEY_ZONE_SITES, null)
+        set(value) = prefs.edit().putString(KEY_ZONE_SITES, value).apply()
+
     // Dernière zone d'affectation connue, pour l'afficher même sans réseau sur le terrain.
     var zoneCode: String?
         get() = prefs.getString(KEY_ZONE_CODE, null)
@@ -110,7 +116,7 @@ class SessionManager(context: Context) {
             .remove(KEY_USERNAME).remove(KEY_FULL_NAME)
             .remove(KEY_ZONE_CODE).remove(KEY_ZONE_PLACE)
             .remove(KEY_ZONE_PROVINCE).remove(KEY_ZONE_VILLE).remove(KEY_ZONE_COMMUNES)
-            .remove(KEY_ROLE)
+            .remove(KEY_ROLE).remove(KEY_ZONE_SITES)
             .apply()
         _session.value = null
     }
@@ -133,6 +139,7 @@ class SessionManager(context: Context) {
         private const val KEY_ZONE_VILLE = "zone_ville"
         private const val KEY_ZONE_COMMUNES = "zone_communes"
         private const val KEY_ROLE = "role"
+        private const val KEY_ZONE_SITES = "zone_sites"
         private const val ZONE_COMMUNES_SEPARATOR = "|||"
         private const val KEY_TOKEN = "token"
         private const val KEY_AGENT_ID = "agent_id"

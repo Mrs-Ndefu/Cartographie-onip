@@ -174,12 +174,13 @@ public class HouseholdService {
                         h.location().latitude(),
                         h.location().longitude(),
                         h.codeMenage(),
+                        h.address() == null ? null : h.address().province(),
                         h.chef() == null ? "" : String.join(" ", Stream.of(h.chef().prenom(), h.chef().nom())
                                 .filter(v -> v != null && !v.isBlank()).toList())))
                 .toList();
     }
 
-    public record MapPoint(double latitude, double longitude, String codeMenage, String chef) {
+    public record MapPoint(double latitude, double longitude, String codeMenage, String province, String chef) {
     }
 
     @Transactional(readOnly = true)

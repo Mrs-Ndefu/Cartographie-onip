@@ -62,6 +62,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onip.cartoonip.data.DRC_PROVINCES
 import com.onip.cartoonip.data.DRC_VILLES
 import com.onip.cartoonip.data.communesForVille
+import com.onip.cartoonip.data.model.ZoneSiteOption
 import com.onip.cartoonip.data.villesForProvince
 import kotlin.math.roundToInt
 
@@ -140,6 +141,21 @@ fun ReperageFormScreen(
             }
 
             SectionCard("I. Identification administrative du site") {
+                if (viewModel.restrictToZoneSites) {
+                    val zoneSites by viewModel.zoneSites.collectAsState()
+                    ZoneSiteIdentification(
+                        state = uiState,
+                        options = zoneSites,
+                        zoneCommunes = viewModel.zoneCommunes,
+                        onSelect = viewModel::onZoneSiteSelected,
+                        onCommuneChange = viewModel::onCommuneChange,
+                    )
+                    FormField("Quartier/Groupement", uiState.quartierGroupement, viewModel::onQuartierGroupementChange)
+                    FormField("Adresse (Village/Avenue/Rue)", uiState.villageAvenueRue, viewModel::onVillageAvenueRueChange)
+                    FormField("Numéro téléphone", uiState.numeroTelephone, viewModel::onNumeroTelephoneChange, keyboard = numberKeyboard, capitalize = false)
+                    FormField("Série téléphone/GPS", uiState.serieTelephoneGps, viewModel::onSerieTelephoneGpsChange, capitalize = false)
+                    return@SectionCard
+                }
                 SiteGeoFields(
                     province = uiState.province,
                     ville = uiState.ville,
@@ -317,6 +333,106 @@ fun ReperageFormScreen(
                     TextButton(onClick = { showSaveConfirm = false }) { Text("Annuler") }
                 },
             )
+        }
+    }
+}
+
+// Fiche du chef d'équipe : le nom du site se choisit dans la liste des sites de sa zone, ce qui
+// remplit province, ville/territoire (non modifiables : ceux de la zone), commune (modifiable
+// parmi les communes de la zone) et adresse.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ZoneSiteIdentification(
+    state: SiteFormState,
+    options: List<ZoneSiteOption>,
+    zoneCommunes: List<String>,
+    onSelect: (ZoneSiteOption) -> Unit,
+    onCommuneChange: (String) -> Unit,
+) {
+    var siteExpanded by remember { mutableStateOf(false) }
+    if (options.isEmpty()) {
+        Text(
+            "Aucun site n'est encore affecté à votre zone. Demandez à l'administrateur de les importer " +
+                "(tableau de bord : Zones > Sites), puis rouvrez la fiche avec une connexion.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+    } else {
+        ExposedDropdownMenuBox(
+            expanded = siteExpanded, onExpandedChange = { siteExpanded = it },
+            modifier = Modifier.padding(bottom = 8.dp),
+        ) {
+            OutlinedTextField(
+                value = state.nomSite,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Nom du site") },
+                placeholder = { Text("Choisir un site de votre zone") },
+                supportingText = { Text("${options.size} site(s) dans votre zone") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = siteExpanded) },
+                modifier = Modifier.fillMaxWidth().menuAnchor(),
+            )
+            ExposedDropdownMenu(expanded = siteExpanded, onDismissRequest = { siteExpanded = false }) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(option.nomSite, fontWeight = FontWeight.SemiBold)
+                                val detail = listOfNotNull(option.adresse, option.commune).joinToString(" — ")
+                                if (detail.isNotBlank()) {
+                                    Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        },
+                        onClick = {
+                            onSelect(option)
+                            siteExpanded = false
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    OutlinedTextField(
+        value = state.province, onValueChange = {}, readOnly = true,
+        label = { Text("Province/Région") }, singleLine = true,
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+    )
+    OutlinedTextField(
+        value = state.ville, onValueChange = {}, readOnly = true,
+        label = { Text("Ville/Territoire") }, singleLine = true,
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+    )
+    if (zoneCommunes.isEmpty()) {
+        OutlinedTextField(
+            value = state.commune, onValueChange = {}, readOnly = true,
+            label = { Text("Commune/Secteur/Chefferie") }, singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        )
+        return
+    }
+    var communeExpanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = communeExpanded, onExpandedChange = { communeExpanded = it },
+        modifier = Modifier.padding(bottom = 8.dp),
+    ) {
+        OutlinedTextField(
+            value = state.commune,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Commune/Secteur/Chefferie") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = communeExpanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+        )
+        ExposedDropdownMenu(expanded = communeExpanded, onDismissRequest = { communeExpanded = false }) {
+            zoneCommunes.forEach { name ->
+                DropdownMenuItem(text = { Text(name) }, onClick = {
+                    onCommuneChange(name)
+                    communeExpanded = false
+                })
+            }
         }
     }
 }

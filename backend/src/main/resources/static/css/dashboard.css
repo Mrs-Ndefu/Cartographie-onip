@@ -664,8 +664,151 @@ h1, h2, h3 {
   border: 0;
 }
 
+.map-toolbar {
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.map-zoom-hint {
+  margin-right: auto;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.map-global-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.map-global-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.map-global-btn:hover {
+  background: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+.map-popup-muted {
+  color: #6b7280;
+  font-size: 0.8em;
+}
+
+/* Bulles « vue globale » : une par province, avec total et détail adressage/repérage. */
+.province-bubble-wrap {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.province-bubble {
+  width: var(--bubble-size);
+  height: var(--bubble-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(15, 95, 168, 0.88);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 4px rgba(15, 95, 168, 0.25), 0 4px 10px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.15s ease;
+}
+
+.province-bubble-wrap:hover .province-bubble {
+  transform: scale(1.08);
+}
+
+/* Paire d'épingles par province (rouge = adressage, bleu = repérage) avec leur nombre. */
+.province-pins {
+  display: flex;
+  gap: 2px;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
+  transition: transform 0.15s ease;
+  transform-origin: bottom center;
+}
+
+.province-bubble-wrap:hover .province-pins {
+  transform: scale(1.1);
+}
+
+.province-bubble-label {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: #1f2937;
+}
+
+.map-compact-labels .province-bubble-label {
+  display: none;
+}
+
+.map-compact-labels .province-bubble-wrap:hover .province-bubble-label {
+  display: inline-flex;
+}
+
+.province-bubble-name {
+  font-weight: 600;
+}
+
+.province-bubble-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.province-bubble-count::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.province-bubble-count.is-adressage {
+  color: #b42323;
+}
+
+.province-bubble-count.is-adressage::before {
+  background: #d33f3f;
+}
+
+.province-bubble-count.is-reperage {
+  color: #0f5fa8;
+}
+
+.province-bubble-count.is-reperage::before {
+  background: #0f5fa8;
+}
+
 #dashboard-map {
-  height: 380px;
+  height: 460px;
   margin: 0.5rem 1.75rem 0;
   border-radius: var(--radius);
   overflow: hidden;
@@ -1779,4 +1922,77 @@ h1, h2, h3 {
   color: #fff;
   font-weight: 800;
   font-size: 0.85rem;
+}
+
+/* Page Sites (Zones > Ajout site). */
+.zone-sites-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) minmax(200px, 2fr) auto;
+  gap: 0.9rem 1rem;
+  align-items: end;
+  padding: 0 1.4rem 1rem;
+}
+
+@media (max-width: 640px) {
+  .zone-sites-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+.zone-site-zone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.zone-site-zone .zone-letter {
+  min-width: 26px;
+  height: 24px;
+  font-size: 0.75rem;
+}
+
+.zone-site-place {
+  font-weight: 600;
+}
+
+.zone-site-assign select {
+  min-width: 170px;
+  max-width: 220px;
+}
+
+a.zone-sites-count {
+  text-decoration: none;
+}
+
+a.zone-sites-count:hover {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* Formulaire « Modifier le site » (Zones > Sites). */
+.zone-site-edit-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.zone-site-edit-wide {
+  grid-column: span 3;
+}
+
+.zone-site-edit-actions {
+  grid-column: span 3;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .zone-site-edit-form {
+    grid-template-columns: 1fr;
+  }
+
+  .zone-site-edit-wide,
+  .zone-site-edit-actions {
+    grid-column: auto;
+  }
 }

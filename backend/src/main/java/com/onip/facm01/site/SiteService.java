@@ -150,6 +150,7 @@ public class SiteService {
                         s.getLatitude(),
                         s.getLongitude(),
                         s.getNomSite(),
+                        s.getProvince(),
                         Stream.of(s.getCommune(), s.getVille())
                                 .filter(v -> v != null && !v.isBlank())
                                 .collect(Collectors.joining(", "))))
@@ -160,7 +161,7 @@ public class SiteService {
         return filter == null || filter.isBlank() || filter.equalsIgnoreCase(value);
     }
 
-    public record SiteMapPoint(UUID id, double latitude, double longitude, String nomSite, String lieu) {
+    public record SiteMapPoint(UUID id, double latitude, double longitude, String nomSite, String province, String lieu) {
     }
 
     // Actions du tableau de bord (rôles vérifiés par SecurityConfig). Validation et retrait ne

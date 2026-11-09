@@ -3,6 +3,9 @@ package com.onip.cartoonip.data
 import android.content.Context
 import com.onip.cartoonip.data.model.AgentDto
 import com.onip.cartoonip.data.model.AgentZone
+import com.onip.cartoonip.data.model.ZoneSiteOption
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.onip.cartoonip.data.network.ApiServices
 import com.onip.cartoonip.data.network.buildRetrofit
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +60,29 @@ object AppContainer {
         sessionManager.zoneCommunes = communes
     }
 
+    // Sites de la zone de l'agent (fiche de repérage du chef d'équipe) : chargés depuis le cache
+    // au démarrage, puis rafraîchis depuis le serveur à l'ouverture de la fiche.
+    private val _zoneSites = MutableStateFlow<List<ZoneSiteOption>>(emptyList())
+    val zoneSites: StateFlow<List<ZoneSiteOption>> = _zoneSites.asStateFlow()
+
+    /** Recharge les sites de la zone depuis le serveur ; sans réseau, garde la dernière liste. */
+    suspend fun refreshZoneSites() {
+        val sites = runCatching { api().agent.zoneSites() }.getOrNull() ?: return
+        _zoneSites.value = sites
+        sessionManager.zoneSitesJson = Gson().toJson(sites)
+    }
+
+    fun clearZoneSites() {
+        _zoneSites.value = emptyList()
+    }
+
+    private fun loadCachedZoneSites(): List<ZoneSiteOption> {
+        val json = sessionManager.zoneSitesJson ?: return emptyList()
+        return runCatching {
+            Gson().fromJson<List<ZoneSiteOption>>(json, object : TypeToken<List<ZoneSiteOption>>() {}.type)
+        }.getOrNull().orEmpty()
+    }
+
     // Jeton refusé par le serveur : on ferme la session (l'écran de connexion s'affiche, cf.
     // CartoOnipNavHost). Les foyers enregistrés sur l'appareil ne sont pas touchés ; leur
     // synchronisation reprend après la reconnexion.
@@ -66,6 +92,7 @@ object AppContainer {
         _agentPhoto.value = null
         _agentZone.value = null
         _agentRole.value = null
+        _zoneSites.value = emptyList()
     }
 
     /** Met à jour photo, zone et rôle d'après la fiche de l'agent renvoyée par le serveur. */
@@ -92,6 +119,7 @@ object AppContainer {
             )
         }
         _agentRole.value = sessionManager.role
+        _zoneSites.value = loadCachedZoneSites()
         initialized = true
     }
 

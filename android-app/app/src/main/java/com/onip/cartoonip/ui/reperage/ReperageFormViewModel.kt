@@ -6,6 +6,7 @@ import com.onip.cartoonip.data.AppContainer
 import com.onip.cartoonip.data.LocationHelper
 import com.onip.cartoonip.data.SiteSyncRepository
 import com.onip.cartoonip.data.model.CapturedSite
+import com.onip.cartoonip.data.model.ZoneSiteOption
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,6 +92,31 @@ class ReperageFormViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(SiteFormState())
     val uiState: StateFlow<SiteFormState> = _uiState.asStateFlow()
+
+    // Chef d'équipe : le nom du site se choisit uniquement parmi les sites de sa zone (importés
+    // depuis le tableau de bord), et ce choix remplit province, ville/territoire, commune et
+    // adresse. Les autres rôles gardent la saisie libre.
+    val restrictToZoneSites: Boolean = AppContainer.agentRole.value == "CHEF_EQUIPE"
+    val zoneSites: StateFlow<List<ZoneSiteOption>> = AppContainer.zoneSites
+
+    // Communes de la zone : seul choix proposé pour la commune quand la fiche est restreinte.
+    val zoneCommunes: List<String> = AppContainer.agentZone.value?.communes.orEmpty()
+
+    init {
+        if (restrictToZoneSites) {
+            viewModelScope.launch { AppContainer.refreshZoneSites() }
+        }
+    }
+
+    fun onZoneSiteSelected(option: ZoneSiteOption) = update {
+        copy(
+            nomSite = option.nomSite.uppercase(),
+            province = option.province?.uppercase() ?: province,
+            ville = option.villeTerritoire?.uppercase() ?: ville,
+            commune = option.commune?.uppercase().orEmpty(),
+            villageAvenueRue = option.adresse?.uppercase() ?: villageAvenueRue,
+        )
+    }
 
     fun loadForEdit(id: String) {
         val site = AppContainer.siteStore.get(id) ?: return

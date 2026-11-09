@@ -1,8 +1,10 @@
 package com.onip.facm01.agent;
 
+
 import com.onip.facm01.agent.dto.AgentDto;
 import com.onip.facm01.agent.dto.ChangePasswordRequest;
 import com.onip.facm01.security.JwtAuthFilter;
+import com.onip.facm01.zone.ZoneSiteService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -28,15 +31,24 @@ public class AgentSelfController {
 
     private final AgentService agentService;
     private final AgentRepository agentRepository;
+    private final ZoneSiteService zoneSiteService;
 
-    public AgentSelfController(AgentService agentService, AgentRepository agentRepository) {
+    public AgentSelfController(AgentService agentService, AgentRepository agentRepository, ZoneSiteService zoneSiteService) {
         this.agentService = agentService;
         this.agentRepository = agentRepository;
+        this.zoneSiteService = zoneSiteService;
     }
 
     @GetMapping
     public AgentDto me(HttpServletRequest request) {
         return AgentDto.from(currentAgent(request));
+    }
+
+    // Sites importés de la zone de l'agent connecté (page Zones > Sites du tableau de bord) :
+    // l'app mobile ne propose que ces noms dans la fiche de repérage du chef d'équipe.
+    @GetMapping("/zone-sites")
+    public List<ZoneSiteService.ZoneSiteOption> zoneSites(HttpServletRequest request) {
+        return zoneSiteService.optionsForZone(currentAgent(request).getZone());
     }
 
     @PutMapping("/password")

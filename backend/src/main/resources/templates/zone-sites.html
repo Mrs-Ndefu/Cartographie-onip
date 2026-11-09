@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sites — Adressage de Foyers</title>
+  <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body th:with="canManage=${currentAgent != null and currentAgent.role.canManageZones()},
+               returnTo=${'/dashboard/zones/sites?zone=' + zone + '&search=' + #uris.escapeQueryParam(search) + '&page=' + page.number}">
+  <header class="topbar">
+    <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
+    <h1>Adressage de Foyers — Sites</h1>
+    <nav class="topbar-nav">
+      <a th:href="@{/dashboard}" class="link-btn">← Tableau de bord</a>
+      <a th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
+      <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
+        <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
+             th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
+        <span th:unless="${currentAgent != null and currentAgent.photoDataUrl != null}" class="avatar-placeholder-lg"
+              th:text="${currentAgent != null ? #strings.substring(currentAgent.fullName,0,1) : '?'}">?</span>
+      </a>
+    </nav>
+  </header>
+
+  <section class="agents-messages">
+    <div th:if="${success}" class="alert alert-success py-2" th:text="${success}">-</div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}">-</div>
+  </section>
+
+  <section class="table-section agents-page">
+    <!-- Import (ADMIN) : uniquement sur la liste complète, pas sur la vue d'une zone. -->
+    <div class="table-card" th:if="${canManage and selectedZone == null}">
+      <div class="table-card-header">
+        <div>
+          <h2>Importer des sites</h2>
+          <span class="table-card-count">Fichier Excel (.xlsx) avec les colonnes Nom du site, Adresse, Province, Ville, Territoire. Chaque site est affecté automatiquement à la zone de même province et de même ville/territoire ; sinon il reste « non affecté » et vous choisissez sa zone ci-dessous. Les lignes déjà importées sont ignorées.</span>
+        </div>
+        <a th:href="@{/dashboard/zones/sites/modele.xlsx}" class="link-btn">Télécharger le modèle</a>
+      </div>
+      <form th:action="@{/dashboard/zones/sites/import}" method="post" enctype="multipart/form-data" class="agents-create-form">
+        <label class="agents-field">
+          <span>Fichier Excel (.xlsx)</span>
+          <input type="file" name="file" accept=".xlsx,.xls" class="form-control form-control-sm" required>
+        </label>
+        <button type="submit" class="btn btn-primary btn-sm agents-create-btn">Importer les sites</button>
+      </form>
+    </div>
+
+    <div class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2 th:text="${selectedZone != null} ? 'Sites de la ' + ${selectedZone.name} : 'Sites'">Sites</h2>
+          <span th:if="${selectedZone != null}" class="table-card-count"
+                th:text="${selectedZone.place} + ' — ' + ${page.totalElements} + ' site(s) affecté(s)'">0 site(s)</span>
+          <span th:if="${selectedZone == null}" class="table-card-count"
+                th:text="${totalCount} + ' site(s) au total — ' + ${totalCount - unassignedCount} + ' affecté(s), ' + ${unassignedCount} + ' non affecté(s)'">0 site(s)</span>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <a th:if="${selectedZone != null}" th:href="@{/dashboard/zones}" class="link-btn">← Zones</a>
+          <a th:if="${selectedZone != null}" th:href="@{/dashboard/zones/sites}" class="link-btn">Tous les sites</a>
+          <form th:if="${canManage and selectedZone == null and unassignedCount > 0 and !zones.isEmpty()}"
+                th:action="@{/dashboard/zones/sites/auto-assign}" method="post">
+            <button type="submit" class="btn btn-sm btn-outline-primary"
+                    title="Rattache aux zones existantes les sites encore non affectés (utile après avoir créé de nouvelles zones)">Réaffecter automatiquement</button>
+          </form>
+          <form th:if="${canManage and selectedZone == null and totalCount > 0}"
+                th:action="@{/dashboard/zones/sites/delete-all}" method="post"
+                class="js-confirm-form"
+                data-confirm-title="Supprimer tous les sites ?"
+                data-confirm-label="Tout supprimer"
+                th:data-confirm-detail="${totalCount} + ' site(s) seront supprimés. Cette action est définitive.'">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer tous les sites</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Filtre par zone + recherche -->
+      <form th:action="@{/dashboard/zones/sites}" method="get" class="zone-sites-filters">
+        <label class="agents-field">
+          <span>Zone</span>
+          <select name="zone" class="form-select form-select-sm js-autosubmit">
+            <option value="" th:selected="${zone == ''}" th:text="'Toutes les zones (' + ${totalCount} + ')'">Toutes les zones</option>
+            <option value="none" th:selected="${zone == 'none'}" th:text="'Non affectés (' + ${unassignedCount} + ')'">Non affectés</option>
+            <option th:each="z : ${zones}" th:value="${z.id}" th:selected="${zone == z.id.toString()}"
+                    th:text="${z.label} + ' (' + ${siteCounts[z.id] ?: 0} + ')'">Zone A1</option>
+          </select>
+        </label>
+        <label class="agents-field">
+          <span>Recherche</span>
+          <input type="search" name="search" class="form-control form-control-sm" th:value="${search}"
+                 placeholder="Nom du site, adresse, ville, territoire…">
+        </label>
+        <button type="submit" class="btn btn-sm btn-outline-secondary agents-create-btn">Filtrer</button>
+      </form>
+
+      <div class="table-scroll">
+        <table class="households-table">
+          <thead>
+            <tr>
+              <th>Nom du site</th>
+              <th>Adresse</th>
+              <th>Province</th>
+              <th>Ville</th>
+              <th>Territoire</th>
+              <th>Zone</th>
+              <th class="col-actions" th:if="${canManage}">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="s : ${sites}">
+              <td th:text="${s.nom}">-</td>
+              <td th:text="${s.adresse ?: '-'}">-</td>
+              <td th:text="${s.province ?: '-'}">-</td>
+              <td th:text="${s.ville ?: '-'}">-</td>
+              <td th:text="${s.territoire ?: '-'}">-</td>
+              <td>
+                <span th:if="${s.zone != null}" class="zone-site-zone" th:title="${s.zone.label}">
+                  <span class="zone-letter" th:text="${s.zone.code ?: '?'}">A1</span>
+                  <span class="zone-site-place" th:text="${s.zone.ville}">VILLE</span>
+                  <span th:if="${s.zoneManuelle}" class="agent-muted small">(manuelle)</span>
+                </span>
+                <span th:if="${s.zone == null}" class="status-badge status-incomplet">Non affecté</span>
+              </td>
+              <td class="col-actions" th:if="${canManage}">
+                <div class="d-flex gap-1 justify-content-end align-items-center">
+                  <a th:href="@{/dashboard/zones/sites/{id}/edit(id=${s.id}, returnTo=${returnTo})}"
+                     class="btn btn-sm btn-outline-secondary btn-icon" title="Modifier le site" aria-label="Modifier le site">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                    </svg>
+                  </a>
+                  <form th:action="@{/dashboard/zones/sites/{id}/zone(id=${s.id})}" method="post" class="zone-site-assign">
+                    <input type="hidden" name="returnTo" th:value="${returnTo}">
+                    <select name="zoneId" class="form-select form-select-sm js-autosubmit" aria-label="Changer la zone"
+                            title="Changer la zone">
+                      <option value="" th:selected="${s.zone == null}">— Non affecté —</option>
+                      <option th:each="z : ${zones}" th:value="${z.id}"
+                              th:selected="${s.zone != null and s.zone.id == z.id}"
+                              th:text="${z.name} + ' — ' + ${z.ville}">Zone A1</option>
+                    </select>
+                  </form>
+                  <form th:action="@{/dashboard/zones/sites/{id}/delete(id=${s.id})}" method="post"
+                        class="js-confirm-form" data-confirm-title="Supprimer ce site ?" data-confirm-label="Supprimer"
+                        th:data-confirm-detail="${s.nom}">
+                    <input type="hidden" name="returnTo" th:value="${returnTo}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Supprimer le site" aria-label="Supprimer le site">
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M4 6h12M8 6V4.5h4V6M6 6l.7 10h6.6L14 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr th:if="${sites.isEmpty()}">
+              <td th:colspan="${canManage ? 7 : 6}" class="table-empty"
+                  th:text="${totalCount == 0} ? 'Aucun site importé pour l\'instant.' : 'Aucun site pour ce filtre.'">Aucun site.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav th:if="${page.totalPages > 1}" aria-label="Pagination des sites" class="table-card-footer">
+        <ul class="pagination pagination-sm mb-1">
+          <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+            <a class="page-link" th:href="@{/dashboard/zones/sites(page=${page.number - 1}, zone=${zone}, search=${search})}">Précédent</a>
+          </li>
+          <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
+            <a class="page-link" th:href="@{/dashboard/zones/sites(page=${i}, zone=${zone}, search=${search})}" th:text="${i + 1}">1</a>
+          </li>
+          <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+            <a class="page-link" th:href="@{/dashboard/zones/sites(page=${page.number + 1}, zone=${zone}, search=${search})}">Suivant</a>
+          </li>
+        </ul>
+        <p class="text-secondary small mb-0">
+          Page <span th:text="${page.number + 1}">1</span> / <span th:text="${page.totalPages}">1</span>
+          — <span th:text="${page.totalElements}">0</span> site(s)
+        </p>
+      </nav>
+    </div>
+  </section>
+
+  <div id="confirm-modal" class="confirm-overlay" hidden>
+    <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+      <h3 id="confirm-title" class="confirm-title">Confirmer ?</h3>
+      <p class="confirm-message"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary confirm-cancel">Annuler</button>
+        <button type="button" class="btn btn-sm btn-danger confirm-ok">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/app.js}"></script>
+  <script>
+    // Changer la zone d'un site (ou le filtre) l'enregistre aussitôt, sans bouton à cliquer.
+    document.querySelectorAll('select.js-autosubmit').forEach(function (select) {
+      select.addEventListener('change', function () { select.form.submit(); });
+    });
+  </script>
+</body>
+</html>

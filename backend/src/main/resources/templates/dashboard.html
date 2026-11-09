@@ -105,6 +105,14 @@
           <span class="map-layer-count" th:text="${#lists.size(sitePoints)}">0</span>
         </button>
       </div>
+      <span id="map-zoom-hint" class="map-zoom-hint"></span>
+      <button type="button" id="map-global-view" class="map-global-btn" title="Voir toutes les provinces">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M2.5 10h15M10 2.5c2.2 2.3 2.2 12.7 0 15M10 2.5c-2.2 2.3-2.2 12.7 0 15" stroke="currentColor" stroke-width="1.4"/>
+        </svg>
+        Vue globale
+      </button>
     </div>
     <div id="dashboard-map"></div>
   </section>
@@ -343,10 +351,20 @@
     // exactement les foyers trouvés.
     const mapPoints = /*[[${mapPoints}]]*/ [];
     const zoomToPoints = /*[[${zoomToPoints}]]*/ false;
-    const map = L.map('dashboard-map').setView([-4.4419, 15.2663], 11);
+    // Centre et zoom couvrant toute la RDC, utilisés quand aucun point n'est disponible.
+    const DRC_CENTER = [-2.9, 23.6];
+    const DRC_ZOOM = 5;
+    const map = L.map('dashboard-map', {
+      minZoom: 4,
+      maxZoom: 19,
+      zoomSnap: 0.5,
+      scrollWheelZoom: true
+    }).setView(DRC_CENTER, DRC_ZOOM);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
     }).addTo(map);
+    L.control.scale({ imperial: false }).addTo(map);
 
     function escapeMapText(value) {
       var div = document.createElement('div');
@@ -372,53 +390,265 @@
       });
     }
 
+    // Deux niveaux d'affichage selon le zoom :
+    //  - vue globale (zoom < DETAIL_ZOOM) : une bulle par province, placée au centre de ses
+    //    points, avec le nombre de relevés d'adressage (rouge) et de repérages (bleu) ;
+    //  - vue détaillée (zoom >= DETAIL_ZOOM) : chaque point GPS individuellement.
+    // Cliquer sur une bulle sélectionne la province : la carte zoome dessus et ses points
+    // d'adressage et de repérage restent affichés quel que soit le zoom (les autres provinces
+    // restent en bulles), jusqu'à ce qu'on choisisse une autre province ou la vue globale.
+    // Molette, double-clic, pincement et boutons +/- restent libres pour zoomer comme on veut.
+    const DETAIL_ZOOM = 9;
+    const LABELS_ZOOM = 6.5;
+    const NO_PROVINCE = 'Province non renseignée';
+
+    // Province d'un point : celle saisie, sinon celle du point renseigné le plus proche (moins
+    // d'environ 100 km), pour que les fiches sans province rejoignent la bonne bulle au lieu
+    // d'en créer une seconde au même endroit.
+    const knownPoints = mapPoints.concat(sitePoints).filter(function (p) {
+      return p.province && p.province.trim();
+    });
+
+    function provinceOf(p) {
+      if (p.province && p.province.trim()) return p.province.trim();
+      if (p._province === undefined) {
+        var best = null;
+        var bestDist = 1;
+        knownPoints.forEach(function (k) {
+          var d = Math.hypot(k.latitude - p.latitude, k.longitude - p.longitude);
+          if (d < bestDist) { bestDist = d; best = k; }
+        });
+        p._province = best ? best.province.trim() : NO_PROVINCE;
+      }
+      return p._province;
+    }
+
     const adressageLayer = L.featureGroup(mapPoints.map(function (p) {
-      return L.marker([p.latitude, p.longitude], { icon: pinIcon('#d33f3f') })
+      var m = L.marker([p.latitude, p.longitude], { icon: pinIcon('#d33f3f') })
         .bindPopup('<strong>Adressage</strong><br>'
-          + escapeMapText(p.codeMenage || '(sans code)') + '<br>' + escapeMapText(p.chef));
+          + escapeMapText(p.codeMenage || '(sans code)') + '<br>' + escapeMapText(p.chef)
+          + '<br><span class="map-popup-muted">' + escapeMapText(provinceOf(p)) + '</span>');
+      m.province = provinceOf(p);
+      m.kind = 'adressage';
+      return m;
     }));
 
     const reperageLayer = L.featureGroup(sitePoints.map(function (s) {
-      return L.marker([s.latitude, s.longitude], { icon: pinIcon('#0f5fa8') })
+      var m = L.marker([s.latitude, s.longitude], { icon: pinIcon('#0f5fa8') })
         .bindPopup('<strong>Repérage</strong><br>'
           + escapeMapText(s.nomSite || '(site sans nom)')
           + (s.lieu ? '<br>' + escapeMapText(s.lieu) : '')
+          + '<br><span class="map-popup-muted">' + escapeMapText(provinceOf(s)) + '</span>'
           + '<br><a href="/dashboard/sites/' + encodeURIComponent(s.id) + '">Voir la fiche</a>');
+      m.province = provinceOf(s);
+      m.kind = 'reperage';
+      return m;
     }));
 
-    const layersByKey = { adressage: [adressageLayer], reperage: [reperageLayer], tout: [adressageLayer, reperageLayer] };
+    // Points réellement posés sur la carte (selon zoom, filtre et province sélectionnée).
+    const pointsLayer = L.featureGroup().addTo(map);
+    var selectedProvince = null;
 
-    function fitVisible(layers) {
+    const provinceLayer = L.layerGroup();
+
+    // Regroupe les points visibles (selon le filtre Adressage/Repérage) par province.
+    function groupByProvince(key) {
+      var groups = {};
+      function add(points, kind) {
+        points.forEach(function (p) {
+          var name = provinceOf(p);
+          var g = groups[name] || (groups[name] = { name: name, adressage: 0, reperage: 0, latlngs: [] });
+          g[kind] += 1;
+          g.latlngs.push([p.latitude, p.longitude]);
+        });
+      }
+      if (key !== 'reperage') add(mapPoints, 'adressage');
+      if (key !== 'adressage') add(sitePoints, 'reperage');
+      return Object.keys(groups).map(function (k) { return groups[k]; });
+    }
+
+    // Épingle de province avec son nombre de points (rouge = adressage, bleu = repérage).
+    function countPin(color, count) {
+      var kind = color === '#d33f3f' ? 'adressage' : 'reperage';
+      return '<svg class="province-pin" data-kind="' + kind + '" width="34" height="46" viewBox="0 0 34 46" aria-hidden="true">'
+        + '<path d="M17 1C8.2 1 1 8 1 16.8 1 28.5 17 45 17 45s16-16.5 16-28.2C33 8 25.8 1 17 1z" '
+        + 'fill="' + color + '" stroke="#fff" stroke-width="2"/>'
+        + '<text x="17" y="21.5" text-anchor="middle" font-size="' + (count > 99 ? 10 : 12.5) + '" '
+        + 'font-weight="700" fill="#fff" font-family="Inter, sans-serif">' + count + '</text></svg>';
+    }
+
+    // Une paire d'épingles par province (seulement celles qui ont des points pour le filtre
+    // choisi), posée sur la médiane des points, avec le nom de la province en dessous.
+    function provinceIcon(g) {
+      var pins = '';
+      if (g.adressage) pins += countPin('#d33f3f', g.adressage);
+      if (g.reperage) pins += countPin('#0f5fa8', g.reperage);
+      var count = (g.adressage ? 1 : 0) + (g.reperage ? 1 : 0);
+      var width = count * 34 + (count - 1) * 2;
+      return L.divIcon({
+        className: 'province-bubble-wrap',
+        html: '<div class="province-pins">' + pins + '</div>'
+          + '<div class="province-bubble-label"><span class="province-bubble-name">' + escapeMapText(g.name)
+          + '</span></div>',
+        iconSize: [width, 46],
+        iconAnchor: [width / 2, 45]
+      });
+    }
+
+    function median(values) {
+      var v = values.slice().sort(function (a, b) { return a - b; });
+      // Médiane basse (une vraie valeur, sans moyenne) : avec 2 points éloignés, la bulle reste
+      // sur l'un d'eux au lieu de tomber à mi-chemin.
+      return v[Math.floor((v.length - 1) / 2)];
+    }
+
+    function buildProvinceLayer(key) {
+      provinceLayer.clearLayers();
+      groupByProvince(key).forEach(function (g) {
+        // Médiane plutôt que centre du cadre : quelques points mal localisés ne déplacent pas la
+        // bulle loin de la province.
+        var center = L.latLng(median(g.latlngs.map(function (ll) { return ll[0]; })),
+                              median(g.latlngs.map(function (ll) { return ll[1]; })));
+        var bubble = L.marker(center, {
+          icon: provinceIcon(g),
+          title: g.name + ' — ' + g.adressage + ' adressage(s), ' + g.reperage + ' repérage(s)',
+          riseOnHover: true
+        }).on('click', function (e) {
+          var pin = e.originalEvent && e.originalEvent.target && e.originalEvent.target.closest
+            ? e.originalEvent.target.closest('[data-kind]') : null;
+          var kind = pin ? pin.getAttribute('data-kind') : null;
+          // Épingle rouge/bleue : on ne garde que ce type de points (le filtre suit) ; le nom
+          // de la province garde le filtre actuel.
+          if (kind && kind !== currentLayer) showLayer(kind, false);
+          selectProvince(g.name);
+        });
+        bubble.provinceName = g.name;
+        bubble.addTo(provinceLayer);
+      });
+    }
+
+    const layersByKey = { adressage: [adressageLayer], reperage: [reperageLayer], tout: [adressageLayer, reperageLayer] };
+    var currentLayer = 'tout';
+
+    function visibleBounds() {
       var bounds = L.latLngBounds([]);
-      layers.forEach(function (layer) {
+      layersByKey[currentLayer].forEach(function (layer) {
         if (layer.getLayers().length > 0) bounds.extend(layer.getBounds());
       });
+      return bounds;
+    }
+
+    function fitVisible() {
+      var bounds = visibleBounds();
       if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+    }
+
+    // Sélectionne une province : zoom sur ses points, qui restent ensuite affichés même en
+    // dézoomant.
+    function selectProvince(name) {
+      selectedProvince = name;
+      renderForZoom();
+      fitProvince(name);
+    }
+
+    // Points de la province pour le filtre courant (Tout / Adressage / Repérage).
+    function provinceMarkers(name) {
+      var markers = [];
+      layersByKey[currentLayer].forEach(function (layer) {
+        layer.eachLayer(function (m) { if (m.province === name) markers.push(m); });
+      });
+      return markers;
+    }
+
+    // Zoome sur les points de la province ; false s'il n'y en a aucun pour ce filtre.
+    function fitProvince(name) {
+      var markers = provinceMarkers(name);
+      if (!markers.length) return false;
+      var bounds = L.latLngBounds(markers.map(function (m) { return m.getLatLng(); }));
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+      return true;
+    }
+
+    // Affiche les bulles par province ou les points individuels selon le zoom courant.
+    function renderForZoom() {
+      var detailed = map.getZoom() >= DETAIL_ZOOM;
+      // Vue très éloignée (pays entier) : les étiquettes se chevaucheraient, on ne garde que le
+      // total dans la bulle et on montre le nom + le détail au survol.
+      map.getContainer().classList.toggle('map-compact-labels', map.getZoom() < LABELS_ZOOM);
+      // Points : tous en vue détaillée, sinon seulement ceux de la province sélectionnée.
+      pointsLayer.clearLayers();
+      layersByKey[currentLayer].forEach(function (layer) {
+        layer.eachLayer(function (m) {
+          if (detailed || m.province === selectedProvince) pointsLayer.addLayer(m);
+        });
+      });
+      // Bulles : en vue éloignée, pour toutes les provinces sauf celle dont on voit les points.
+      if (detailed) map.removeLayer(provinceLayer); else provinceLayer.addTo(map);
+      provinceLayer.eachLayer(function (b) {
+        var el = b.getElement();
+        if (el) el.style.display = b.provinceName === selectedProvince ? 'none' : '';
+      });
+      var hint = document.getElementById('map-zoom-hint');
+      if (hint) {
+        if (selectedProvince && !provinceMarkers(selectedProvince).length) {
+          hint.textContent = 'Province ' + selectedProvince + ' : aucun point '
+            + (currentLayer === 'adressage' ? "d'adressage" : currentLayer === 'reperage' ? 'de repérage' : '')
+            + ' — choisissez un autre filtre ou « Vue globale »';
+        } else if (selectedProvince && !detailed) {
+          hint.textContent = 'Province ' + selectedProvince + ' : ses points restent affichés — cliquez sur une autre province ou « Vue globale »';
+        } else {
+          hint.textContent = detailed
+            ? 'Vue détaillée — dézoomez pour revoir les totaux par province'
+            : 'Vue par province — cliquez sur une province ou zoomez pour voir chaque point';
+        }
+      }
     }
 
     function showLayer(key, refit) {
       if (!layersByKey[key]) key = 'tout';
-      [adressageLayer, reperageLayer].forEach(function (layer) {
-        if (layersByKey[key].indexOf(layer) >= 0) layer.addTo(map); else map.removeLayer(layer);
-      });
+      currentLayer = key;
+      buildProvinceLayer(key);
       document.querySelectorAll('.map-layer-btn').forEach(function (btn) {
         var active = btn.getAttribute('data-layer') === key;
         btn.classList.toggle('is-active', active);
         btn.setAttribute('aria-checked', active ? 'true' : 'false');
       });
       try { localStorage.setItem('dashboardMapLayer', key); } catch (e) { /* stockage indisponible */ }
-      if (refit) fitVisible(layersByKey[key]);
+      if (refit) {
+        if (selectedProvince) fitProvince(selectedProvince); else fitVisible();
+      }
+      renderForZoom();
     }
+
+    // Vue globale : cadre l'ensemble des points visibles (toutes provinces) en restant au niveau
+    // des bulles par province, ou toute la RDC s'il n'y a aucun point.
+    function showGlobalView() {
+      selectedProvince = null;
+      renderForZoom();
+      var bounds = visibleBounds();
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: DETAIL_ZOOM - 1 });
+      } else {
+        map.setView(DRC_CENTER, DRC_ZOOM);
+      }
+    }
+
+    map.on('zoomend', renderForZoom);
 
     var initialLayer = 'tout';
     try { initialLayer = localStorage.getItem('dashboardMapLayer') || 'tout'; } catch (e) { /* idem */ }
     showLayer(initialLayer, zoomToPoints);
+    // Sans filtre de lieu, la carte s'ouvre sur la vue globale par province.
+    if (!zoomToPoints) showGlobalView();
 
     document.querySelectorAll('.map-layer-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         showLayer(btn.getAttribute('data-layer'), true);
       });
     });
+
+    var globalBtn = document.getElementById('map-global-view');
+    if (globalBtn) globalBtn.addEventListener('click', showGlobalView);
 
     // Recherche en direct : filtre dès la première lettre tapée (nom du chef ou code foyer),
     // sans recharger la page — reprend aussi la commune/plage de dates actuellement sélectionnées

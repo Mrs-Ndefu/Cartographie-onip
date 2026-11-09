@@ -179,5 +179,6 @@ class ProfileViewModel : ViewModel() {
         AppContainer.sessionManager.clear()
         AppContainer.setAgentPhoto(null)
         AppContainer.setAgentZone(null, null)
+        AppContainer.clearZoneSites()
     }
 }

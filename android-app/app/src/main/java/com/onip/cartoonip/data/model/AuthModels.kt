@@ -35,4 +35,17 @@ data class AgentZone(
     val communes: List<String> = emptyList(),
 )
 
+/** Site importé (tableau de bord : Zones > Sites) appartenant à la zone de l'agent connecté —
+ *  renvoyé par GET /api/me/zone-sites. Dans la fiche de repérage du chef d'équipe, choisir un
+ *  nom de site remplit d'office province, ville/territoire, commune et adresse. */
+data class ZoneSiteOption(
+    val id: String,
+    val nomSite: String,
+    val adresse: String? = null,
+    val province: String? = null,
+    val villeTerritoire: String? = null,
+    val commune: String? = null,
+    val zoneCode: String? = null,
+)
+
 data class ChangePasswordRequest(val currentPassword: String, val newPassword: String)

@@ -117,6 +117,9 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "SUPERVISEUR")
                         .requestMatchers(HttpMethod.POST, "/dashboard/zones", "/dashboard/zones/**")
                         .hasRole("ADMIN")
+                        // Modifier un site importé (page Zones > Sites) : réservé à l'ADMIN.
+                        .requestMatchers("/dashboard/zones/sites/*/edit")
+                        .hasRole("ADMIN")
                         .requestMatchers("/dashboard/historique")
                         .hasRole("SUPERVISEUR")
                         // Import du personnel et suppression d'un compte : réservés à l'ADMIN/SUPER_ADMIN,
