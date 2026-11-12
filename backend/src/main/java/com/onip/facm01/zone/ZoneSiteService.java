@@ -1,6 +1,7 @@
 package com.onip.facm01.zone;
 
 import com.onip.facm01.household.DrcProvinces;
+import com.onip.facm01.site.SiteRepository;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -43,10 +44,12 @@ public class ZoneSiteService {
 
     private final ZoneSiteRepository zoneSiteRepository;
     private final ZoneRepository zoneRepository;
+    private final SiteRepository siteRepository;
 
-    public ZoneSiteService(ZoneSiteRepository zoneSiteRepository, ZoneRepository zoneRepository) {
+    public ZoneSiteService(ZoneSiteRepository zoneSiteRepository, ZoneRepository zoneRepository, SiteRepository siteRepository) {
         this.zoneSiteRepository = zoneSiteRepository;
         this.zoneRepository = zoneRepository;
+        this.siteRepository = siteRepository;
     }
 
     public record ImportResult(int imported, int duplicates, int assigned, int unassigned) {
@@ -78,8 +81,9 @@ public class ZoneSiteService {
 
     // Site tel que proposé dans l'app mobile (fiche de repérage) : le choix du nom remplit d'office
     // province, ville/territoire, commune et adresse.
+    // visite = une fiche de repérage (non retirée) porte déjà ce nom de site dans cette province.
     public record ZoneSiteOption(String id, String nomSite, String adresse, String province,
-                                 String villeTerritoire, String commune, String zoneCode) {
+                                 String villeTerritoire, String commune, String zoneCode, boolean visite) {
     }
 
     // Sites de la zone d'un agent (vide s'il n'a pas de zone), triés par nom. Province et
@@ -89,6 +93,8 @@ public class ZoneSiteService {
         if (zone == null) {
             return List.of();
         }
+        Set<String> visited = visitedKeys();
+        String provinceKey = key(zone.getProvince());
         return zoneSiteRepository.findByZone_Id(zone.getId()).stream()
                 .sorted(java.util.Comparator.comparing(s -> key(s.getNom())))
                 .map(s -> new ZoneSiteOption(
@@ -98,8 +104,34 @@ public class ZoneSiteService {
                         zone.getProvince(),
                         zone.getVille(),
                         communeOf(s, zone),
-                        zone.getCode()))
+                        zone.getCode(),
+                        visited.contains(key(s.getNom()) + "|" + provinceKey)
+                                || visited.contains(key(s.getNom()) + "|")))
                 .toList();
+    }
+
+    // Clés "NOM|PROVINCE" des fiches de repérage actives (une fiche sans province donne "NOM|",
+    // reconnue au seul nom du site).
+    private Set<String> visitedKeys() {
+        Set<String> visited = new HashSet<>();
+        for (Object[] row : siteRepository.findActiveNamesAndProvinces()) {
+            visited.add(key((String) row[0]) + "|" + key((String) row[1]));
+        }
+        return visited;
+    }
+
+    // Sites (parmi ceux donnés) qui ont déjà une fiche de repérage : colonne Statut de la page Sites.
+    @Transactional(readOnly = true)
+    public Set<UUID> visitedIds(List<ZoneSite> sites) {
+        Set<String> visited = visitedKeys();
+        Set<UUID> ids = new HashSet<>();
+        for (ZoneSite s : sites) {
+            String province = s.getZone() != null ? s.getZone().getProvince() : s.getProvince();
+            if (visited.contains(key(s.getNom()) + "|" + key(province)) || visited.contains(key(s.getNom()) + "|")) {
+                ids.add(s.getId());
+            }
+        }
+        return ids;
     }
 
     // Commune de la zone correspondant au site : la seule si la zone n'en a qu'une, sinon celle

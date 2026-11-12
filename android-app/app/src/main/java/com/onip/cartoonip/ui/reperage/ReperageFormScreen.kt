@@ -74,6 +74,7 @@ private val numberKeyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal
 fun ReperageFormScreen(
     onBack: () -> Unit,
     editId: String? = null,
+    zoneSiteId: String? = null,
     viewModel: ReperageFormViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -82,6 +83,10 @@ fun ReperageFormScreen(
 
     LaunchedEffect(editId) {
         if (editId != null) viewModel.loadForEdit(editId)
+    }
+    // Ouverte depuis « Sites à visiter » : le site est déjà choisi.
+    LaunchedEffect(zoneSiteId) {
+        if (zoneSiteId != null) viewModel.preselectZoneSite(zoneSiteId)
     }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(

@@ -1996,3 +1996,10 @@ a.zone-sites-count:hover {
     grid-column: auto;
   }
 }
+
+/* Site importé pas encore visité (page Sites) : orange, comme sur l'app mobile. */
+.status-a-visiter {
+  background: #fdeedd;
+  border-color: #f6d2ad;
+  color: #b4610f;
+}

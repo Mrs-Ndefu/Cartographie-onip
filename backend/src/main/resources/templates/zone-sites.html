@@ -109,6 +109,7 @@
               <th>Ville</th>
               <th>Territoire</th>
               <th>Zone</th>
+              <th>Statut</th>
               <th class="col-actions" th:if="${canManage}">Actions</th>
             </tr>
           </thead>
@@ -126,6 +127,11 @@
                   <span th:if="${s.zoneManuelle}" class="agent-muted small">(manuelle)</span>
                 </span>
                 <span th:if="${s.zone == null}" class="status-badge status-incomplet">Non affecté</span>
+              </td>
+              <!-- Visité = une fiche de repérage (non retirée) porte ce nom de site. -->
+              <td>
+                <span th:if="${visitedIds.contains(s.id)}" class="status-badge status-complet">Visité</span>
+                <span th:unless="${visitedIds.contains(s.id)}" class="status-badge status-a-visiter">À visiter</span>
               </td>
               <td class="col-actions" th:if="${canManage}">
                 <div class="d-flex gap-1 justify-content-end align-items-center">
@@ -159,7 +165,7 @@
               </td>
             </tr>
             <tr th:if="${sites.isEmpty()}">
-              <td th:colspan="${canManage ? 7 : 6}" class="table-empty"
+              <td th:colspan="${canManage ? 8 : 7}" class="table-empty"
                   th:text="${totalCount == 0} ? 'Aucun site importé pour l\'instant.' : 'Aucun site pour ce filtre.'">Aucun site.</td>
             </tr>
           </tbody>

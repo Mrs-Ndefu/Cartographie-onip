@@ -8,10 +8,12 @@ object Routes {
     const val REPERAGE = "reperage"
     const val REPERAGE_FORM = "reperage/form"
     const val REPERAGE_FORM_EDIT = "reperage/form/{siteId}"
+    const val REPERAGE_FORM_FOR_SITE = "reperage/form/site/{zoneSiteId}"
     const val JOURNAL = "journal"
     const val OVERVIEW = "overview"
     const val PROFILE = "profile"
 
     fun captureEdit(id: String) = "capture/$id"
     fun reperageFormEdit(id: String) = "reperage/form/$id"
+    fun reperageFormForSite(zoneSiteId: String) = "reperage/form/site/$zoneSiteId"
 }

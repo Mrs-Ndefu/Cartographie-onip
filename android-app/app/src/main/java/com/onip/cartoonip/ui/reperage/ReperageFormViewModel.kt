@@ -108,6 +108,10 @@ class ReperageFormViewModel : ViewModel() {
         }
     }
 
+    fun preselectZoneSite(zoneSiteId: String) {
+        AppContainer.zoneSites.value.firstOrNull { it.id == zoneSiteId }?.let(::onZoneSiteSelected)
+    }
+
     fun onZoneSiteSelected(option: ZoneSiteOption) = update {
         copy(
             nomSite = option.nomSite.uppercase(),

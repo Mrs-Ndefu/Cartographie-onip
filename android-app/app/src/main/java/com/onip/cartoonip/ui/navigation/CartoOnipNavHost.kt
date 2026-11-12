@@ -61,7 +61,15 @@ fun CartoOnipNavHost(navController: NavHostController = rememberNavController())
                 onBack = { navController.popBackStack() },
                 onNew = { navController.navigate(Routes.REPERAGE_FORM) },
                 onEdit = { id -> navController.navigate(Routes.reperageFormEdit(id)) },
+                onVisitSite = { zoneSiteId -> navController.navigate(Routes.reperageFormForSite(zoneSiteId)) },
             )
+        }
+        composable(
+            route = Routes.REPERAGE_FORM_FOR_SITE,
+            arguments = listOf(navArgument("zoneSiteId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val zoneSiteId = backStackEntry.arguments?.getString("zoneSiteId")
+            ReperageFormScreen(onBack = { navController.popBackStack() }, zoneSiteId = zoneSiteId)
         }
         composable(Routes.REPERAGE_FORM) {
             ReperageFormScreen(onBack = { navController.popBackStack() })

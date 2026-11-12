@@ -46,6 +46,8 @@ data class ZoneSiteOption(
     val villeTerritoire: String? = null,
     val commune: String? = null,
     val zoneCode: String? = null,
+    // Une fiche de repérage portant ce nom de site existe déjà sur le serveur.
+    val visite: Boolean = false,
 )
 
 data class ChangePasswordRequest(val currentPassword: String, val newPassword: String)
