@@ -20,7 +20,8 @@
       <!-- Actions : modifier (ADMIN seul), valider/rejeter et retirer/restaurer (ADMIN et
            SUPERVISEUR), cf. AgentRole.canEditSites/canManageSites et SecurityConfig. -->
       <a th:if="${currentAgent != null and currentAgent.role.canEditSites()}"
-         th:href="@{/dashboard/sites/{id}/edit(id=${site.id})}" class="link-btn">Modifier la fiche</a>
+         th:href="@{/dashboard/sites/{id}/edit(id=${site.id})}" class="btn btn-sm btn-primary"
+         th:text="${site.visiteComplete()} ? 'Modifier la fiche' : 'Compléter la fiche'">Modifier la fiche</a>
       <th:block th:if="${currentAgent != null and currentAgent.role.canManageSites()}">
         <form th:if="${!site.archived and site.validation.name() != 'VALIDE'}"
               th:action="@{/dashboard/sites/{id}/validate(id=${site.id})}" method="post" style="display:inline">
@@ -81,12 +82,23 @@
         <p class="detail-hero-name" th:text="${site.nomSite ?: 'Site sans nom'}">-</p>
         <span class="detail-hero-code" th:text="${site.commune ?: '-'} + ' / ' + (${site.ville} ?: '-')">-</span>
         <div class="detail-hero-badges">
-          <span class="status-badge"
-                th:classappend="${site.validation.name() == 'VALIDE'} ? 'status-complet' : (${site.validation.name() == 'REJETE'} ? 'status-a-verifier' : 'status-incomplet')"
-                th:text="${site.validation.label()}">En attente</span>
+          <span th:if="${site.visiteComplete()}" class="status-badge status-complet">Visité complet</span>
+          <span th:unless="${site.visiteComplete()}" class="status-badge status-incomplet"
+                th:title="'Manque : ' + ${#strings.listJoin(site.champsManquants, ', ')}">Visité incomplet</span>
+          <span th:if="${site.validation.name() == 'VALIDE'}" class="status-badge status-complet">Validée</span>
+          <span th:if="${site.validation.name() == 'REJETE'}" class="status-badge status-a-verifier">Rejetée</span>
           <span th:if="${site.avisGlobal != null and site.avisGlobal.name() == 'FAVORABLE'}" class="status-badge status-complet">Favorable</span>
           <span th:if="${site.avisGlobal != null and site.avisGlobal.name() == 'FAVORABLE_SOUS_RESERVE'}" class="status-badge status-incomplet">Favorable sous réserve</span>
           <span th:if="${site.avisGlobal != null and site.avisGlobal.name() == 'DEFAVORABLE'}" class="status-badge status-a-verifier">Défavorable</span>
+        </div>
+        <!-- Fiche incomplète : ce qu'il reste à renseigner pour passer à « Visité complet ». -->
+        <div th:unless="${site.visiteComplete()}" class="detail-complete-hint">
+          <span>Pour passer à <strong>« Visité complet »</strong>, renseignez :</span>
+          <span class="missing-chips">
+            <span class="missing-chip" th:each="champ : ${site.champsManquants}" th:text="${champ}">-</span>
+          </span>
+          <a th:if="${currentAgent != null and currentAgent.role.canEditSites() and !site.archived}"
+             th:href="@{/dashboard/sites/{id}/edit(id=${site.id})}" class="btn btn-sm btn-primary">Compléter la fiche</a>
         </div>
         <div class="detail-hero-meta">
           <span>Agent : <strong th:text="${site.agentUsername ?: '—'}">-</strong></span>

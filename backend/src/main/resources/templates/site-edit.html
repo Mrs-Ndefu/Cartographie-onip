@@ -39,9 +39,17 @@
           data-confirm-label="Enregistrer"
           data-confirm-variant="success"
           th:data-confirm-detail="'Site ' + ${site.nomSite ?: '(sans nom)'}">
-      <p class="text-secondary small mb-3">
+      <p class="text-secondary small mb-2">
         L'agent qui a saisi la fiche et ses dates de création ne sont pas modifiables.
+        Les champs marqués <span class="req">*</span> sont obligatoires pour une fiche « Visité complet »
+        (« Préciser » aussi quand le type choisi est « Autre »).
       </p>
+      <div th:unless="${site.visiteComplete()}" class="detail-complete-hint mb-3">
+        <span>Actuellement <strong>« Visité incomplet »</strong> — à renseigner :</span>
+        <span class="missing-chips">
+          <span class="missing-chip" th:each="champ : ${site.champsManquants}" th:text="${champ}">-</span>
+        </span>
+      </div>
 
       <div class="detail-columns">
         <div>
@@ -50,25 +58,25 @@
             <div class="detail-card-body">
               <div class="row g-3">
                 <div class="col-sm-12">
-                  <label class="form-label small fw-semibold" for="nomSite">Nom du site</label>
+                  <label class="form-label small fw-semibold" for="nomSite">Nom du site <span class="req">*</span></label>
                   <input type="text" class="form-control" th:field="*{nomSite}">
                 </div>
                 <!-- Province, ville et commune : listes enchaînées (cf. app.js, .js-geo). -->
                 <div class="col-12">
                   <div class="row g-3 js-geo">
                     <div class="col-sm-6">
-                      <label class="form-label small fw-semibold" for="geo-province">Province/Région</label>
+                      <label class="form-label small fw-semibold" for="geo-province">Province/Région <span class="req">*</span></label>
                       <input type="hidden" name="province" class="js-geo-province-value" th:value="*{province}">
                       <select id="geo-province" class="form-select js-geo-province"></select>
                     </div>
                     <div class="col-sm-6">
-                      <label class="form-label small fw-semibold" for="geo-ville">Ville/Territoire</label>
+                      <label class="form-label small fw-semibold" for="geo-ville">Ville/Territoire <span class="req">*</span></label>
                       <input type="hidden" name="ville" class="js-geo-ville-value" th:value="*{ville}">
                       <select id="geo-ville" class="form-select js-geo-ville"></select>
                       <input type="text" class="form-control mt-1 js-geo-ville-other" placeholder="Ville ou territoire" hidden>
                     </div>
                     <div class="col-sm-6">
-                      <label class="form-label small fw-semibold" for="geo-commune">Commune/Secteur/Chefferie</label>
+                      <label class="form-label small fw-semibold" for="geo-commune">Commune/Secteur/Chefferie <span class="req">*</span></label>
                       <input type="hidden" name="commune" class="js-geo-commune-value" th:value="*{commune}">
                       <select id="geo-commune" class="form-select js-geo-commune"></select>
                       <input type="text" class="form-control mt-1 js-geo-commune-other" placeholder="Commune, secteur ou chefferie" hidden>
@@ -100,11 +108,11 @@
             <div class="detail-card-body">
               <div class="row g-3">
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="latitude">Latitude</label>
+                  <label class="form-label small fw-semibold" for="latitude">Latitude <span class="req">*</span></label>
                   <input type="number" class="form-control" th:field="*{latitude}" step="any">
                 </div>
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="longitude">Longitude</label>
+                  <label class="form-label small fw-semibold" for="longitude">Longitude <span class="req">*</span></label>
                   <input type="number" class="form-control" th:field="*{longitude}" step="any">
                 </div>
                 <div class="col-sm-6">
@@ -124,7 +132,7 @@
             <div class="detail-card-body">
               <div class="row g-3">
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="typeSite">Type</label>
+                  <label class="form-label small fw-semibold" for="typeSite">Type <span class="req">*</span></label>
                   <select class="form-select" th:field="*{typeSite}">
                     <option value="">—</option>
                     <option th:each="v : ${T(com.onip.facm01.site.TypeSite).values()}" th:value="${v}"
@@ -144,7 +152,7 @@
             <div class="detail-card-body">
               <div class="row g-3">
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="proprieteStatut">Propriété</label>
+                  <label class="form-label small fw-semibold" for="proprieteStatut">Propriété <span class="req">*</span></label>
                   <select class="form-select" th:field="*{proprieteStatut}">
                     <option value="">—</option>
                     <option th:each="v : ${T(com.onip.facm01.site.ProprieteStatut).values()}" th:value="${v}"
@@ -185,7 +193,7 @@
             <div class="detail-card-body">
               <div class="row g-3">
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="typeInfrastructure">Type d'infrastructure</label>
+                  <label class="form-label small fw-semibold" for="typeInfrastructure">Type d'infrastructure <span class="req">*</span></label>
                   <select class="form-select" th:field="*{typeInfrastructure}">
                     <option value="">—</option>
                     <option th:each="v : ${T(com.onip.facm01.site.TypeInfrastructure).values()}" th:value="${v}"

@@ -88,7 +88,13 @@ public class SiteDashboardController {
             RedirectAttributes redirectAttributes) {
         try {
             siteService.updateFromDashboard(id, form);
-            redirectAttributes.addFlashAttribute("success", "Fiche de repérage mise à jour.");
+            SiteDto updated = siteService.get(id);
+            if (updated.visiteComplete()) {
+                redirectAttributes.addFlashAttribute("success", "Fiche de repérage mise à jour — statut : Visité complet.");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Fiche enregistrée mais toujours « Visité incomplet » : il manque "
+                        + String.join(", ", updated.champsManquants()) + ".");
+            }
             return "redirect:/dashboard/sites/" + id;
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

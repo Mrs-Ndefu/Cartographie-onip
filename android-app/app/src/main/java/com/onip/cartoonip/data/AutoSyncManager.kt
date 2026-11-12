@@ -69,6 +69,10 @@ object AutoSyncManager {
             pending.forEach { household ->
                 runCatching { SyncRepository.sync(household) }
             }
+            // Fiches de repérage enregistrées hors connexion : envoyées dès le retour du réseau.
+            AppContainer.siteStore.sites.value.filter { it.syncedAt == null }.forEach { site ->
+                runCatching { SiteSyncRepository.sync(site) }
+            }
         } finally {
             syncMutex.unlock()
         }

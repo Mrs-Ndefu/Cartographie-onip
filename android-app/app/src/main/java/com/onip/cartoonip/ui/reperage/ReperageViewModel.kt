@@ -24,6 +24,11 @@ import kotlinx.coroutines.launch
  *  appareil ([localFiche]) ou déjà sur le serveur ([ZoneSiteOption.visite]). */
 data class ZoneSiteVisit(val option: ZoneSiteOption, val localFiche: CapturedSite?) {
     val visited: Boolean get() = option.visite || localFiche != null
+
+    /** « Visité complet » : la fiche a tous ses champs obligatoires (fiche de l'appareil si elle
+     *  existe, sinon l'état renvoyé par le serveur). */
+    val complete: Boolean
+        get() = localFiche?.missingFields?.isEmpty() ?: option.visiteComplete
 }
 
 class ReperageViewModel : ViewModel() {

@@ -74,6 +74,12 @@ public record SiteDto(
         List<String> champsManquants) {
 
     // Fiche à signaler : active, sans décision de l'ADMIN/SUPERVISEUR, et incomplète.
+    // Statut de visite affiché au tableau de bord : « Visité complet » quand tous les champs
+    // obligatoires sont renseignés (cf. Site.champsManquants), sinon « Visité incomplet ».
+    public boolean visiteComplete() {
+        return champsManquants.isEmpty();
+    }
+
     public boolean enAttenteIncomplete() {
         return !archived && validation == SiteValidation.EN_ATTENTE && !champsManquants.isEmpty();
     }

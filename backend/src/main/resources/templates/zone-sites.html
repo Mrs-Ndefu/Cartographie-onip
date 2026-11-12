@@ -128,10 +128,12 @@
                 </span>
                 <span th:if="${s.zone == null}" class="status-badge status-incomplet">Non affecté</span>
               </td>
-              <!-- Visité = une fiche de repérage (non retirée) porte ce nom de site. -->
+              <!-- Visité = une fiche de repérage (non retirée) porte ce nom de site ; complet si tous
+                   ses champs obligatoires sont renseignés. -->
               <td>
-                <span th:if="${visitedIds.contains(s.id)}" class="status-badge status-complet">Visité</span>
-                <span th:unless="${visitedIds.contains(s.id)}" class="status-badge status-a-visiter">À visiter</span>
+                <span th:if="${visitStatus[s.id] == true}" class="status-badge status-complet">Visité complet</span>
+                <span th:if="${visitStatus[s.id] == false}" class="status-badge status-incomplet">Visité incomplet</span>
+                <span th:if="${visitStatus[s.id] == null}" class="status-badge status-a-visiter">À visiter</span>
               </td>
               <td class="col-actions" th:if="${canManage}">
                 <div class="d-flex gap-1 justify-content-end align-items-center">

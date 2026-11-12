@@ -81,9 +81,11 @@ public class ZoneSiteService {
 
     // Site tel que proposé dans l'app mobile (fiche de repérage) : le choix du nom remplit d'office
     // province, ville/territoire, commune et adresse.
-    // visite = une fiche de repérage (non retirée) porte déjà ce nom de site dans cette province.
+    // visite = une fiche de repérage (non retirée) porte déjà ce nom de site dans cette province ;
+    // visiteComplete = cette fiche a tous ses champs obligatoires (cf. Site.champsManquants).
     public record ZoneSiteOption(String id, String nomSite, String adresse, String province,
-                                 String villeTerritoire, String commune, String zoneCode, boolean visite) {
+                                 String villeTerritoire, String commune, String zoneCode,
+                                 boolean visite, boolean visiteComplete) {
     }
 
     // Sites de la zone d'un agent (vide s'il n'a pas de zone), triés par nom. Province et
@@ -93,45 +95,59 @@ public class ZoneSiteService {
         if (zone == null) {
             return List.of();
         }
-        Set<String> visited = visitedKeys();
-        String provinceKey = key(zone.getProvince());
+        Map<String, Boolean> visits = visits();
         return zoneSiteRepository.findByZone_Id(zone.getId()).stream()
                 .sorted(java.util.Comparator.comparing(s -> key(s.getNom())))
-                .map(s -> new ZoneSiteOption(
-                        s.getId().toString(),
-                        s.getNom(),
-                        s.getAdresse(),
-                        zone.getProvince(),
-                        zone.getVille(),
-                        communeOf(s, zone),
-                        zone.getCode(),
-                        visited.contains(key(s.getNom()) + "|" + provinceKey)
-                                || visited.contains(key(s.getNom()) + "|")))
+                .map(s -> {
+                    Boolean complete = visitOf(s.getNom(), zone.getProvince(), visits);
+                    return new ZoneSiteOption(
+                            s.getId().toString(),
+                            s.getNom(),
+                            s.getAdresse(),
+                            zone.getProvince(),
+                            zone.getVille(),
+                            communeOf(s, zone),
+                            zone.getCode(),
+                            complete != null,
+                            Boolean.TRUE.equals(complete));
+                })
                 .toList();
     }
 
-    // Clés "NOM|PROVINCE" des fiches de repérage actives (une fiche sans province donne "NOM|",
-    // reconnue au seul nom du site).
-    private Set<String> visitedKeys() {
-        Set<String> visited = new HashSet<>();
-        for (Object[] row : siteRepository.findActiveNamesAndProvinces()) {
-            visited.add(key((String) row[0]) + "|" + key((String) row[1]));
+    // Fiches de repérage actives indexées "NOM|PROVINCE" (une fiche sans province donne "NOM|",
+    // reconnue au seul nom du site) -> true si au moins une de ces fiches est complète.
+    private Map<String, Boolean> visits() {
+        Map<String, Boolean> visits = new HashMap<>();
+        for (com.onip.facm01.site.Site fiche : siteRepository.findByArchivedFalseAndNomSiteIsNotNull()) {
+            visits.merge(key(fiche.getNomSite()) + "|" + key(fiche.getProvince()),
+                    fiche.champsManquants().isEmpty(), Boolean::logicalOr);
         }
-        return visited;
+        return visits;
     }
 
-    // Sites (parmi ceux donnés) qui ont déjà une fiche de repérage : colonne Statut de la page Sites.
+    // null = pas visité ; true = visité, fiche complète ; false = visité, fiche incomplète.
+    private static Boolean visitOf(String nom, String province, Map<String, Boolean> visits) {
+        Boolean withProvince = visits.get(key(nom) + "|" + key(province));
+        Boolean withoutProvince = visits.get(key(nom) + "|");
+        if (withProvince == null) return withoutProvince;
+        if (withoutProvince == null) return withProvince;
+        return withProvince || withoutProvince;
+    }
+
+    // Statut de visite des sites donnés (colonne Statut de la page Sites) : absent = à visiter,
+    // true = visité complet, false = visité incomplet.
     @Transactional(readOnly = true)
-    public Set<UUID> visitedIds(List<ZoneSite> sites) {
-        Set<String> visited = visitedKeys();
-        Set<UUID> ids = new HashSet<>();
+    public Map<UUID, Boolean> visitStatus(List<ZoneSite> sites) {
+        Map<String, Boolean> visits = visits();
+        Map<UUID, Boolean> status = new HashMap<>();
         for (ZoneSite s : sites) {
             String province = s.getZone() != null ? s.getZone().getProvince() : s.getProvince();
-            if (visited.contains(key(s.getNom()) + "|" + key(province)) || visited.contains(key(s.getNom()) + "|")) {
-                ids.add(s.getId());
+            Boolean complete = visitOf(s.getNom(), province, visits);
+            if (complete != null) {
+                status.put(s.getId(), complete);
             }
         }
-        return ids;
+        return status;
     }
 
     // Commune de la zone correspondant au site : la seule si la zone n'en a qu'une, sinon celle

@@ -207,6 +207,7 @@ fun ReperageScreen(
 // fiche est remplie. Toucher un site à visiter ouvre une fiche déjà remplie ; un site visité
 // depuis cet appareil rouvre sa fiche.
 private val VisitedGreen = Color(0xFF178A17)
+private val IncompleteAmber = Color(0xFFB58105)
 private val ToVisitOrange = Color(0xFFD9822B)
 
 @Composable
@@ -219,6 +220,7 @@ private fun ZoneSitesList(
     otherRow: @Composable (CapturedSite) -> Unit,
 ) {
     val visitedCount = visits.count { it.visited }
+    val completeCount = visits.count { it.visited && it.complete }
     Column(Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -237,7 +239,8 @@ private fun ZoneSitesList(
             }
             if (visits.isNotEmpty()) {
                 Text(
-                    "$visitedCount / ${visits.size} site${if (visits.size != 1) "s" else ""} visité${if (visitedCount != 1) "s" else ""}",
+                    "$visitedCount / ${visits.size} site${if (visits.size != 1) "s" else ""} visité${if (visitedCount != 1) "s" else ""}" +
+                        if (visitedCount > 0) " — $completeCount complet${if (completeCount != 1) "s" else ""}, ${visitedCount - completeCount} incomplet${if (visitedCount - completeCount != 1) "s" else ""}" else "",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(top = 6.dp),
@@ -302,7 +305,11 @@ private fun ZoneSitesList(
 
 @Composable
 private fun ZoneSiteRow(visit: ZoneSiteVisit, onClick: () -> Unit) {
-    val accent = if (visit.visited) VisitedGreen else ToVisitOrange
+    val accent = when {
+        !visit.visited -> ToVisitOrange
+        visit.complete -> VisitedGreen
+        else -> IncompleteAmber
+    }
     val fiche = visit.localFiche
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
@@ -326,11 +333,15 @@ private fun ZoneSiteRow(visit: ZoneSiteVisit, onClick: () -> Unit) {
                             .background(accent.copy(alpha = 0.12f), RoundedCornerShape(50))
                             .padding(horizontal = 8.dp, vertical = 3.dp),
                     ) {
-                        if (visit.visited) {
+                        if (visit.visited && visit.complete) {
                             Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = accent, modifier = Modifier.size(14.dp))
                         }
                         Text(
-                            if (visit.visited) " Visité" else "À visiter",
+                            when {
+                                !visit.visited -> "À visiter"
+                                visit.complete -> " Visité complet"
+                                else -> "Visité incomplet"
+                            },
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = accent,
@@ -344,6 +355,16 @@ private fun ZoneSiteRow(visit: ZoneSiteVisit, onClick: () -> Unit) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+                // Visité incomplet : rappelle ce qu'il reste à renseigner.
+                val missing = fiche?.missingFields.orEmpty()
+                if (visit.visited && !visit.complete && missing.isNotEmpty()) {
+                    Text(
+                        "À compléter : " + missing.joinToString(", "),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = IncompleteAmber,
+                        modifier = Modifier.padding(top = 4.dp),
                     )
                 }
                 Text(

@@ -68,7 +68,7 @@ public class ZoneSiteController {
         Page<ZoneSite> sites = zoneSiteService.search(zoneFilter, zoneId, search, PageRequest.of(Math.max(page, 0), PAGE_SIZE));
         List<Zone> zones = zoneService.list();
         model.addAttribute("sites", sites.getContent());
-        model.addAttribute("visitedIds", zoneSiteService.visitedIds(sites.getContent()));
+        model.addAttribute("visitStatus", zoneSiteService.visitStatus(sites.getContent()));
         model.addAttribute("page", sites);
         model.addAttribute("zones", zones);
         model.addAttribute("siteCounts", zoneSiteService.countsByZone());

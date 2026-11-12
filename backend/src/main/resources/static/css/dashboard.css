@@ -2003,3 +2003,83 @@ a.zone-sites-count:hover {
   border-color: #f6d2ad;
   color: #b4610f;
 }
+
+/* Décision Validée / Rejetée affichée en second sous le statut de visite (page Repérage). */
+.status-badge-sm {
+  margin-left: 0.3rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.68rem;
+}
+
+/* Fiche de repérage incomplète : ce qu'il reste à renseigner (détail et formulaire). */
+.detail-complete-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0.6rem 0 0.4rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #f5dfb4;
+  border-left: 4px solid #d99a1e;
+  border-radius: var(--radius-sm);
+  background: #fdf8ec;
+  font-size: 0.85rem;
+  color: #6b4a06;
+}
+
+.missing-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.missing-chip {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #f0d49c;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9a6406;
+}
+
+.detail-complete-hint .btn {
+  margin-left: auto;
+}
+
+.req {
+  color: #c0392b;
+  font-weight: 700;
+}
+
+/* Tableau Adressage (Foyers enregistrés) : recherche et zone côte à côte, poussées à droite. */
+#hh-filters {
+  margin-left: auto;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+#hh-filters .table-search-form {
+  flex: 0 1 300px;
+}
+
+#hh-filters #zone-filter {
+  flex: 0 1 260px;
+  width: 260px;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 760px) {
+  #hh-filters {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  #hh-filters .table-search-form,
+  #hh-filters #zone-filter {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: none;
+  }
+}

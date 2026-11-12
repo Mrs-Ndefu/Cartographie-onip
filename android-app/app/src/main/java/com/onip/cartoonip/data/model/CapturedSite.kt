@@ -77,6 +77,21 @@ data class CapturedSite(
     val syncedAt: String? = null,
 ) {
     /** Résumé affiché dans le journal — nom du site s'il est renseigné, sinon la localisation. */
+    /** Champs obligatoires manquants — mêmes règles que Site.champsManquants côté serveur. */
+    val missingFields: List<String>
+        get() = buildList {
+            if (nomSite.isBlank()) add("Nom du site")
+            if (province.isBlank()) add("Province")
+            if (ville.isBlank()) add("Ville")
+            if (commune.isBlank()) add("Commune")
+            if (latitude == null || longitude == null) add("Coordonnées GPS")
+            if (typeSite == null) add("Type de site")
+            else if (typeSite == "AUTRE" && typeSiteAutre.isBlank()) add("Type de site (préciser)")
+            if (proprieteStatut == null) add("Statut de propriété")
+            if (typeInfrastructure == null) add("Type d'infrastructure")
+            else if (typeInfrastructure == "AUTRE" && typeInfrastructureAutre.isBlank()) add("Type d'infrastructure (préciser)")
+        }
+
     val displayName: String
         get() = nomSite.ifBlank {
             listOf(commune, ville).filter { it.isNotBlank() }.joinToString(", ").ifBlank { "Site sans nom" }

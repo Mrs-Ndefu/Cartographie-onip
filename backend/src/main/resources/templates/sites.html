@@ -90,13 +90,14 @@
                 <span th:if="${s.avisGlobal == null}" class="agent-muted">—</span>
               </td>
               <td>
-                <span class="status-badge"
-                      th:classappend="${s.validation.name() == 'VALIDE'} ? 'status-complet' : (${s.validation.name() == 'REJETE'} ? 'status-a-verifier' : 'status-incomplet')"
-                      th:text="${s.validation.label()}">En attente</span>
-                <!-- Champs obligatoires manquants (cf. Site.champsManquants) : signalé par la cloche
-                     tant que la fiche est en attente. -->
-                <span th:if="${s.enAttenteIncomplete()}" class="badge-incomplete"
-                      th:title="'Manque : ' + ${#strings.listJoin(s.champsManquants, ', ')}">Incomplète</span>
+                <!-- Statut de visite : complet si tous les champs obligatoires sont renseignés
+                     (cf. Site.champsManquants), sinon incomplet (survol = champs manquants). -->
+                <span th:if="${s.visiteComplete()}" class="status-badge status-complet">Visité complet</span>
+                <span th:unless="${s.visiteComplete()}" class="status-badge status-incomplet"
+                      th:title="'Manque : ' + ${#strings.listJoin(s.champsManquants, ', ')}">Visité incomplet</span>
+                <!-- Décision de l'admin/superviseur, affichée seulement une fois prise. -->
+                <span th:if="${s.validation.name() == 'VALIDE'}" class="status-badge status-complet status-badge-sm">Validée</span>
+                <span th:if="${s.validation.name() == 'REJETE'}" class="status-badge status-a-verifier status-badge-sm">Rejetée</span>
               </td>
               <td th:text="${s.agentUsername ?: '-'}">-</td>
               <td class="cell-date" th:text="${#temporals.format(s.createdAt, 'dd/MM/yyyy HH:mm')}">-</td>

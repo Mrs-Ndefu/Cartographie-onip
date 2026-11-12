@@ -56,10 +56,9 @@ public interface SiteRepository extends JpaRepository<Site, UUID> {
     // Carte du tableau de bord : seules les fiches non retirées avec un relevé GPS complet.
     List<Site> findByArchivedFalseAndLatitudeIsNotNullAndLongitudeIsNotNull();
 
-    // [nomSite, province] des fiches de repérage actives : sert à savoir quels sites importés
-    // (Zones > Sites) ont déjà été visités (cf. ZoneSiteService.optionsForZone).
-    @Query("SELECT s.nomSite, s.province FROM Site s WHERE s.archived = false AND s.nomSite IS NOT NULL")
-    List<Object[]> findActiveNamesAndProvinces();
+    // Fiches de repérage actives portant un nom de site : sert à savoir quels sites importés
+    // (Zones > Sites) ont été visités, et si la fiche est complète (cf. ZoneSiteService.visits).
+    List<Site> findByArchivedFalseAndNomSiteIsNotNull();
 
     // Empêche de supprimer définitivement un compte agent qui a déjà des fiches de repérage (même
     // principe que HouseholdRepository.existsByAgent_Id).
