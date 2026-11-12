@@ -146,8 +146,18 @@ public class ZoneSiteController {
             @RequestParam(required = false) String returnTo,
             Authentication authentication,
             Model model) {
-        model.addAttribute("site", zoneSiteService.find(id));
-        model.addAttribute("provinces", com.onip.facm01.household.DrcProvinces.PROVINCES);
+        ZoneSite site = zoneSiteService.find(id);
+        model.addAttribute("site", site);
+        // Valeurs de départ des listes enchaînées : ville/territoire = la ville (à défaut le
+        // territoire) ; commune = celle du site, sinon le territoire s'il diffère de la ville (cas
+        // de Kinshasa, où l'Excel donne souvent la commune comme territoire).
+        String villeInit = site.getVille() != null ? site.getVille() : site.getTerritoire();
+        String communeInit = site.getCommune();
+        if (communeInit == null && site.getTerritoire() != null && !site.getTerritoire().equalsIgnoreCase(villeInit)) {
+            communeInit = site.getTerritoire();
+        }
+        model.addAttribute("villeInit", villeInit);
+        model.addAttribute("communeInit", communeInit);
         model.addAttribute("returnTo", safeReturn(returnTo));
         agentRepository.findByUsername(authentication.getName())
                 .ifPresent(agent -> model.addAttribute("currentAgent", AgentDto.from(agent)));
@@ -161,11 +171,11 @@ public class ZoneSiteController {
             @RequestParam(required = false) String adresse,
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String ville,
-            @RequestParam(required = false) String territoire,
+            @RequestParam(required = false) String commune,
             @RequestParam(required = false) String returnTo,
             RedirectAttributes redirectAttributes) {
         try {
-            ZoneSite site = zoneSiteService.update(id, nom, adresse, province, ville, territoire);
+            ZoneSite site = zoneSiteService.update(id, nom, adresse, province, ville, commune);
             redirectAttributes.addFlashAttribute("success", "Site modifié : " + site.getNom()
                     + (site.getZone() == null ? " (non affecté à une zone)." : " — " + site.getZone().getName() + "."));
         } catch (IllegalArgumentException e) {

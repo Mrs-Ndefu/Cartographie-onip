@@ -15,7 +15,18 @@ class ZoneSiteMatchTest {
     private final List<Zone> zones = List.of(matadi, gombe, limete);
 
     private static ZoneSite site(String adresse, String province, String ville, String territoire) {
-        return new ZoneSite(UUID.randomUUID(), "Site", adresse, province, ville, territoire);
+        return new ZoneSite(UUID.randomUUID(), "Site", adresse, province, ville, territoire, null);
+    }
+
+    private static ZoneSite siteWithCommune(String province, String villeTerritoire, String commune) {
+        return new ZoneSite(UUID.randomUUID(), "Site", null, province, villeTerritoire, villeTerritoire, commune);
+    }
+
+    @Test
+    void communeChosenInTheFormPicksTheZone() {
+        assertThat(ZoneSiteService.matchZone(siteWithCommune("Kinshasa", "Kinshasa", "Limete"), zones)).isEqualTo(limete);
+        assertThat(ZoneSiteService.matchZone(siteWithCommune("Kinshasa", "Kinshasa", "Lingwala"), zones)).isEqualTo(gombe);
+        assertThat(ZoneSiteService.communeOf(siteWithCommune("Kinshasa", "Kinshasa", "lingwala"), gombe)).isEqualTo("LINGWALA");
     }
 
     @Test

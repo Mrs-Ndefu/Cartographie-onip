@@ -939,7 +939,7 @@ h1, h2, h3 {
 /* ---------- Tableau des ménages ---------- */
 
 .table-section {
-  padding: 0.5rem 1.75rem 2rem;
+  padding: 0.5rem 1.75rem 1.5rem;
   /* .topbar est "position: sticky" : sans cette marge, défiler vers #menages (cf. la popover de
      la cloche de notification) cale la section juste sous la barre, qui la recouvre. */
   scroll-margin-top: 80px;
@@ -965,10 +965,10 @@ h1, h2, h3 {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1.1rem 1.5rem;
+  gap: 0.75rem;
+  padding: 0.8rem 1.25rem;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafd 100%);
 }
 
 .table-search-form {
@@ -1005,7 +1005,7 @@ h1, h2, h3 {
 
 .table-card-header h2 {
   margin: 0;
-  font-size: 1.02rem;
+  font-size: 0.97rem;
   font-weight: 700;
   color: var(--ink);
   letter-spacing: -0.01em;
@@ -1013,8 +1013,8 @@ h1, h2, h3 {
 
 .table-card-count {
   display: block;
-  margin-top: 0.2rem;
-  font-size: 0.78rem;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -1023,8 +1023,9 @@ h1, h2, h3 {
   overflow-x: auto;
 }
 
-/* Tableaux de données (foyers, repérage, comptes, zones, archives, historique, statistiques) :
-   en-tête sobre et collant, lignes aérées, survol marqué d'un liseré bleu à gauche. */
+/* Tableaux de données (foyers, repérage, sites, comptes, zones, archives, historique,
+   statistiques) : compacts, en-tête teinté et collant souligné d'un liseré bleu, lignes
+   alternées, survol marqué d'un liseré bleu à gauche. */
 .households-table {
   width: 100%;
   border-collapse: separate;
@@ -1034,37 +1035,42 @@ h1, h2, h3 {
 .households-table th,
 .households-table td {
   text-align: left;
-  padding: 0.8rem 1rem;
-  font-size: 0.83rem;
-  line-height: 1.35;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.79rem;
+  line-height: 1.3;
   white-space: nowrap;
   vertical-align: middle;
-  border-bottom: 1px solid #edf0f3;
+  border-bottom: 1px solid #eef1f5;
 }
 
 .households-table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #f5f7fa;
-  color: #4a5562;
+  background: linear-gradient(180deg, #f3f7fc 0%, #e9f0f8 100%);
+  color: #2f4a66;
   text-transform: uppercase;
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  border-bottom: 1px solid var(--border);
-  padding-top: 0.7rem;
-  padding-bottom: 0.7rem;
+  letter-spacing: 0.07em;
+  border-bottom: 2px solid #c9d9ec;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
 }
 
 .households-table thead th:first-child,
 .households-table tbody td:first-child {
-  padding-left: 1.5rem;
+  padding-left: 1.1rem;
 }
 
 .households-table thead th:last-child,
 .households-table tbody td:last-child {
-  padding-right: 1.5rem;
+  padding-right: 1.1rem;
+}
+
+/* Lignes alternées pour suivre une ligne d'un bout à l'autre. */
+.households-table tbody tr:nth-child(even) {
+  background: #fafbfd;
 }
 
 /* Première colonne = l'identifiant de la ligne (nom, code, compte) : mise en avant. */
@@ -1078,7 +1084,7 @@ h1, h2, h3 {
 }
 
 .households-table tbody tr:hover {
-  background: #f4f8fd;
+  background: #eef5fd;
   box-shadow: inset 3px 0 0 var(--brand);
 }
 
@@ -1105,8 +1111,8 @@ h1, h2, h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   padding: 0;
   line-height: 1;
   border-radius: var(--radius-sm);
@@ -1122,8 +1128,17 @@ h1, h2, h3 {
 }
 
 .btn-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
+}
+
+/* Listes et champs dans une cellule (ex. zone d'un site) : à la hauteur des boutons. */
+.households-table td .form-select-sm,
+.households-table td .form-control-sm {
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  font-size: 0.76rem;
+  min-height: 1.75rem;
 }
 
 .col-actions form {
@@ -1133,9 +1148,9 @@ h1, h2, h3 {
 .table-empty {
   text-align: center;
   color: var(--ink-muted);
-  font-size: 0.88rem !important;
+  font-size: 0.85rem !important;
   font-weight: 400 !important;
-  padding: 3rem 1rem !important;
+  padding: 2rem 1rem !important;
   white-space: normal;
   background: repeating-linear-gradient(135deg, #fbfcfd 0 10px, #f7f9fb 10px 20px);
 }
@@ -1146,9 +1161,9 @@ h1, h2, h3 {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem 1rem;
-  padding: 0.85rem 1.5rem;
+  padding: 0.6rem 1.25rem;
   border-top: 1px solid var(--border);
-  background: #fbfcfd;
+  background: #f8fafd;
 }
 
 .table-card-footer .pagination {
@@ -1176,10 +1191,10 @@ h1, h2, h3 {
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.22rem 0.6rem 0.22rem 0.5rem;
+  gap: 0.3rem;
+  padding: 0.16rem 0.5rem 0.16rem 0.42rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
@@ -1957,8 +1972,8 @@ h1, h2, h3 {
 }
 
 .zone-site-assign select {
-  min-width: 170px;
-  max-width: 220px;
+  min-width: 140px;
+  max-width: 180px;
 }
 
 a.zone-sites-count {
@@ -2082,4 +2097,30 @@ a.zone-sites-count:hover {
     width: 100%;
     max-width: none;
   }
+}
+
+/* « Modifier le site » : Province / Ville-Territoire / Commune sur une ligne (3 colonnes). */
+.zone-site-geo {
+  grid-column: span 3;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
+}
+
+@media (max-width: 640px) {
+  .zone-site-geo {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Cellule longue (nom, adresse) : retour à la ligne plutôt qu'un tableau trop large. */
+.households-table td.cell-wrap {
+  white-space: normal;
+  min-width: 140px;
+  max-width: 230px;
+}
+
+.households-table td.cell-muted {
+  color: var(--ink-muted);
 }

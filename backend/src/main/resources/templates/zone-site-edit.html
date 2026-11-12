@@ -39,7 +39,7 @@
           <span class="table-card-count" th:if="${site.zoneManuelle}"
                 th:text="'Zone choisie à la main (' + (${site.zone != null} ? ${site.zone.name} : 'non affecté') + ') : elle est conservée après modification.'">Zone manuelle</span>
           <span class="table-card-count" th:unless="${site.zoneManuelle}"
-                th:text="'Zone actuelle : ' + (${site.zone != null} ? ${site.zone.label} : 'non affecté') + '. Elle sera recalculée d\'après la province et la ville/territoire enregistrées.'">Zone automatique</span>
+                th:text="'Zone actuelle : ' + (${site.zone != null} ? ${site.zone.label} : 'non affecté') + '. Elle sera recalculée d\'après la province, la ville/territoire et la commune enregistrées.'">Zone automatique</span>
         </div>
       </div>
       <form th:action="@{/dashboard/zones/sites/{id}/edit(id=${site.id})}" method="post" class="agents-create-form zone-site-edit-form">
@@ -52,23 +52,27 @@
           <span>Adresse</span>
           <input type="text" name="adresse" class="form-control form-control-sm" th:value="${site.adresse}" maxlength="255">
         </label>
-        <label class="agents-field">
-          <span>Province</span>
-          <select name="province" class="form-select form-select-sm">
-            <option value="">—</option>
-            <option th:if="${site.province != null and !provinces.contains(site.province)}"
-                    th:value="${site.province}" th:text="${site.province}" selected>AUTRE</option>
-            <option th:each="p : ${provinces}" th:value="${p}" th:text="${p}" th:selected="${p == site.province}">PROVINCE</option>
-          </select>
-        </label>
-        <label class="agents-field">
-          <span>Ville</span>
-          <input type="text" name="ville" class="form-control form-control-sm text-uppercase" th:value="${site.ville}" maxlength="255">
-        </label>
-        <label class="agents-field">
-          <span>Territoire</span>
-          <input type="text" name="territoire" class="form-control form-control-sm text-uppercase" th:value="${site.territoire}" maxlength="255">
-        </label>
+        <!-- Province -> Ville/Territoire -> Commune : listes enchaînées (cf. app.js, .js-geo) —
+             choisir la province filtre les villes, choisir la ville filtre les communes. -->
+        <div class="js-geo zone-site-geo">
+          <label class="agents-field">
+            <span>Province</span>
+            <input type="hidden" name="province" class="js-geo-province-value" th:value="${site.province}">
+            <select class="form-select form-select-sm js-geo-province"></select>
+          </label>
+          <label class="agents-field">
+            <span>Ville/Territoire</span>
+            <input type="hidden" name="ville" class="js-geo-ville-value" th:value="${villeInit}">
+            <select class="form-select form-select-sm js-geo-ville"></select>
+            <input type="text" class="form-control form-control-sm js-geo-ville-other" placeholder="Ville ou territoire" hidden>
+          </label>
+          <label class="agents-field">
+            <span>Commune/Secteur/Chefferie</span>
+            <input type="hidden" name="commune" class="js-geo-commune-value" th:value="${communeInit}">
+            <select class="form-select form-select-sm js-geo-commune"></select>
+            <input type="text" class="form-control form-control-sm js-geo-commune-other" placeholder="Commune, secteur ou chefferie" hidden>
+          </label>
+        </div>
         <div class="zone-site-edit-actions">
           <a th:href="@{${returnTo}}" class="btn btn-sm btn-outline-secondary">Annuler</a>
           <button type="submit" class="btn btn-sm btn-primary">Enregistrer</button>

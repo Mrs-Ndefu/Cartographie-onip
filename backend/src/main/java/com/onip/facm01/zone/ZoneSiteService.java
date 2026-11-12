@@ -155,6 +155,14 @@ public class ZoneSiteService {
     // dernier recours, cf. matchZone). Null si on ne peut pas trancher.
     static String communeOf(ZoneSite site, Zone zone) {
         List<String> communes = zone.getCommunes();
+        String own = key(site.getCommune());
+        if (!own.isEmpty()) {
+            for (String c : communes) {
+                if (key(c).equals(own)) {
+                    return c;
+                }
+            }
+        }
         if (communes.size() == 1) {
             return communes.get(0);
         }
@@ -258,19 +266,22 @@ public class ZoneSiteService {
     // n'en avait pas), elle est recalculée d'après les nouvelles valeurs ; une zone choisie à la
     // main est conservée.
     @Transactional
-    public ZoneSite update(UUID siteId, String nom, String adresse, String province, String ville, String territoire) {
+    // Le formulaire propose Province -> Ville/Territoire -> Commune en listes enchaînées : la
+    // ville/territoire choisie est enregistrée comme ville ET territoire du site.
+    public ZoneSite update(UUID siteId, String nom, String adresse, String province, String villeTerritoire, String commune) {
         if (nom == null || nom.isBlank()) {
             throw new IllegalArgumentException("Le nom du site est obligatoire");
         }
         ZoneSite site = get(siteId);
-        String v = upperOrNull(clean(ville));
+        String v = upperOrNull(clean(villeTerritoire));
         String p = clean(province);
         site.update(
                 clean(nom),
                 emptyToNull(clean(adresse)),
                 p == null ? DrcProvinces.resolve(null, v) : DrcProvinces.normalize(p),
                 v,
-                upperOrNull(clean(territoire)));
+                v,
+                upperOrNull(clean(commune)));
         if (!site.isZoneManuelle()) {
             site.setZone(matchZone(site, zoneRepository.findAll()));
         }
@@ -324,6 +335,7 @@ public class ZoneSiteService {
         List<Zone> inProvince = zones.stream().filter(z -> key(z.getProvince()).equals(province)).toList();
         String territoire = key(site.getTerritoire());
         String ville = key(site.getVille());
+        String commune = key(site.getCommune());
 
         List<Zone> candidates = List.of();
         if (!territoire.isEmpty()) {
@@ -335,11 +347,20 @@ public class ZoneSiteService {
         if (candidates.isEmpty()) {
             candidates = inProvince.stream()
                     .filter(z -> z.getCommunes().stream().map(ZoneSiteService::key)
-                            .anyMatch(c -> c.equals(territoire) || c.equals(ville)))
+                            .anyMatch(c -> c.equals(territoire) || c.equals(ville) || (!commune.isEmpty() && c.equals(commune))))
                     .toList();
         }
         if (candidates.size() == 1) {
             return candidates.get(0);
+        }
+        if (candidates.size() > 1 && !commune.isEmpty()) {
+            // Commune renseignée : c'est elle qui désigne la zone.
+            List<Zone> byCommune = candidates.stream()
+                    .filter(z -> z.getCommunes().stream().map(ZoneSiteService::key).anyMatch(commune::equals))
+                    .toList();
+            if (byCommune.size() == 1) {
+                return byCommune.get(0);
+            }
         }
         if (candidates.size() > 1) {
             // On cherche une commune dans l'adresse et le territoire (s'il diffère de la ville).
@@ -390,7 +411,7 @@ public class ZoneSiteService {
         DataFormatter formatter = new DataFormatter();
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
-            int[] columns = {0, 1, 2, 3, 4};
+            int[] columns = {0, 1, 2, 3, 4, -1};
             boolean first = true;
             for (Row row : sheet) {
                 if (first) {
@@ -413,7 +434,8 @@ public class ZoneSiteService {
                         emptyToNull(text(row, columns[1], formatter)),
                         province.isEmpty() ? DrcProvinces.resolve(null, ville) : DrcProvinces.normalize(province),
                         ville,
-                        upperOrNull(text(row, columns[4], formatter))));
+                        upperOrNull(text(row, columns[4], formatter)),
+                        upperOrNull(text(row, columns[5], formatter))));
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible de lire le fichier Excel", e);
@@ -428,7 +450,7 @@ public class ZoneSiteService {
     // Repère les colonnes d'après la ligne d'en-tête ; null si la ligne n'est pas un en-tête (moins
     // de 2 intitulés reconnus). Une colonne absente de l'en-tête vaut -1 (champ laissé vide).
     private static int[] headerColumns(Row row, DataFormatter formatter) {
-        int[] columns = {-1, -1, -1, -1, -1};
+        int[] columns = {-1, -1, -1, -1, -1, -1};
         int found = 0;
         for (Cell cell : row) {
             String label = key(formatter.formatCellValue(cell)).toLowerCase();
@@ -439,6 +461,8 @@ public class ZoneSiteService {
                 index = 2;
             } else if (label.contains("territoire")) {
                 index = 4;
+            } else if (label.contains("commune")) {
+                index = 5;
             } else if (label.contains("ville")) {
                 index = 3;
             } else if (label.contains("nom") || label.contains("site")) {
@@ -482,14 +506,14 @@ public class ZoneSiteService {
             Font font = workbook.createFont();
             font.setBold(true);
             bold.setFont(font);
-            String[] headers = {"Nom du site", "Adresse", "Province", "Ville", "Territoire"};
+            String[] headers = {"Nom du site", "Adresse", "Province", "Ville", "Territoire", "Commune"};
             Row header = sheet.createRow(0);
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(headers[i]);
                 cell.setCellStyle(bold);
             }
-            String[] example = {"École primaire Mapendo", "12, avenue de la Paix", "Kongo-Central", "Matadi", "Matadi"};
+            String[] example = {"École primaire Mapendo", "12, avenue de la Paix", "Kongo-Central", "Matadi", "Matadi", "Mvuzi"};
             Row row = sheet.createRow(1);
             for (int i = 0; i < example.length; i++) {
                 row.createCell(i).setCellValue(example[i]);
