@@ -64,6 +64,7 @@ import com.onip.cartoonip.data.DRC_VILLES
 import com.onip.cartoonip.data.communesForVille
 import com.onip.cartoonip.data.model.ZoneSiteOption
 import com.onip.cartoonip.data.villesForProvince
+import com.onip.cartoonip.ui.common.QuartierField
 import kotlin.math.roundToInt
 
 private val upperKeyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Characters)
@@ -155,7 +156,7 @@ fun ReperageFormScreen(
                         onSelect = viewModel::onZoneSiteSelected,
                         onCommuneChange = viewModel::onCommuneChange,
                     )
-                    FormField("Quartier/Groupement", uiState.quartierGroupement, viewModel::onQuartierGroupementChange)
+                    QuartierField(uiState.ville, uiState.commune, uiState.quartierGroupement, viewModel::onQuartierGroupementChange)
                     FormField("Adresse (Village/Avenue/Rue)", uiState.villageAvenueRue, viewModel::onVillageAvenueRueChange)
                     FormField("Numéro téléphone", uiState.numeroTelephone, viewModel::onNumeroTelephoneChange, keyboard = numberKeyboard, capitalize = false)
                     FormField("Série téléphone/GPS", uiState.serieTelephoneGps, viewModel::onSerieTelephoneGpsChange, capitalize = false)
@@ -169,7 +170,7 @@ fun ReperageFormScreen(
                     onVilleChange = viewModel::onVilleChange,
                     onCommuneChange = viewModel::onCommuneChange,
                 )
-                FormField("Quartier/Groupement", uiState.quartierGroupement, viewModel::onQuartierGroupementChange)
+                QuartierField(uiState.ville, uiState.commune, uiState.quartierGroupement, viewModel::onQuartierGroupementChange)
                 FormField("Village/Avenue/Rue", uiState.villageAvenueRue, viewModel::onVillageAvenueRueChange)
                 FormField("Nom du site", uiState.nomSite, viewModel::onNomSiteChange)
                 FormField("Numéro téléphone", uiState.numeroTelephone, viewModel::onNumeroTelephoneChange, keyboard = numberKeyboard, capitalize = false)

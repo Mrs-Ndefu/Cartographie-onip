@@ -1,5 +1,7 @@
 package com.onip.cartoonip.ui.journal
 
+import com.onip.cartoonip.ui.common.PlaceFilter
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onip.cartoonip.data.AppContainer
@@ -27,6 +29,14 @@ class JournalViewModel : ViewModel() {
     val households: StateFlow<List<CapturedHousehold>> = AppContainer.captureStore.households
         .map { list -> list.filter { isToday(it.createdAt) }.sortedByDescending { it.createdAt } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    // Filtre de lieu choisi dans la barre de filtres (cf. PlaceFilterBar).
+    private val _placeFilter = MutableStateFlow(PlaceFilter())
+    val placeFilter: StateFlow<PlaceFilter> = _placeFilter.asStateFlow()
+
+    fun setPlaceFilter(filter: PlaceFilter) {
+        _placeFilter.value = filter
+    }
 
     private val _syncingIds = MutableStateFlow<Set<String>>(emptySet())
     val syncingIds: StateFlow<Set<String>> = _syncingIds.asStateFlow()

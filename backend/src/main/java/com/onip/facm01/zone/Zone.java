@@ -13,7 +13,9 @@ import jakarta.persistence.Table;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 // Zone d'affectation d'un agent, définie à l'avance par l'ADMIN : une province, une ville, et une
@@ -45,6 +47,14 @@ public class Zone {
     @OrderBy
     private List<String> communes = new ArrayList<>();
 
+    // Quartiers de la zone (au moins un pour une zone créée ou complétée depuis l'ajout des
+    // quartiers ; vide = zone ancienne « à compléter »). Un Set et non une List : Hibernate refuse
+    // deux listes chargées d'office sur la même entité (MultipleBagFetchException).
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "zone_quartiers", joinColumns = @JoinColumn(name = "zone_id"))
+    @Column(name = "quartier", nullable = false)
+    private Set<String> quartiers = new LinkedHashSet<>();
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -52,11 +62,16 @@ public class Zone {
     }
 
     public Zone(UUID id, String code, String province, String ville, List<String> communes) {
+        this(id, code, province, ville, communes, List.of());
+    }
+
+    public Zone(UUID id, String code, String province, String ville, List<String> communes, List<String> quartiers) {
         this.id = id;
         this.code = code;
         this.province = province;
         this.ville = ville;
         this.communes = new ArrayList<>(communes);
+        this.quartiers = new LinkedHashSet<>(quartiers);
         this.createdAt = Instant.now();
     }
 
@@ -95,6 +110,21 @@ public class Zone {
 
     public List<String> getCommunes() {
         return communes;
+    }
+
+    // Triés pour l'affichage.
+    public List<String> getQuartiers() {
+        return quartiers.stream().sorted().toList();
+    }
+
+    public void setQuartiers(List<String> quartiers) {
+        this.quartiers.clear();
+        this.quartiers.addAll(quartiers);
+    }
+
+    // Zone créée avant l'ajout des quartiers : à compléter par l'ADMIN.
+    public boolean isQuartiersManquants() {
+        return quartiers.isEmpty();
     }
 
     public Instant getCreatedAt() {

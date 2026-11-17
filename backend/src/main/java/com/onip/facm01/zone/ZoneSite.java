@@ -43,6 +43,10 @@ public class ZoneSite {
     @Column(name = "commune")
     private String commune;
 
+    // Quartier : colonne optionnelle de l'Excel, ou choisi dans « Modifier le site ».
+    @Column(name = "quartier")
+    private String quartier;
+
     // Null = site non affecté (aucune zone ne correspond, ou zone supprimée depuis).
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "zone_id")
@@ -94,17 +98,27 @@ public class ZoneSite {
     }
 
     // Modification depuis la page Sites (ADMIN).
-    public void update(String nom, String adresse, String province, String ville, String territoire, String commune) {
+    public void update(String nom, String adresse, String province, String ville, String territoire, String commune,
+                       String quartier) {
         this.nom = nom;
         this.adresse = adresse;
         this.province = province;
         this.ville = ville;
         this.territoire = territoire;
         this.commune = commune;
+        this.quartier = quartier;
     }
 
     public String getCommune() {
         return commune;
+    }
+
+    public String getQuartier() {
+        return quartier;
+    }
+
+    public void setQuartier(String quartier) {
+        this.quartier = quartier;
     }
 
     public Zone getZone() {

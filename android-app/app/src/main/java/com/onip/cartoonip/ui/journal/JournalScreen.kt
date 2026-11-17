@@ -1,5 +1,8 @@
 package com.onip.cartoonip.ui.journal
 
+import com.onip.cartoonip.ui.common.PlaceFilterBar
+import com.onip.cartoonip.ui.common.PlaceValues
+
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
@@ -76,7 +79,9 @@ private val DATE_HEADER_FORMAT = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy",
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: JournalViewModel = viewModel()) {
-    val households by viewModel.households.collectAsState()
+    val allHouseholds by viewModel.households.collectAsState()
+    val placeFilter by viewModel.placeFilter.collectAsState()
+    val households = allHouseholds.filter { placeFilter.matches(it.place) }
     val syncingIds by viewModel.syncingIds.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -110,6 +115,13 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             JournalSummaryHeader(total = households.size, pending = pendingCount)
+            if (allHouseholds.isNotEmpty()) {
+                PlaceFilterBar(
+                    entries = allHouseholds.map { it.place },
+                    filter = placeFilter,
+                    onChange = viewModel::setPlaceFilter,
+                )
+            }
 
             if (households.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -121,7 +133,7 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
                             tint = MaterialTheme.colorScheme.outline,
                         )
                         Text(
-                            "Aucun foyer enregistré aujourd'hui.",
+                            if (placeFilter.isActive) "Aucun foyer pour ce filtre." else "Aucun foyer enregistré aujourd'hui.",
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -309,3 +321,7 @@ private fun SyncBadge(household: CapturedHousehold, isSyncing: Boolean, onRetry:
         }
     }
 }
+
+// Lieu d'un foyer pour les filtres du Journal.
+private val CapturedHousehold.place: PlaceValues
+    get() = PlaceValues(province, ville, commune, quartier)

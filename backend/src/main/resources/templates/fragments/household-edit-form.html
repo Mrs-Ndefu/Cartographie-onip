@@ -67,7 +67,7 @@
       <div class="detail-card">
         <div class="detail-card-header"><h2>Adresse</h2></div>
         <div class="detail-card-body">
-          <!-- Province, ville et commune : listes enchaînées (cf. app.js, .js-geo). -->
+          <!-- Province, ville, commune et quartier : listes enchaînées (cf. app.js, .js-geo). -->
           <div class="row g-3 js-geo">
             <div class="col-sm-6">
               <label class="form-label small fw-semibold" for="geo-province">Province/Région *</label>
@@ -87,8 +87,11 @@
               <input type="text" class="form-control mt-1 js-geo-commune-other" placeholder="Commune, secteur ou chefferie" hidden>
             </div>
             <div class="col-sm-6">
-              <label class="form-label small fw-semibold" for="quartier">Quartier/Groupement</label>
-              <input type="text" class="form-control" th:field="*{quartier}">
+              <label class="form-label small fw-semibold" for="geo-quartier">Quartier/Groupement</label>
+              <!-- Quartiers de la commune choisie (référentiel Subdivision ADM-RDC), cf. app.js. -->
+              <input type="hidden" name="quartier" class="js-geo-quartier-value" th:value="*{quartier}">
+              <select id="geo-quartier" class="form-select js-geo-quartier"></select>
+              <input type="text" class="form-control mt-1 js-geo-quartier-other" placeholder="Quartier ou groupement" hidden>
             </div>
             <div class="col-sm-8">
               <label class="form-label small fw-semibold" for="rue">Rue/Avenue/Village</label>

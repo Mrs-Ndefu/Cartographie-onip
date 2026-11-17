@@ -78,6 +78,7 @@ import com.onip.cartoonip.data.DRC_PROVINCES
 import com.onip.cartoonip.data.DRC_VILLES
 import com.onip.cartoonip.data.communesForVille
 import com.onip.cartoonip.data.villesForProvince
+import com.onip.cartoonip.ui.common.QuartierField
 import com.onip.cartoonip.data.model.AgentZone
 import com.onip.cartoonip.data.model.MAX_HOUSEHOLD_PHOTOS
 import com.onip.cartoonip.ui.navigation.Routes
@@ -255,10 +256,12 @@ fun CaptureScreen(onNavigate: (String) -> Unit, editId: String? = null, viewMode
                         onCommuneChange = viewModel::onCommuneChange,
                         zone = agentZone,
                     )
-                    OutlinedTextField(
-                        value = uiState.quartier, onValueChange = viewModel::onQuartierChange,
-                        label = { Text("Quartier/Groupement") }, singleLine = true, keyboardOptions = fieldKeyboardOptions,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    QuartierField(
+                        ville = uiState.ville,
+                        commune = uiState.commune,
+                        value = uiState.quartier,
+                        onValueChange = viewModel::onQuartierChange,
+                        allowed = agentZone?.quartiers.orEmpty(),
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(

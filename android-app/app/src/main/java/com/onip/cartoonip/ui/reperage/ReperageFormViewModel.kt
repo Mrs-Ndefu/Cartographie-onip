@@ -118,6 +118,7 @@ class ReperageFormViewModel : ViewModel() {
             province = option.province?.uppercase() ?: province,
             ville = option.villeTerritoire?.uppercase() ?: ville,
             commune = option.commune?.uppercase().orEmpty(),
+            quartierGroupement = option.quartier?.uppercase() ?: quartierGroupement,
             villageAvenueRue = option.adresse?.uppercase() ?: villageAvenueRue,
         )
     }
@@ -175,9 +176,11 @@ class ReperageFormViewModel : ViewModel() {
     }
 
     // I. Changer de province/ville vide les champs qui en dépendent (listes en cascade).
-    fun onProvinceChange(v: String) = update { copy(province = v.uppercase(), ville = "", commune = "") }
-    fun onVilleChange(v: String) = update { copy(ville = v.uppercase(), commune = "") }
-    fun onCommuneChange(v: String) = update { copy(commune = v.uppercase()) }
+    fun onProvinceChange(v: String) = update { copy(province = v.uppercase(), ville = "", commune = "", quartierGroupement = "") }
+    fun onVilleChange(v: String) = update { copy(ville = v.uppercase(), commune = "", quartierGroupement = "") }
+    fun onCommuneChange(v: String) = update {
+        copy(commune = v.uppercase(), quartierGroupement = if (v.equals(commune, ignoreCase = true)) quartierGroupement else "")
+    }
     fun onQuartierGroupementChange(v: String) = update { copy(quartierGroupement = v.uppercase()) }
     fun onVillageAvenueRueChange(v: String) = update { copy(villageAvenueRue = v.uppercase()) }
     fun onNomSiteChange(v: String) = update { copy(nomSite = v.uppercase()) }

@@ -93,6 +93,10 @@ class SessionManager(context: Context) {
 
     // Communes de la zone : SharedPreferences ne stocke pas de liste directement, d'où le join
     // sur un séparateur improbable dans un nom de commune.
+    var zoneQuartiers: List<String>
+        get() = prefs.getString(KEY_ZONE_QUARTIERS, null)?.split(ZONE_COMMUNES_SEPARATOR)?.filter { it.isNotBlank() } ?: emptyList()
+        set(value) = prefs.edit().putString(KEY_ZONE_QUARTIERS, value.joinToString(ZONE_COMMUNES_SEPARATOR)).apply()
+
     var zoneCommunes: List<String>
         get() = prefs.getString(KEY_ZONE_COMMUNES, null)?.split(ZONE_COMMUNES_SEPARATOR)?.filter { it.isNotBlank() } ?: emptyList()
         set(value) = prefs.edit().putString(KEY_ZONE_COMMUNES, value.joinToString(ZONE_COMMUNES_SEPARATOR)).apply()
@@ -115,7 +119,7 @@ class SessionManager(context: Context) {
             .remove(KEY_BASE_URL).remove(KEY_TOKEN).remove(KEY_AGENT_ID)
             .remove(KEY_USERNAME).remove(KEY_FULL_NAME)
             .remove(KEY_ZONE_CODE).remove(KEY_ZONE_PLACE)
-            .remove(KEY_ZONE_PROVINCE).remove(KEY_ZONE_VILLE).remove(KEY_ZONE_COMMUNES)
+            .remove(KEY_ZONE_PROVINCE).remove(KEY_ZONE_VILLE).remove(KEY_ZONE_COMMUNES).remove(KEY_ZONE_QUARTIERS)
             .remove(KEY_ROLE).remove(KEY_ZONE_SITES)
             .apply()
         _session.value = null
@@ -138,6 +142,7 @@ class SessionManager(context: Context) {
         private const val KEY_ZONE_PROVINCE = "zone_province"
         private const val KEY_ZONE_VILLE = "zone_ville"
         private const val KEY_ZONE_COMMUNES = "zone_communes"
+        private const val KEY_ZONE_QUARTIERS = "zone_quartiers"
         private const val KEY_ROLE = "role"
         private const val KEY_ZONE_SITES = "zone_sites"
         private const val ZONE_COMMUNES_SEPARATOR = "|||"

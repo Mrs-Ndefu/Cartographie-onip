@@ -152,10 +152,15 @@ public class HouseholdService {
                         orEmpty(filter.province()),
                         orEmpty(filter.ville()),
                         orEmpty(filter.commune()),
+                        orEmpty(filter.quartier()),
                         filter.communes() != null && !filter.communes().isEmpty(),
                         filter.communes() == null || filter.communes().isEmpty()
                                 ? List.of("")
                                 : filter.communes().stream().map(String::toUpperCase).toList(),
+                        filter.quartiers() != null && !filter.quartiers().isEmpty(),
+                        filter.quartiers() == null || filter.quartiers().isEmpty()
+                                ? List.of("")
+                                : filter.quartiers().stream().map(String::toUpperCase).toList(),
                         orEmpty(filter.statut()),
                         filter.dateFrom() == null ? EPOCH : filter.dateFrom(),
                         filter.dateTo() == null ? FAR_FUTURE : filter.dateTo(),
@@ -196,6 +201,11 @@ public class HouseholdService {
     @Transactional(readOnly = true)
     public List<String> distinctCommunes(String province, String ville) {
         return householdRepository.findDistinctCommunes(orEmpty(province), orEmpty(ville));
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> distinctQuartiers(String province, String ville, String commune) {
+        return householdRepository.findDistinctQuartiers(orEmpty(province), orEmpty(ville), orEmpty(commune));
     }
 
     private static String orEmpty(String value) {

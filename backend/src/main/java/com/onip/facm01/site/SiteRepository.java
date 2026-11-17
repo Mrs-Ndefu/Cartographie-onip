@@ -42,12 +42,59 @@ public interface SiteRepository extends JpaRepository<Site, UUID> {
                    OR LOWER(s.nomSite) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR LOWER(s.ville) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR LOWER(s.commune) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:province = '' OR UPPER(s.province) = UPPER(:province))
+              AND (:ville = '' OR UPPER(s.ville) = UPPER(:ville))
+              AND (:commune = '' OR UPPER(s.commune) = UPPER(:commune))
+              AND (:quartier = '' OR UPPER(s.quartierGroupement) = UPPER(:quartier))
               AND (:incompletes = false OR\s""" + PENDING_INCOMPLETE + ")")
     Page<Site> searchAdmin(
             @Param("search") String search,
+            @Param("province") String province,
+            @Param("ville") String ville,
+            @Param("commune") String commune,
+            @Param("quartier") String quartier,
             @Param("archived") boolean archived,
             @Param("incompletes") boolean incompletes,
             Pageable pageable);
+
+    // Valeurs présentes dans les fiches (retirées ou non, selon la liste affichée) pour les filtres
+    // Province / Ville / Commune / Quartier du tableau Repérage, chacune restreinte par les niveaux
+    // au-dessus déjà choisis ("" = pas de restriction).
+    @Query("""
+            SELECT DISTINCT UPPER(s.province) FROM Site s
+            WHERE s.archived = :archived AND s.province IS NOT NULL AND s.province <> ''
+            ORDER BY UPPER(s.province)
+            """)
+    List<String> distinctProvinces(@Param("archived") boolean archived);
+
+    @Query("""
+            SELECT DISTINCT UPPER(s.ville) FROM Site s
+            WHERE s.archived = :archived AND s.ville IS NOT NULL AND s.ville <> ''
+              AND (:province = '' OR UPPER(s.province) = UPPER(:province))
+            ORDER BY UPPER(s.ville)
+            """)
+    List<String> distinctVilles(@Param("archived") boolean archived, @Param("province") String province);
+
+    @Query("""
+            SELECT DISTINCT UPPER(s.commune) FROM Site s
+            WHERE s.archived = :archived AND s.commune IS NOT NULL AND s.commune <> ''
+              AND (:province = '' OR UPPER(s.province) = UPPER(:province))
+              AND (:ville = '' OR UPPER(s.ville) = UPPER(:ville))
+            ORDER BY UPPER(s.commune)
+            """)
+    List<String> distinctCommunes(@Param("archived") boolean archived, @Param("province") String province,
+                                  @Param("ville") String ville);
+
+    @Query("""
+            SELECT DISTINCT UPPER(s.quartierGroupement) FROM Site s
+            WHERE s.archived = :archived AND s.quartierGroupement IS NOT NULL AND s.quartierGroupement <> ''
+              AND (:province = '' OR UPPER(s.province) = UPPER(:province))
+              AND (:ville = '' OR UPPER(s.ville) = UPPER(:ville))
+              AND (:commune = '' OR UPPER(s.commune) = UPPER(:commune))
+            ORDER BY UPPER(s.quartierGroupement)
+            """)
+    List<String> distinctQuartiers(@Param("archived") boolean archived, @Param("province") String province,
+                                   @Param("ville") String ville, @Param("commune") String commune);
 
     // Nombre affiché par la cloche de notification (ADMIN/SUPERVISEUR).
     @Query("SELECT COUNT(s) FROM Site s WHERE " + PENDING_INCOMPLETE)

@@ -76,6 +76,18 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
             """)
     List<String> findDistinctCommunes(@Param("province") String province, @Param("ville") String ville);
 
+    // Quartiers réellement présents en base, restreints à la province / ville / commune choisies.
+    @Query("""
+            SELECT DISTINCT UPPER(h.address.quartier) FROM Household h
+            WHERE h.address.quartier IS NOT NULL AND h.address.quartier <> '' AND h.archived = false
+              AND (:province = '' OR UPPER(h.address.province) = UPPER(:province))
+              AND (:ville = '' OR UPPER(h.address.ville) = UPPER(:ville))
+              AND (:commune = '' OR UPPER(h.address.commune) = UPPER(:commune))
+            ORDER BY UPPER(h.address.quartier)
+            """)
+    List<String> findDistinctQuartiers(@Param("province") String province, @Param("ville") String ville,
+                                       @Param("commune") String commune);
+
     // Recherche unifiée du tableau de bord : nom du chef (nom/postnom/prénom) OU code ménage,
     // filtres province/ville/commune sans tenir compte de la casse (d'anciens ménages ont été
     // saisis en minuscules), communes d'une zone choisie (:anyZoneCommune = false quand aucune
@@ -99,7 +111,9 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
               AND (:province = '' OR UPPER(h.address.province) = UPPER(:province))
               AND (:ville = '' OR UPPER(h.address.ville) = UPPER(:ville))
               AND (:commune = '' OR UPPER(h.address.commune) = UPPER(:commune))
+              AND (:quartier = '' OR UPPER(h.address.quartier) = UPPER(:quartier))
               AND (:anyZoneCommune = false OR UPPER(h.address.commune) IN :zoneCommunes)
+              AND (:anyZoneQuartier = false OR UPPER(h.address.quartier) IN :zoneQuartiers)
               AND (:statut = ''
                    OR (:statut = 'complet' AND h.status = com.onip.facm01.household.HouseholdStatus.COMPLET)
                    OR (:statut = 'incomplet' AND h.status <> com.onip.facm01.household.HouseholdStatus.COMPLET))
@@ -111,8 +125,11 @@ public interface HouseholdRepository extends JpaRepository<Household, UUID> {
             @Param("province") String province,
             @Param("ville") String ville,
             @Param("commune") String commune,
+            @Param("quartier") String quartier,
             @Param("anyZoneCommune") boolean anyZoneCommune,
             @Param("zoneCommunes") List<String> zoneCommunes,
+            @Param("anyZoneQuartier") boolean anyZoneQuartier,
+            @Param("zoneQuartiers") List<String> zoneQuartiers,
             @Param("statut") String statut,
             @Param("dateFrom") Instant dateFrom,
             @Param("dateTo") Instant dateTo,

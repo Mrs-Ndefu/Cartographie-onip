@@ -83,6 +83,7 @@ public class DashboardController {
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String ville,
             @RequestParam(required = false) String commune,
+            @RequestParam(required = false) String quartier,
             @RequestParam(required = false) String statut,
             @RequestParam(required = false) UUID zoneId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
@@ -96,7 +97,7 @@ public class DashboardController {
         if (statut == null) {
             statut = "complet";
         }
-        HouseholdFilter filter = filter(search, province, ville, commune, statut, zoneId, dateFrom, dateTo);
+        HouseholdFilter filter = filter(search, province, ville, commune, quartier, statut, zoneId, dateFrom, dateTo);
         Page<HouseholdDto> households = householdService.searchAdmin(
                 filter, false, PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "updatedAt")));
 
@@ -108,6 +109,7 @@ public class DashboardController {
         model.addAttribute("province", province);
         model.addAttribute("ville", ville);
         model.addAttribute("commune", commune);
+        model.addAttribute("quartier", quartier);
         model.addAttribute("statut", statut);
         model.addAttribute("zoneId", zoneId);
         model.addAttribute("dateFrom", dateFrom);
@@ -115,6 +117,7 @@ public class DashboardController {
         model.addAttribute("provinces", householdService.distinctProvinces());
         model.addAttribute("villes", householdService.distinctVilles(province, commune));
         model.addAttribute("communes", householdService.distinctCommunes(province, ville));
+        model.addAttribute("quartiers", householdService.distinctQuartiers(province, ville, commune));
         model.addAttribute("zones", zoneService.list());
 
         // Carte : tous les ménages filtrés (pas seulement la page), et zoom sur eux dès qu'un
@@ -267,7 +270,7 @@ public class DashboardController {
             @RequestParam(required = false) String search,
             Authentication authentication,
             Model model) {
-        HouseholdFilter filter = new HouseholdFilter(search, null, null, null, null, null, null, null);
+        HouseholdFilter filter = new HouseholdFilter(search, null, null, null, null, null, null, null, null, null);
         Page<HouseholdDto> households = householdService.searchAdmin(
                 filter, true, PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "archivedAt")));
 
@@ -291,12 +294,13 @@ public class DashboardController {
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String ville,
             @RequestParam(required = false) String commune,
+            @RequestParam(required = false) String quartier,
             @RequestParam(required = false) String statut,
             @RequestParam(required = false) UUID zoneId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo) {
         return householdService.searchAdmin(
-                filter(q, province, ville, commune, statut, zoneId, dateFrom, dateTo), false,
+                filter(q, province, ville, commune, quartier, statut, zoneId, dateFrom, dateTo), false,
                 PageRequest.of(0, 50, Sort.by(Sort.Direction.DESC, "updatedAt"))).getContent();
     }
 
@@ -355,19 +359,23 @@ public class DashboardController {
     // Une zone choisie remplace les filtres province/ville/commune par les siens : le ménage doit
     // être dans l'une des communes de la zone.
     private HouseholdFilter filter(
-            String search, String province, String ville, String commune, String statut, UUID zoneId,
+            String search, String province, String ville, String commune, String quartier, String statut, UUID zoneId,
             LocalDate dateFrom, LocalDate dateTo) {
         List<String> zoneCommunes = null;
+        List<String> zoneQuartiers = null;
         // Une zone supprimée entre-temps (lien ou page restés ouverts) est simplement ignorée.
         Zone zone = zoneId == null ? null : zoneService.find(zoneId).orElse(null);
         if (zone != null) {
             province = zone.getProvince();
             ville = zone.getVille();
             commune = null;
+            quartier = null;
             zoneCommunes = zone.getCommunes();
+            zoneQuartiers = zone.getQuartiers();
         }
         return new HouseholdFilter(
-                search, province, ville, commune, zoneCommunes, statut, toStartOfDay(dateFrom), toEndOfDay(dateTo));
+                search, province, ville, commune, quartier, zoneCommunes, zoneQuartiers, statut,
+                toStartOfDay(dateFrom), toEndOfDay(dateTo));
     }
 
     private void addEditOptions(Model model, HouseholdDto household) {

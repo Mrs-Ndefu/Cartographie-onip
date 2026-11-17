@@ -175,6 +175,16 @@
               </th>
               <th>
                 <div class="th-with-filter">
+                  <span>Quartier</span>
+                  <select name="quartier" form="hh-filters" class="filter-select filter-select-column">
+                    <option value="">Tous</option>
+                    <option th:each="q : ${quartiers}" th:value="${q}" th:text="${q}"
+                            th:selected="${quartier != null and #strings.equalsIgnoreCase(q, quartier)}">Quartier</option>
+                  </select>
+                </div>
+              </th>
+              <th>
+                <div class="th-with-filter">
                   <span>Statut</span>
                   <select name="statut" form="hh-filters" id="statut-filter" class="filter-select filter-select-column">
                     <option value="">Tous</option>
@@ -205,6 +215,7 @@
               <td th:text="${h.address != null and h.address.province != null ? h.address.province : '-'}">-</td>
               <td th:text="${h.address != null ? h.address.ville : '-'}">-</td>
               <td th:text="${h.address != null ? h.address.commune : '-'}">-</td>
+              <td th:text="${h.address != null and h.address.quartier != null and !#strings.isEmpty(h.address.quartier) ? h.address.quartier : '-'}">-</td>
               <td>
                 <span th:if="${h.status.value == 'complet'}" class="status-badge status-complet">Complet</span>
                 <span th:if="${h.status.value == 'a_verifier'}" class="status-badge status-a-verifier">À vérifier</span>
@@ -240,7 +251,7 @@
               </td>
             </tr>
             <tr th:if="${households.isEmpty()}">
-              <td colspan="9" class="table-empty"
+              <td colspan="10" class="table-empty"
                   th:text="${search != null and !#strings.isEmpty(search)} ? 'Aucun foyer ne correspond à cette recherche.' : 'Aucun foyer synchronisé pour l\'instant.'">
                 Aucun foyer synchronisé pour l'instant.
               </td>
@@ -252,13 +263,13 @@
       <nav th:if="${page.totalPages > 1}" aria-label="Pagination des foyers" class="table-card-footer">
         <ul class="pagination pagination-sm mb-1">
           <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard(page=${page.number - 1}, search=${search}, province=${province}, ville=${ville}, commune=${commune}, statut=${statut}, zoneId=${zoneId}, dateFrom=${dateFrom}, dateTo=${dateTo})}">Précédent</a>
+            <a class="page-link" th:href="@{/dashboard(page=${page.number - 1}, search=${search}, province=${province}, ville=${ville}, commune=${commune}, quartier=${quartier}, statut=${statut}, zoneId=${zoneId}, dateFrom=${dateFrom}, dateTo=${dateTo})}">Précédent</a>
           </li>
           <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
-            <a class="page-link" th:href="@{/dashboard(page=${i}, search=${search}, province=${province}, ville=${ville}, commune=${commune}, statut=${statut}, zoneId=${zoneId}, dateFrom=${dateFrom}, dateTo=${dateTo})}" th:text="${i + 1}">1</a>
+            <a class="page-link" th:href="@{/dashboard(page=${i}, search=${search}, province=${province}, ville=${ville}, commune=${commune}, quartier=${quartier}, statut=${statut}, zoneId=${zoneId}, dateFrom=${dateFrom}, dateTo=${dateTo})}" th:text="${i + 1}">1</a>
           </li>
           <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard(page=${page.number + 1}, search=${search}, province=${province}, ville=${ville}, commune=${commune}, statut=${statut}, zoneId=${zoneId}, dateFrom=${dateFrom}, dateTo=${dateTo})}">Suivant</a>
+            <a class="page-link" th:href="@{/dashboard(page=${page.number + 1}, search=${search}, province=${province}, ville=${ville}, commune=${commune}, quartier=${quartier}, statut=${statut}, zoneId=${zoneId}, dateFrom=${dateFrom}, dateTo=${dateTo})}">Suivant</a>
           </li>
         </ul>
         <p class="text-secondary small mb-0">
@@ -372,27 +383,59 @@
       return div.innerHTML;
     }
 
-    // Deux couches : relevés GPS d'adressage (ménages) en rouge, sites de repérage en bleu. Le
+    // Deux couches : relevés GPS d'adressage (ménages) en orange, sites de repérage en vert. Le
     // sélecteur au-dessus de la carte affiche l'une, l'autre ou les deux, et recadre la carte
     // sur les points visibles pour que le changement se voie immédiatement.
     const sitePoints = /*[[${sitePoints}]]*/ [];
 
-    function pinIcon(color) {
-      return L.divIcon({
-        className: 'map-pin',
-        html: '<svg width="26" height="38" viewBox="0 0 26 38" aria-hidden="true">'
-          + '<path d="M13 1C6.4 1 1 6.3 1 12.9 1 22 13 37 13 37s12-15 12-24.1C25 6.3 19.6 1 13 1z" '
-          + 'fill="' + color + '" stroke="#fff" stroke-width="2"/>'
-          + '<circle cx="13" cy="13" r="4.5" fill="#fff"/></svg>',
-        iconSize: [26, 38],
-        iconAnchor: [13, 37],
-        popupAnchor: [0, -32]
+    // Couleurs de la carte : orange = adressage (ménages), vert = repérage (sites).
+    const ADRESSAGE_COLOR = '#f08a24';
+    const REPERAGE_COLOR = '#1f9d55';
+
+    // Point de la carte : cercle plein bordé de blanc (orange = adressage, vert = repérage).
+    function dotStyle(color) {
+      return { radius: 7, color: '#ffffff', weight: 2, fillColor: color, fillOpacity: 0.95, bubblingMouseEvents: false };
+    }
+
+    // Zoom sur un point : un clic sur un point (carte éloignée) vole jusqu'à lui au niveau rue
+    // puis ouvre sa fiche ; la fiche propose « Zoomer + », « Zoomer − » et « Centrer ici ».
+    const POINT_ZOOM = 17;
+
+    function zoomableDot(marker, html) {
+      marker.bindPopup(html
+        + '<div class="map-popup-zoom">'
+        + '<button type="button" data-zoom="in" title="Zoomer sur ce point">Zoomer +</button>'
+        + '<button type="button" data-zoom="out" title="Dézoomer">Zoomer −</button>'
+        + '<button type="button" data-zoom="center" title="Centrer la carte sur ce point">Centrer ici</button>'
+        + '</div>', { autoPan: true });
+      marker.off('click');
+      marker.on('click', function (e) {
+        L.DomEvent.stopPropagation(e);
+        if (map.getZoom() < POINT_ZOOM - 1) {
+          map.once('moveend', function () { marker.openPopup(); });
+          map.flyTo(marker.getLatLng(), POINT_ZOOM, { duration: 0.8 });
+        } else {
+          marker.openPopup();
+        }
       });
+      marker.on('popupopen', function (e) {
+        e.popup.getElement().querySelectorAll('[data-zoom]').forEach(function (btn) {
+          btn.onclick = function () {
+            var at = marker.getLatLng();
+            var action = btn.getAttribute('data-zoom');
+            var zoom = action === 'in' ? Math.min(map.getZoom() + 2, map.getMaxZoom())
+              : action === 'out' ? Math.max(map.getZoom() - 2, map.getMinZoom())
+              : map.getZoom();
+            map.flyTo(at, zoom, { duration: 0.5 });
+          };
+        });
+      });
+      return marker;
     }
 
     // Deux niveaux d'affichage selon le zoom :
     //  - vue globale (zoom < DETAIL_ZOOM) : une bulle par province, placée au centre de ses
-    //    points, avec le nombre de relevés d'adressage (rouge) et de repérages (bleu) ;
+    //    points, avec le nombre de relevés d'adressage (orange) et de repérages (vert) ;
     //  - vue détaillée (zoom >= DETAIL_ZOOM) : chaque point GPS individuellement.
     // Cliquer sur une bulle sélectionne la province : la carte zoome dessus et ses points
     // d'adressage et de repérage restent affichés quel que soit le zoom (les autres provinces
@@ -424,8 +467,8 @@
     }
 
     const adressageLayer = L.featureGroup(mapPoints.map(function (p) {
-      var m = L.marker([p.latitude, p.longitude], { icon: pinIcon('#d33f3f') })
-        .bindPopup('<strong>Adressage</strong><br>'
+      var m = zoomableDot(L.circleMarker([p.latitude, p.longitude], dotStyle(ADRESSAGE_COLOR)),
+        '<strong>Adressage</strong><br>'
           + escapeMapText(p.codeMenage || '(sans code)') + '<br>' + escapeMapText(p.chef)
           + '<br><span class="map-popup-muted">' + escapeMapText(provinceOf(p)) + '</span>');
       m.province = provinceOf(p);
@@ -434,8 +477,8 @@
     }));
 
     const reperageLayer = L.featureGroup(sitePoints.map(function (s) {
-      var m = L.marker([s.latitude, s.longitude], { icon: pinIcon('#0f5fa8') })
-        .bindPopup('<strong>Repérage</strong><br>'
+      var m = zoomableDot(L.circleMarker([s.latitude, s.longitude], dotStyle(REPERAGE_COLOR)),
+        '<strong>Repérage</strong><br>'
           + escapeMapText(s.nomSite || '(site sans nom)')
           + (s.lieu ? '<br>' + escapeMapText(s.lieu) : '')
           + '<br><span class="map-popup-muted">' + escapeMapText(provinceOf(s)) + '</span>'
@@ -467,31 +510,27 @@
       return Object.keys(groups).map(function (k) { return groups[k]; });
     }
 
-    // Épingle de province avec son nombre de points (rouge = adressage, bleu = repérage).
+    // Point de province avec son nombre de points (orange = adressage, vert = repérage).
     function countPin(color, count) {
-      var kind = color === '#d33f3f' ? 'adressage' : 'reperage';
-      return '<svg class="province-pin" data-kind="' + kind + '" width="34" height="46" viewBox="0 0 34 46" aria-hidden="true">'
-        + '<path d="M17 1C8.2 1 1 8 1 16.8 1 28.5 17 45 17 45s16-16.5 16-28.2C33 8 25.8 1 17 1z" '
-        + 'fill="' + color + '" stroke="#fff" stroke-width="2"/>'
-        + '<text x="17" y="21.5" text-anchor="middle" font-size="' + (count > 99 ? 10 : 12.5) + '" '
-        + 'font-weight="700" fill="#fff" font-family="Inter, sans-serif">' + count + '</text></svg>';
+      var kind = color === ADRESSAGE_COLOR ? 'adressage' : 'reperage';
+      return '<span class="province-dot" data-kind="' + kind + '" style="background:' + color + '">' + count + '</span>';
     }
 
     // Une paire d'épingles par province (seulement celles qui ont des points pour le filtre
     // choisi), posée sur la médiane des points, avec le nom de la province en dessous.
     function provinceIcon(g) {
       var pins = '';
-      if (g.adressage) pins += countPin('#d33f3f', g.adressage);
-      if (g.reperage) pins += countPin('#0f5fa8', g.reperage);
+      if (g.adressage) pins += countPin(ADRESSAGE_COLOR, g.adressage);
+      if (g.reperage) pins += countPin(REPERAGE_COLOR, g.reperage);
       var count = (g.adressage ? 1 : 0) + (g.reperage ? 1 : 0);
-      var width = count * 34 + (count - 1) * 2;
+      var width = count * 30 + (count - 1) * 4;
       return L.divIcon({
         className: 'province-bubble-wrap',
         html: '<div class="province-pins">' + pins + '</div>'
           + '<div class="province-bubble-label"><span class="province-bubble-name">' + escapeMapText(g.name)
           + '</span></div>',
-        iconSize: [width, 46],
-        iconAnchor: [width / 2, 45]
+        iconSize: [width, 30],
+        iconAnchor: [width / 2, 15]
       });
     }
 
@@ -517,7 +556,7 @@
           var pin = e.originalEvent && e.originalEvent.target && e.originalEvent.target.closest
             ? e.originalEvent.target.closest('[data-kind]') : null;
           var kind = pin ? pin.getAttribute('data-kind') : null;
-          // Épingle rouge/bleue : on ne garde que ce type de points (le filtre suit) ; le nom
+          // Point orange/vert : on ne garde que ce type de points (le filtre suit) ; le nom
           // de la province garde le filtre actuel.
           if (kind && kind !== currentLayer) showLayer(kind, false);
           selectProvince(g.name);
@@ -576,11 +615,17 @@
       // total dans la bulle et on montre le nom + le détail au survol.
       map.getContainer().classList.toggle('map-compact-labels', map.getZoom() < LABELS_ZOOM);
       // Points : tous en vue détaillée, sinon seulement ceux de la province sélectionnée.
-      pointsLayer.clearLayers();
+      var wanted = new Set();
       layersByKey[currentLayer].forEach(function (layer) {
         layer.eachLayer(function (m) {
-          if (detailed || m.province === selectedProvince) pointsLayer.addLayer(m);
+          if (detailed || m.province === selectedProvince) wanted.add(m);
         });
+      });
+      pointsLayer.eachLayer(function (m) {
+        if (!wanted.has(m)) pointsLayer.removeLayer(m);
+      });
+      wanted.forEach(function (m) {
+        if (!pointsLayer.hasLayer(m)) pointsLayer.addLayer(m);
       });
       // Bulles : en vue éloignée, pour toutes les provinces sauf celle dont on voit les points.
       if (detailed) map.removeLayer(provinceLayer); else provinceLayer.addTo(map);
@@ -665,6 +710,7 @@
       var zoneSelect = document.querySelector('select[name="zoneId"]');
       var canRemove = /*[[${currentAgent != null and currentAgent.role.canRemoveHouseholds()}]]*/ false;
       var communeSelect = document.querySelector('select[name="commune"]');
+      var quartierSelect = document.querySelector('select[name="quartier"]');
       var dateInputs = document.querySelectorAll('.filter-date');
       var tbody = document.querySelector('.households-table tbody');
       var countEl = document.querySelector('.table-card-count');
@@ -682,6 +728,7 @@
           province: provinceSelect ? provinceSelect.value : '',
           ville: villeSelect ? villeSelect.value : '',
           commune: communeSelect ? communeSelect.value : '',
+          quartier: quartierSelect ? quartierSelect.value : '',
           statut: statutSelect ? statutSelect.value : '',
           dateFrom: dateInputs[0] ? dateInputs[0].value : '',
           dateTo: dateInputs[1] ? dateInputs[1].value : ''
@@ -704,6 +751,7 @@
         provinceSelect.addEventListener('change', function () {
           if (villeSelect) villeSelect.value = '';
           if (communeSelect) communeSelect.value = '';
+          if (quartierSelect) quartierSelect.value = '';
           applyFilters();
         });
       }
@@ -714,6 +762,7 @@
           if (provinceSelect) provinceSelect.value = '';
           if (villeSelect) villeSelect.value = '';
           if (communeSelect) communeSelect.value = '';
+          if (quartierSelect) quartierSelect.value = '';
           applyFilters();
         });
       }
@@ -725,13 +774,19 @@
       if (villeSelect) {
         villeSelect.addEventListener('change', function () {
           if (communeSelect) communeSelect.value = '';
+          if (quartierSelect) quartierSelect.value = '';
           applyFilters();
         });
       }
+      // Changer de commune réinitialise le quartier (liste propre à chaque commune).
       if (communeSelect) {
         communeSelect.addEventListener('change', function () {
+          if (quartierSelect) quartierSelect.value = '';
           applyFilters();
         });
+      }
+      if (quartierSelect) {
+        quartierSelect.addEventListener('change', applyFilters);
       }
 
       // Entrée dans le champ de recherche : même rechargement que les autres filtres.
@@ -758,6 +813,7 @@
         var province = h.address && h.address.province ? h.address.province : '-';
         var ville = h.address && h.address.ville ? h.address.ville : '-';
         var addr = h.address && h.address.commune ? h.address.commune : '-';
+        var quartierCell = h.address && h.address.quartier ? h.address.quartier : '-';
         var code = h.codeMenage || '';
         var statusClass = h.status === 'complet' ? 'status-complet' : h.status === 'a_verifier' ? 'status-a-verifier' : 'status-incomplet';
         var statusLabel = h.status === 'complet' ? 'Complet' : h.status === 'a_verifier' ? 'À vérifier' : 'Incomplet';
@@ -767,6 +823,7 @@
           + '<td>' + escapeHtml(province) + '</td>'
           + '<td>' + escapeHtml(ville) + '</td>'
           + '<td>' + escapeHtml(addr) + '</td>'
+          + '<td>' + escapeHtml(quartierCell) + '</td>'
           + '<td><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></td>'
           + '<td>' + escapeHtml(h.agentUsername || '—') + '</td>'
           + '<td class="cell-date">' + formatDate(h.updatedAt) + '</td>'
@@ -796,12 +853,13 @@
         var province = provinceSelect ? provinceSelect.value : '';
         var ville = villeSelect ? villeSelect.value : '';
         var commune = communeSelect ? communeSelect.value : '';
+        var quartier = quartierSelect ? quartierSelect.value : '';
         var statut = statutSelect ? statutSelect.value : '';
         var zoneId = zoneSelect ? zoneSelect.value : '';
         var dateFrom = dateInputs[0] ? dateInputs[0].value : '';
         var dateTo = dateInputs[1] ? dateInputs[1].value : '';
 
-        if (!term && !province && !ville && !commune && !statut && !zoneId && !dateFrom && !dateTo) {
+        if (!term && !province && !ville && !commune && !quartier && !statut && !zoneId && !dateFrom && !dateTo) {
           applyFilters();
           return;
         }
@@ -812,6 +870,7 @@
           if (province) params.set('province', province);
           if (ville) params.set('ville', ville);
           if (commune) params.set('commune', commune);
+          if (quartier) params.set('quartier', quartier);
           if (statut) params.set('statut', statut);
           if (zoneId) params.set('zoneId', zoneId);
           if (dateFrom) params.set('dateFrom', dateFrom);
@@ -826,7 +885,7 @@
               }
               tbody.innerHTML = results.length
                 ? results.map(renderRow).join('')
-                : '<tr><td colspan="9" class="table-empty">Aucun foyer ne correspond à cette recherche.</td></tr>';
+                : '<tr><td colspan="10" class="table-empty">Aucun foyer ne correspond à cette recherche.</td></tr>';
             })
             .catch(function () {
               // Recherche live indisponible — la touche Entrée / le rechargement de page reste utilisable.

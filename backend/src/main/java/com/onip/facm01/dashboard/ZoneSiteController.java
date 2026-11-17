@@ -158,6 +158,7 @@ public class ZoneSiteController {
         }
         model.addAttribute("villeInit", villeInit);
         model.addAttribute("communeInit", communeInit);
+        model.addAttribute("quartierInit", site.getQuartier());
         model.addAttribute("returnTo", safeReturn(returnTo));
         agentRepository.findByUsername(authentication.getName())
                 .ifPresent(agent -> model.addAttribute("currentAgent", AgentDto.from(agent)));
@@ -172,10 +173,11 @@ public class ZoneSiteController {
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String ville,
             @RequestParam(required = false) String commune,
+            @RequestParam(required = false) String quartier,
             @RequestParam(required = false) String returnTo,
             RedirectAttributes redirectAttributes) {
         try {
-            ZoneSite site = zoneSiteService.update(id, nom, adresse, province, ville, commune);
+            ZoneSite site = zoneSiteService.update(id, nom, adresse, province, ville, commune, quartier);
             redirectAttributes.addFlashAttribute("success", "Site modifié : " + site.getNom()
                     + (site.getZone() == null ? " (non affecté à une zone)." : " — " + site.getZone().getName() + "."));
         } catch (IllegalArgumentException e) {

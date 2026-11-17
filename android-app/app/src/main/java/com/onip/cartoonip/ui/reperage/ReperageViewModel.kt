@@ -7,6 +7,7 @@ import com.onip.cartoonip.data.SiteSyncRepository
 import com.onip.cartoonip.data.model.AgentZone
 import com.onip.cartoonip.data.model.CapturedSite
 import com.onip.cartoonip.data.model.ZoneSiteOption
+import com.onip.cartoonip.ui.common.PlaceFilter
 import java.text.Normalizer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -59,6 +60,14 @@ class ReperageViewModel : ViewModel() {
         if (showZoneSites) {
             viewModelScope.launch { AppContainer.refreshZoneSites() }
         }
+    }
+
+    // Filtre de lieu de la liste (cf. PlaceFilterBar).
+    private val _placeFilter = MutableStateFlow(PlaceFilter())
+    val placeFilter: StateFlow<PlaceFilter> = _placeFilter.asStateFlow()
+
+    fun setPlaceFilter(filter: PlaceFilter) {
+        _placeFilter.value = filter
     }
 
     private val _syncingIds = MutableStateFlow<Set<String>>(emptySet())

@@ -23,6 +23,8 @@ data class AgentDto(
     val zoneProvince: String? = null,
     val zoneVille: String? = null,
     val zoneCommunes: List<String>? = null,
+    // Quartiers de la zone : la saisie (adressage) ne propose que ceux-là.
+    val zoneQuartiers: List<String>? = null,
 )
 
 /** Zone d'affectation de l'agent connecté : affichée sur l'écran de saisie et le profil, et sert
@@ -33,6 +35,7 @@ data class AgentZone(
     val province: String? = null,
     val ville: String? = null,
     val communes: List<String> = emptyList(),
+    val quartiers: List<String> = emptyList(),
 )
 
 /** Site importé (tableau de bord : Zones > Sites) appartenant à la zone de l'agent connecté —
@@ -45,6 +48,7 @@ data class ZoneSiteOption(
     val province: String? = null,
     val villeTerritoire: String? = null,
     val commune: String? = null,
+    val quartier: String? = null,
     val zoneCode: String? = null,
     // Une fiche de repérage portant ce nom de site existe déjà sur le serveur...
     val visite: Boolean = false,

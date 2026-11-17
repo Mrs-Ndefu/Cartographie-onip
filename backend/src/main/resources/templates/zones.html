@@ -41,7 +41,7 @@
       <div class="table-card-header">
         <div>
           <h2>Définir une zone</h2>
-          <span class="table-card-count">Une province, une ville, et une ou plusieurs communes de cette ville. Son code est attribué automatiquement : lettre de la province (A = Kinshasa, puis ordre alphabétique) et numéro dans la province — A1, A2, B1…</span>
+          <span class="table-card-count">Une province, une ville, une ou plusieurs communes de cette ville et leurs quartiers (au moins un). Son code est attribué automatiquement : lettre de la province (A = Kinshasa, puis ordre alphabétique) et numéro dans la province — A1, A2, B1…</span>
         </div>
       </div>
       <!-- Province, ville et communes : listes enchaînées (cf. app.js, .js-geo). -->
@@ -64,6 +64,15 @@
           </div>
           <input type="text" class="form-control form-control-sm js-geo-commune-pick-other" placeholder="Commune, secteur ou chefferie" hidden>
           <div class="zones-chosen js-geo-communes-chosen"></div>
+        </div>
+        <!-- Quartiers des communes choisies (référentiel Subdivision ADM-RDC), cf. app.js. -->
+        <div class="agents-field zones-quartiers-field js-geo-quartiers">
+          <span>Quartiers * <em class="zones-quartier-count js-geo-quartiers-count"></em></span>
+          <div class="zones-quartier-list js-geo-quartiers-list"></div>
+          <div class="zones-quartier-other">
+            <input type="text" class="form-control form-control-sm js-geo-quartiers-other" placeholder="Autre quartier (absent de la liste)">
+            <button type="button" class="btn btn-sm btn-outline-secondary js-geo-quartiers-add">Ajouter</button>
+          </div>
         </div>
         <button type="submit" class="btn btn-primary btn-sm agents-create-btn">Créer la zone</button>
       </form>
@@ -97,6 +106,7 @@
               <th>Province/Région</th>
               <th>Ville/Territoire</th>
               <th>Communes/Secteurs/Chefferies</th>
+              <th>Quartiers</th>
               <th>Comptes affectés</th>
               <th>Sites</th>
               <th class="col-actions" th:if="${currentAgent != null and currentAgent.role.canManageZones()}">Actions</th>
@@ -113,6 +123,14 @@
                   <span class="geo-tag geo-tag-static" th:each="c : ${z.communes}" th:text="${c}">COMMUNE</span>
                 </span>
               </td>
+              <td class="zones-quartiers-cell">
+                <span th:if="${z.quartiersManquants}" class="status-badge status-incomplet">À compléter</span>
+                <span th:unless="${z.quartiersManquants}" class="zones-communes"
+                      th:title="${#strings.listJoin(z.quartiers, ', ')}">
+                  <span class="geo-tag geo-tag-static geo-tag-quartier" th:each="q, st : ${z.quartiers}" th:if="${st.index < 4}" th:text="${q}">QUARTIER</span>
+                  <span th:if="${z.quartiers.size() > 4}" class="agent-muted small" th:text="'+ ' + ${z.quartiers.size() - 4}">+ 2</span>
+                </span>
+              </td>
               <td>
                 <span class="agent-role-badge" th:text="${agentCounts[z.id]}">0</span>
               </td>
@@ -121,6 +139,15 @@
                    th:title="'Voir les sites de la ' + ${z.name}" th:text="${siteCounts[z.id] ?: 0}">0</a>
               </td>
               <td class="col-actions" th:if="${currentAgent != null and currentAgent.role.canManageZones()}">
+                <div class="d-flex gap-1 justify-content-end">
+                <a th:href="@{/dashboard/zones/{id}/quartiers(id=${z.id})}" class="btn btn-sm btn-icon"
+                   th:classappend="${z.quartiersManquants} ? 'btn-warning' : 'btn-outline-secondary'"
+                   th:title="${z.quartiersManquants} ? 'Ajouter les quartiers de la zone' : 'Modifier les quartiers'"
+                   aria-label="Quartiers de la zone">
+                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  </svg>
+                </a>
                 <form th:action="@{/dashboard/zones/{id}/delete(id=${z.id})}" method="post"
                       class="js-confirm-form"
                       data-confirm-title="Voulez-vous supprimer cette zone ?"
@@ -132,10 +159,11 @@
                     </svg>
                   </button>
                 </form>
+                </div>
               </td>
             </tr>
             <tr th:if="${zones.isEmpty()}">
-              <td colspan="7" class="table-empty">Aucune zone définie pour l'instant.</td>
+              <td colspan="8" class="table-empty">Aucune zone définie pour l'instant.</td>
             </tr>
           </tbody>
         </table>

@@ -39,7 +39,7 @@
       <div class="table-card-header">
         <div>
           <h2>Importer des sites</h2>
-          <span class="table-card-count">Fichier Excel (.xlsx) avec les colonnes Nom du site, Adresse, Province, Ville, Territoire (Commune en option). Chaque site est affecté automatiquement à la zone de même province et de même ville/territoire ; sinon il reste « non affecté » et vous choisissez sa zone ci-dessous. Les lignes déjà importées sont ignorées.</span>
+          <span class="table-card-count">Fichier Excel (.xlsx) avec les colonnes Nom du site, Adresse, Province, Ville, Territoire (Commune et Quartier en option). Chaque site est affecté automatiquement à la zone de même province et de même ville/territoire ; sinon il reste « non affecté » et vous choisissez sa zone ci-dessous. Les lignes déjà importées sont ignorées.</span>
         </div>
         <a th:href="@{/dashboard/zones/sites/modele.xlsx}" class="link-btn">Télécharger le modèle</a>
       </div>
@@ -109,6 +109,7 @@
               <th>Ville</th>
               <th>Territoire</th>
               <th>Commune</th>
+              <th>Quartier</th>
               <th>Zone</th>
               <th>Statut</th>
               <th class="col-actions" th:if="${canManage}">Actions</th>
@@ -122,6 +123,7 @@
               <td th:text="${s.ville ?: '-'}">-</td>
               <td th:text="${s.territoire ?: '-'}">-</td>
               <td th:text="${s.commune ?: '-'}">-</td>
+              <td th:text="${s.quartier ?: '-'}">-</td>
               <td>
                 <span th:if="${s.zone != null}" class="zone-site-zone" th:title="${s.zone.label}">
                   <span class="zone-letter" th:text="${s.zone.code ?: '?'}">A1</span>
@@ -169,7 +171,7 @@
               </td>
             </tr>
             <tr th:if="${sites.isEmpty()}">
-              <td th:colspan="${canManage ? 9 : 8}" class="table-empty"
+              <td th:colspan="${canManage ? 10 : 9}" class="table-empty"
                   th:text="${totalCount == 0} ? 'Aucun site importé pour l\'instant.' : 'Aucun site pour ce filtre.'">Aucun site.</td>
             </tr>
           </tbody>

@@ -174,6 +174,45 @@ document.addEventListener('click', function (e) {
   }
 })();
 
+// Actualisation automatique de la page toutes les 15 minutes (nouvelles données du terrain), en
+// gardant la position de défilement (cf. ci-dessus). Pour ne rien faire perdre, elle est reportée
+// de 15 minutes quand un formulaire a été modifié sans être envoyé, quand une fenêtre de
+// confirmation est ouverte ou quand une fiche est ouverte sur la carte. Désactivable sur une page
+// avec <body data-no-autorefresh>.
+(function () {
+  var REFRESH_MS = 15 * 60 * 1000;
+  if (document.body && document.body.hasAttribute('data-no-autorefresh')) return;
+
+  var dirty = false;
+  document.addEventListener('input', function (e) {
+    if (e.target && e.target.closest && e.target.closest('form')) dirty = true;
+  }, true);
+  document.addEventListener('change', function (e) {
+    // Les listes de filtres rechargent déjà la page : seul un vrai formulaire compte.
+    if (e.target && e.target.closest && e.target.closest('form') && !e.target.classList.contains('filter-select')) dirty = true;
+  }, true);
+  document.addEventListener('submit', function () { dirty = false; }, true);
+
+  function busy() {
+    var confirm = document.getElementById('confirm-modal');
+    var editModal = document.getElementById('edit-modal');
+    return dirty
+      || (confirm && !confirm.hidden)
+      || (editModal && !editModal.hidden)
+      || !!document.querySelector('.leaflet-popup');
+  }
+
+  function tick() {
+    if (busy()) {
+      setTimeout(tick, REFRESH_MS);
+    } else {
+      location.reload();
+    }
+  }
+
+  setTimeout(tick, REFRESH_MS);
+})();
+
 // Formulaire de modification d'un ménage : le nombre de membres (chef compris, obligatoire)
 // limite les fiches membres qu'on peut ajouter à (nombre - 1). Au-delà, on demande de modifier
 // d'abord ce nombre. Les fiches ajoutées peuvent rester vides.
@@ -301,8 +340,8 @@ document.addEventListener('click', function (e) {
   });
 })();
 
-// Listes déroulantes enchaînées province -> ville -> commune (formulaire de modification d'un
-// ménage, création des zones). Dans un conteneur .js-geo :
+// Listes déroulantes enchaînées province -> ville -> commune -> quartier (formulaire de
+// modification d'un ménage, fiche de repérage, sites, création des zones). Dans un conteneur .js-geo :
 // - .js-geo-province / .js-geo-ville / .js-geo-commune : les listes affichées ;
 // - .js-geo-*-value : champs cachés réellement envoyés (name="province", "ville", "commune"),
 //   déjà remplis par le serveur avec la valeur actuelle ;
@@ -311,7 +350,12 @@ document.addEventListener('click', function (e) {
 //   commune connue, ville saisie librement) ;
 // - .js-geo-multi : à la place de .js-geo-commune, choix de plusieurs communes (zones) — liste
 //   .js-geo-commune-pick (ajout dès le choix, ou par Entrée en saisie libre) ; chaque commune
-//   ajoutée devient une étiquette dans .js-geo-communes-chosen (champ caché name="communes").
+//   ajoutée devient une étiquette dans .js-geo-communes-chosen (champ caché name="communes") ;
+// - .js-geo-quartier / .js-geo-quartier-value / .js-geo-quartier-other (facultatifs) : quartiers
+//   de la commune choisie (référentiel « Subdivision ADM-RDC »), avec saisie libre en secours ;
+// - .js-geo-quartiers (zones) : quartiers des communes choisies, en cases à cocher (cf.
+//   setupQuartierPicker). Sans liste de province (page « Quartiers de la zone »), la ville et les
+//   communes viennent des attributs data-ville / data-communes / data-selected du bloc.
 // Les données viennent de /dashboard/geo (mêmes listes que les apps de saisie), chargées une fois.
 (function () {
   var AUTRE = '__autre__';
@@ -380,6 +424,9 @@ document.addEventListener('click', function (e) {
     var pickSel = multi && multi.querySelector('.js-geo-commune-pick');
     var pickOther = multi && multi.querySelector('.js-geo-commune-pick-other');
     var chosen = multi && multi.querySelector('.js-geo-communes-chosen');
+    var quartierSel = box.querySelector('.js-geo-quartier');
+    var quartierVal = box.querySelector('.js-geo-quartier-value');
+    var quartierOther = box.querySelector('.js-geo-quartier-other');
 
     function villeEntry(name) {
       return geo.villes.find(function (v) { return key(v.name) === key(name); }) || null;
@@ -396,6 +443,23 @@ document.addEventListener('click', function (e) {
       return entry ? entry.communes : [];
     }
 
+    // Quartiers de la commune (clé sans casse ni accents : "KALAMU" retrouve "Kalamu").
+    function quartiersFor(ville, commune) {
+      var entry = villeEntry(ville);
+      if (!entry || !entry.quartiers || !commune) return [];
+      var found = Object.keys(entry.quartiers).find(function (c) { return key(c) === key(commune); });
+      return found ? entry.quartiers[found] : [];
+    }
+
+    function renderQuartiers() {
+      if (!quartierSel) return;
+      fill(quartierSel, quartiersFor(villeVal.value, communeVal ? communeVal.value : ''), quartierVal.value, quartierOther);
+    }
+
+    function clearQuartier() {
+      if (quartierVal) quartierVal.value = '';
+    }
+
     function renderCommunes() {
       var communes = communesFor(villeVal.value);
       if (communeSel) {
@@ -404,11 +468,152 @@ document.addEventListener('click', function (e) {
       if (multi) {
         fill(pickSel, communes, '', pickOther);
       }
+      renderQuartiers();
+      if (typeof rerenderZoneQuartiers === 'function') rerenderZoneQuartiers();
     }
 
     function renderVilles() {
       fill(villeSel, villesFor(provinceVal.value), villeVal.value, villeOther);
       renderCommunes();
+    }
+
+    // --- Quartiers d'une zone (.js-geo-quartiers) : cases à cocher regroupées par commune
+    // (quartiers du référentiel pour les communes choisies) + saisie libre d'un autre quartier.
+    // Chaque quartier coché envoie un champ name="quartiers" ; au moins un est exigé.
+    var qbox = box.querySelector('.js-geo-quartiers');
+    function setupQuartierPicker(getVille, getCommunes, initial) {
+      var list = qbox.querySelector('.js-geo-quartiers-list');
+      var otherInput = qbox.querySelector('.js-geo-quartiers-other');
+      var otherBtn = qbox.querySelector('.js-geo-quartiers-add');
+      var counter = qbox.querySelector('.js-geo-quartiers-count');
+      var extra = [];          // quartiers saisis librement
+      var checked = {};        // clé -> nom, quartiers cochés
+      (initial || []).forEach(function (q) { checked[key(q)] = q.toUpperCase(); });
+
+      function updateCount() {
+        if (counter) {
+          var n = Object.keys(checked).length;
+          counter.textContent = n ? n + ' quartier(s) choisi(s)' : 'Aucun quartier choisi';
+        }
+      }
+
+      function checkbox(name) {
+        var label = document.createElement('label');
+        label.className = 'zones-quartier-option';
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.name = 'quartiers';
+        input.value = name.toUpperCase();
+        input.checked = !!checked[key(name)];
+        input.addEventListener('change', function () {
+          if (input.checked) checked[key(name)] = name.toUpperCase();
+          else delete checked[key(name)];
+          updateCount();
+          list.setCustomValidity && list.setCustomValidity('');
+        });
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(' ' + name));
+        return label;
+      }
+
+      function render() {
+        list.innerHTML = '';
+        var ville = getVille();
+        var known = {};
+        getCommunes().forEach(function (commune) {
+          var quartiers = quartiersFor(ville, commune);
+          var group = document.createElement('div');
+          group.className = 'zones-quartier-group';
+          var title = document.createElement('div');
+          title.className = 'zones-quartier-group-title';
+          title.textContent = commune.toUpperCase() + (quartiers.length ? ' (' + quartiers.length + ')' : ' — aucun quartier connu, utilisez « Autre quartier »');
+          group.appendChild(title);
+          if (quartiers.length) {
+            var all = document.createElement('button');
+            all.type = 'button';
+            all.className = 'zones-quartier-all';
+            all.textContent = 'Tout cocher';
+            all.addEventListener('click', function () {
+              quartiers.forEach(function (q) { checked[key(q)] = q.toUpperCase(); });
+              render();
+            });
+            title.appendChild(all);
+          }
+          var grid = document.createElement('div');
+          grid.className = 'zones-quartier-grid';
+          quartiers.forEach(function (q) {
+            known[key(q)] = true;
+            grid.appendChild(checkbox(q));
+          });
+          group.appendChild(grid);
+          list.appendChild(group);
+        });
+        // Quartiers cochés hors liste (saisis librement, ou d'une commune retirée) : gardés visibles.
+        var others = Object.keys(checked).filter(function (k) { return !known[k]; });
+        extra.forEach(function (q) { if (!known[key(q)] && others.indexOf(key(q)) < 0) others.push(key(q)); });
+        if (others.length) {
+          var g = document.createElement('div');
+          g.className = 'zones-quartier-group';
+          var t = document.createElement('div');
+          t.className = 'zones-quartier-group-title';
+          t.textContent = 'Autres quartiers';
+          g.appendChild(t);
+          var grid2 = document.createElement('div');
+          grid2.className = 'zones-quartier-grid';
+          others.forEach(function (k) { grid2.appendChild(checkbox(checked[k] || k)); });
+          g.appendChild(grid2);
+          list.appendChild(g);
+        }
+        if (!list.children.length) {
+          var hint = document.createElement('p');
+          hint.className = 'zones-quartier-hint';
+          hint.textContent = 'Choisissez d\'abord la ville et les communes : leurs quartiers s\'afficheront ici.';
+          list.appendChild(hint);
+        }
+        updateCount();
+      }
+
+      function addOther() {
+        var name = (otherInput.value || '').trim().toUpperCase();
+        if (!name) return;
+        checked[key(name)] = name;
+        extra.push(name);
+        otherInput.value = '';
+        render();
+      }
+      if (otherBtn) otherBtn.addEventListener('click', addOther);
+      otherInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addOther();
+        }
+      });
+
+      // Au moins un quartier avant d'envoyer (un quartier tapé mais pas encore ajouté compte).
+      box.addEventListener('submit', function (e) {
+        if (otherInput.value.trim()) addOther();
+        if (!Object.keys(checked).length) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          otherInput.setCustomValidity('Choisissez au moins un quartier.');
+          otherInput.reportValidity();
+        }
+      }, true);
+      otherInput.addEventListener('input', function () { otherInput.setCustomValidity(''); });
+
+      render();
+      return render;
+    }
+
+    // Page « Quartiers de la zone » : ville et communes fixes, seul le choix des quartiers.
+    if (!provinceSel) {
+      if (qbox) {
+        setupQuartierPicker(
+          function () { return qbox.dataset.ville || ''; },
+          function () { return JSON.parse(qbox.dataset.communes || '[]'); },
+          JSON.parse(qbox.dataset.selected || '[]'));
+      }
+      return;
     }
 
     // --- zones : communes ajoutées une à une, affichées en étiquettes
@@ -431,10 +636,14 @@ document.addEventListener('click', function (e) {
       remove.className = 'geo-tag-remove';
       remove.setAttribute('aria-label', 'Retirer ' + name);
       remove.textContent = '×';
-      remove.addEventListener('click', function () { tag.remove(); });
+      remove.addEventListener('click', function () {
+        tag.remove();
+        if (rerenderZoneQuartiers) rerenderZoneQuartiers();
+      });
       tag.appendChild(hidden);
       tag.appendChild(remove);
       chosen.appendChild(tag);
+      if (rerenderZoneQuartiers) rerenderZoneQuartiers();
     }
 
     function addPicked() {
@@ -445,6 +654,14 @@ document.addEventListener('click', function (e) {
       if (!pickSel.hidden) showOther(pickSel, pickOther, false, false);
     }
 
+    // Création d'une zone : quartiers des communes ajoutées (étiquettes).
+    var rerenderZoneQuartiers = (qbox && chosen) ? setupQuartierPicker(
+      function () { return villeVal.value; },
+      function () {
+        return Array.prototype.map.call(chosen.querySelectorAll('input'), function (i) { return i.value; });
+      },
+      []) : null;
+
     fill(provinceSel, geo.provinces, provinceVal.value, null);
     renderVilles();
 
@@ -452,6 +669,7 @@ document.addEventListener('click', function (e) {
       provinceVal.value = provinceSel.value;
       villeVal.value = '';
       if (communeVal) communeVal.value = '';
+      clearQuartier();
       if (chosen) chosen.innerHTML = '';
       renderVilles();
     });
@@ -469,6 +687,7 @@ document.addEventListener('click', function (e) {
         fill(villeSel, villesFor(provinceVal.value), villeVal.value, villeOther);
       }
       if (communeVal) communeVal.value = '';
+      clearQuartier();
       if (chosen) chosen.innerHTML = '';
       renderCommunes();
     });
@@ -483,9 +702,23 @@ document.addEventListener('click', function (e) {
         showOther(communeSel, communeOther, isOther, false);
         communeVal.value = isOther ? communeOther.value.trim().toUpperCase() : communeSel.value;
         if (isOther) communeOther.focus();
+        clearQuartier();
+        renderQuartiers();
       });
       communeOther.addEventListener('input', function () {
         communeVal.value = communeOther.value.trim().toUpperCase();
+      });
+    }
+
+    if (quartierSel) {
+      quartierSel.addEventListener('change', function () {
+        var isOther = quartierSel.value === AUTRE;
+        showOther(quartierSel, quartierOther, isOther, false);
+        quartierVal.value = isOther ? quartierOther.value.trim().toUpperCase() : quartierSel.value;
+        if (isOther) quartierOther.focus();
+      });
+      quartierOther.addEventListener('input', function () {
+        quartierVal.value = quartierOther.value.trim().toUpperCase();
       });
     }
 

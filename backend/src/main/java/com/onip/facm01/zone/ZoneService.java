@@ -44,9 +44,9 @@ public class ZoneService {
 
     // Saisies normalisées en majuscules, comme les adresses envoyées par les apps terrain, pour
     // que le filtre par zone du tableau de bord retrouve bien les ménages correspondants.
-    // Une zone = une province, une ville et au moins une commune (doublons et lignes vides
-    // ignorés).
-    public Zone create(String province, String ville, List<String> communes) {
+    // Une zone = une province, une ville, au moins une commune et au moins un quartier (doublons
+    // et lignes vides ignorés).
+    public Zone create(String province, String ville, List<String> communes, List<String> quartiers) {
         String p = normalize(province);
         String v = normalize(ville);
         List<String> c = communes == null ? List.of() : communes.stream()
@@ -58,12 +58,38 @@ public class ZoneService {
         if (p == null || v == null || c.isEmpty()) {
             throw new IllegalArgumentException("La province, la ville et au moins une commune sont obligatoires");
         }
+        List<String> q = normalizeAll(quartiers);
+        if (q.isEmpty()) {
+            throw new IllegalArgumentException("Choisissez au moins un quartier pour la zone");
+        }
         boolean exists = list().stream().anyMatch(z ->
                 z.getProvince().equals(p) && z.getVille().equals(v) && z.getCommunes().stream().sorted().toList().equals(c));
         if (exists) {
             throw new IllegalArgumentException("Cette zone existe déjà");
         }
-        return zoneRepository.save(new Zone(UUID.randomUUID(), nextCode(p), p, v, c));
+        return zoneRepository.save(new Zone(UUID.randomUUID(), nextCode(p), p, v, c, q));
+    }
+
+    // Quartiers d'une zone existante (au moins un) — complète les zones créées avant l'ajout des
+    // quartiers, ou ajuste la liste.
+    @Transactional
+    public Zone updateQuartiers(UUID id, List<String> quartiers) {
+        Zone zone = get(id);
+        List<String> q = normalizeAll(quartiers);
+        if (q.isEmpty()) {
+            throw new IllegalArgumentException("Choisissez au moins un quartier pour la zone");
+        }
+        zone.setQuartiers(q);
+        return zone;
+    }
+
+    private static List<String> normalizeAll(List<String> values) {
+        return values == null ? List.of() : values.stream()
+                .map(ZoneService::normalize)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
     }
 
     // Code d'une nouvelle zone : lettre de la province (A = Kinshasa...) suivie du premier numéro

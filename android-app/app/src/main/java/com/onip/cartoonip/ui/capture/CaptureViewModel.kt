@@ -155,7 +155,7 @@ class CaptureViewModel : ViewModel() {
     fun onChefDateNaissanceChange(v: String) = update { copy(chefDateNaissance = formatDateDigits(v)) }
     fun onChefSexeChange(v: String) = update { copy(chefSexe = v) }
     // Changer de province vide la ville et la commune (elles appartenaient à l'ancienne province).
-    fun onProvinceChange(v: String) = update { copy(province = v.toFieldCase(), ville = "", commune = "") }
+    fun onProvinceChange(v: String) = update { copy(province = v.toFieldCase(), ville = "", commune = "", quartier = "") }
 
     // Une ville de la liste impose sa province ; une ville saisie librement garde la province
     // choisie à la main.
@@ -163,10 +163,11 @@ class CaptureViewModel : ViewModel() {
         copy(
             ville = v.toFieldCase(),
             commune = "",
+            quartier = "",
             province = provinceForVille(v)?.toFieldCase() ?: province,
         )
     }
-    fun onCommuneChange(v: String) = update { copy(commune = v.toFieldCase()) }
+    fun onCommuneChange(v: String) = update { copy(commune = v.toFieldCase(), quartier = "") }
     fun onQuartierChange(v: String) = update { copy(quartier = v.toFieldCase()) }
     fun onRueChange(v: String) = update { copy(rue = v.toFieldCase()) }
     fun onNumeroChange(v: String) = update { copy(numero = v.toFieldCase()) }

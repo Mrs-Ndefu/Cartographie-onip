@@ -54,14 +54,47 @@ public class ZoneAdminController {
             @RequestParam String province,
             @RequestParam String ville,
             @RequestParam(required = false) List<String> communes,
+            @RequestParam(required = false) List<String> quartiers,
             RedirectAttributes redirectAttributes) {
         try {
-            Zone zone = zoneService.create(province, ville, communes);
+            Zone zone = zoneService.create(province, ville, communes, quartiers);
             redirectAttributes.addFlashAttribute("success", "Zone créée : " + zone.getLabel());
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/dashboard/zones";
+    }
+
+    // Quartiers d'une zone (ADMIN) : compléter une zone créée avant l'ajout des quartiers, ou
+    // ajuster la liste.
+    @GetMapping("/{id}/quartiers")
+    public String quartiersForm(@PathVariable UUID id, Authentication authentication, Model model)
+            throws com.fasterxml.jackson.core.JsonProcessingException {
+        Zone zone = zoneService.get(id);
+        var json = new com.fasterxml.jackson.databind.ObjectMapper();
+        model.addAttribute("zone", zone);
+        // Communes et quartiers déjà choisis, lus par app.js (data-communes / data-selected).
+        model.addAttribute("communesJson", json.writeValueAsString(zone.getCommunes()));
+        model.addAttribute("quartiersJson", json.writeValueAsString(zone.getQuartiers()));
+        agentRepository.findByUsername(authentication.getName())
+                .ifPresent(agent -> model.addAttribute("currentAgent", AgentDto.from(agent)));
+        return "zone-quartiers";
+    }
+
+    @PostMapping("/{id}/quartiers")
+    public String saveQuartiers(
+            @PathVariable UUID id,
+            @RequestParam(required = false) List<String> quartiers,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Zone zone = zoneService.updateQuartiers(id, quartiers);
+            redirectAttributes.addFlashAttribute("success",
+                    zone.getName() + " : " + zone.getQuartiers().size() + " quartier(s) enregistré(s).");
+            return "redirect:/dashboard/zones";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/dashboard/zones/" + id + "/quartiers";
+        }
     }
 
     @PostMapping("/delete-all")

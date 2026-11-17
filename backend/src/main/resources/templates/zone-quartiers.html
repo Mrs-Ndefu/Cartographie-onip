@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quartiers de la zone — Adressage de Foyers</title>
+  <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+  <header class="topbar">
+    <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
+    <h1>Adressage de Foyers — Quartiers de la zone</h1>
+    <nav class="topbar-nav">
+      <a th:href="@{/dashboard/zones}" class="link-btn">← Zones</a>
+      <a th:href="@{/dashboard/profile}" class="avatar-link" title="Mon profil">
+        <img th:if="${currentAgent != null and currentAgent.photoDataUrl != null}"
+             th:src="${currentAgent.photoDataUrl}" alt="" class="avatar-img-lg">
+        <span th:unless="${currentAgent != null and currentAgent.photoDataUrl != null}" class="avatar-placeholder-lg"
+              th:text="${currentAgent != null ? #strings.substring(currentAgent.fullName,0,1) : '?'}">?</span>
+      </a>
+    </nav>
+  </header>
+
+  <section class="agents-messages">
+    <div th:if="${error}" class="alert alert-danger py-2 alert-persistent" th:text="${error}">-</div>
+  </section>
+
+  <section class="table-section agents-page">
+    <div class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2 th:text="${zone.name}">Zone A1</h2>
+          <span class="table-card-count" th:text="${zone.place}">KINSHASA / KINSHASA / GOMBE</span>
+        </div>
+        <span th:if="${zone.quartiersManquants}" class="status-badge status-incomplet">Quartiers à compléter</span>
+      </div>
+      <!-- Ville et communes fixes : seuls les quartiers se choisissent (cf. app.js, .js-geo-quartiers). -->
+      <form th:action="@{/dashboard/zones/{id}/quartiers(id=${zone.id})}" method="post" class="zone-quartiers-form js-geo">
+        <div class="agents-field zones-quartiers-field js-geo-quartiers"
+             th:data-ville="${zone.ville}"
+             th:data-communes="${communesJson}"
+             th:data-selected="${quartiersJson}">
+          <span>Quartiers de la zone * <em class="zones-quartier-count js-geo-quartiers-count"></em></span>
+          <div class="zones-quartier-list js-geo-quartiers-list"></div>
+          <div class="zones-quartier-other">
+            <input type="text" class="form-control form-control-sm js-geo-quartiers-other" placeholder="Autre quartier (absent de la liste)">
+            <button type="button" class="btn btn-sm btn-outline-secondary js-geo-quartiers-add">Ajouter</button>
+          </div>
+        </div>
+        <div class="zone-site-edit-actions">
+          <a th:href="@{/dashboard/zones}" class="btn btn-sm btn-outline-secondary">Annuler</a>
+          <button type="submit" class="btn btn-sm btn-primary">Enregistrer les quartiers</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

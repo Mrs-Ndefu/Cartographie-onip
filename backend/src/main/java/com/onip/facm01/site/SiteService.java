@@ -123,12 +123,36 @@ public class SiteService {
         siteRepository.save(site);
     }
 
+    // Filtres de lieu du tableau Repérage : null/vide = pas de filtre.
+    public record PlaceFilter(String province, String ville, String commune, String quartier) {
+        public static final PlaceFilter NONE = new PlaceFilter(null, null, null, null);
+    }
+
     // Tableau de bord (ADMIN/SUPER_ADMIN/SUPERVISEUR, cf. SecurityConfig) : toutes les fiches,
-    // sans scope agent, avec recherche — même principe que HouseholdService.searchAdmin.
+    // sans scope agent, avec recherche et filtres de lieu — même principe que
+    // HouseholdService.searchAdmin.
     @Transactional(readOnly = true)
-    public Page<SiteDto> listAdmin(String search, boolean archived, boolean incompletes, Pageable pageable) {
-        return siteRepository.searchAdmin(search == null ? "" : search, archived, incompletes, pageable)
+    public Page<SiteDto> listAdmin(String search, PlaceFilter place, boolean archived, boolean incompletes, Pageable pageable) {
+        PlaceFilter p = place == null ? PlaceFilter.NONE : place;
+        return siteRepository.searchAdmin(search == null ? "" : search,
+                        orEmpty(p.province()), orEmpty(p.ville()), orEmpty(p.commune()), orEmpty(p.quartier()),
+                        archived, incompletes, pageable)
                 .map(SiteDto::from);
+    }
+
+    // Valeurs proposées par les filtres Province / Ville / Commune / Quartier du tableau Repérage.
+    @Transactional(readOnly = true)
+    public java.util.Map<String, List<String>> placeOptions(PlaceFilter place, boolean archived) {
+        PlaceFilter p = place == null ? PlaceFilter.NONE : place;
+        return java.util.Map.of(
+                "provinces", siteRepository.distinctProvinces(archived),
+                "villes", siteRepository.distinctVilles(archived, orEmpty(p.province())),
+                "communes", siteRepository.distinctCommunes(archived, orEmpty(p.province()), orEmpty(p.ville())),
+                "quartiers", siteRepository.distinctQuartiers(archived, orEmpty(p.province()), orEmpty(p.ville()), orEmpty(p.commune())));
+    }
+
+    private static String orEmpty(String value) {
+        return value == null ? "" : value.trim();
     }
 
     // Fiches incomplètes en attente d'une action de l'ADMIN/SUPERVISEUR (cloche de notification).

@@ -51,13 +51,21 @@ object AppContainer {
     private val _agentZone = MutableStateFlow<AgentZone?>(null)
     val agentZone: StateFlow<AgentZone?> = _agentZone.asStateFlow()
 
-    fun setAgentZone(code: String?, place: String?, province: String? = null, ville: String? = null, communes: List<String> = emptyList()) {
-        _agentZone.value = if (code.isNullOrBlank()) null else AgentZone(code, place.orEmpty(), province, ville, communes)
+    fun setAgentZone(
+        code: String?,
+        place: String?,
+        province: String? = null,
+        ville: String? = null,
+        communes: List<String> = emptyList(),
+        quartiers: List<String> = emptyList(),
+    ) {
+        _agentZone.value = if (code.isNullOrBlank()) null else AgentZone(code, place.orEmpty(), province, ville, communes, quartiers)
         sessionManager.zoneCode = code
         sessionManager.zonePlace = place
         sessionManager.zoneProvince = province
         sessionManager.zoneVille = ville
         sessionManager.zoneCommunes = communes
+        sessionManager.zoneQuartiers = quartiers
     }
 
     // Sites de la zone de l'agent (fiche de repérage du chef d'équipe) : chargés depuis le cache
@@ -98,7 +106,10 @@ object AppContainer {
     /** Met à jour photo, zone et rôle d'après la fiche de l'agent renvoyée par le serveur. */
     fun applyAgent(agent: AgentDto) {
         setAgentPhoto(agent.photoDataUrl)
-        setAgentZone(agent.zoneCode, agent.zonePlace, agent.zoneProvince, agent.zoneVille, agent.zoneCommunes.orEmpty())
+        setAgentZone(
+            agent.zoneCode, agent.zonePlace, agent.zoneProvince, agent.zoneVille,
+            agent.zoneCommunes.orEmpty(), agent.zoneQuartiers.orEmpty(),
+        )
         setAgentRole(agent.role)
     }
 
@@ -109,6 +120,8 @@ object AppContainer {
     fun init(context: Context) {
         if (initialized) return
         appContext = context.applicationContext
+        // Référentiel provinces/villes/communes/quartiers (assets/drc-geo.json).
+        DrcGeo.load(appContext)
         sessionManager = SessionManager(appContext)
         captureStore = CaptureStore(appContext)
         siteStore = SiteStore(appContext)
@@ -116,6 +129,7 @@ object AppContainer {
             _agentZone.value = AgentZone(
                 it, sessionManager.zonePlace.orEmpty(),
                 sessionManager.zoneProvince, sessionManager.zoneVille, sessionManager.zoneCommunes,
+                sessionManager.zoneQuartiers,
             )
         }
         _agentRole.value = sessionManager.role

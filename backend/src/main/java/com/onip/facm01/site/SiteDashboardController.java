@@ -47,19 +47,29 @@ public class SiteDashboardController {
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "false") boolean retirees,
             @RequestParam(defaultValue = "false") boolean incompletes,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String ville,
+            @RequestParam(required = false) String commune,
+            @RequestParam(required = false) String quartier,
             Authentication authentication,
             Model model) {
+        SiteService.PlaceFilter place = new SiteService.PlaceFilter(province, ville, commune, quartier);
         Sort sort = retirees
                 ? Sort.by(Sort.Direction.DESC, "archivedAt")
                 : Sort.by(Sort.Direction.DESC, "createdAt");
         incompletes = incompletes && !retirees;
-        Page<SiteDto> sites = siteService.listAdmin(search, retirees, incompletes, PageRequest.of(page, 20, sort));
+        Page<SiteDto> sites = siteService.listAdmin(search, place, retirees, incompletes, PageRequest.of(page, 20, sort));
         addCurrentAgent(authentication, model);
         model.addAttribute("sites", sites.getContent());
         model.addAttribute("page", sites);
         model.addAttribute("search", search);
         model.addAttribute("retirees", retirees);
         model.addAttribute("incompletes", incompletes);
+        model.addAttribute("province", province);
+        model.addAttribute("ville", ville);
+        model.addAttribute("commune", commune);
+        model.addAttribute("quartier", quartier);
+        model.addAllAttributes(siteService.placeOptions(place, retirees));
         return "sites";
     }
 

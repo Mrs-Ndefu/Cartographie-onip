@@ -61,7 +61,7 @@
                   <label class="form-label small fw-semibold" for="nomSite">Nom du site <span class="req">*</span></label>
                   <input type="text" class="form-control" th:field="*{nomSite}">
                 </div>
-                <!-- Province, ville et commune : listes enchaînées (cf. app.js, .js-geo). -->
+                <!-- Province, ville, commune et quartier : listes enchaînées (cf. app.js, .js-geo). -->
                 <div class="col-12">
                   <div class="row g-3 js-geo">
                     <div class="col-sm-6">
@@ -81,11 +81,14 @@
                       <select id="geo-commune" class="form-select js-geo-commune"></select>
                       <input type="text" class="form-control mt-1 js-geo-commune-other" placeholder="Commune, secteur ou chefferie" hidden>
                     </div>
+                    <div class="col-sm-6">
+                      <label class="form-label small fw-semibold" for="geo-quartier">Quartier/Groupement</label>
+                      <!-- Quartiers de la commune choisie (référentiel Subdivision ADM-RDC), cf. app.js. -->
+                      <input type="hidden" name="quartierGroupement" class="js-geo-quartier-value" th:value="*{quartierGroupement}">
+                      <select id="geo-quartier" class="form-select js-geo-quartier"></select>
+                      <input type="text" class="form-control mt-1 js-geo-quartier-other" placeholder="Quartier ou groupement" hidden>
+                    </div>
                   </div>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="quartierGroupement">Quartier/Groupement</label>
-                  <input type="text" class="form-control" th:field="*{quartierGroupement}">
                 </div>
                 <div class="col-sm-6">
                   <label class="form-label small fw-semibold" for="villageAvenueRue">Village/Avenue/Rue</label>

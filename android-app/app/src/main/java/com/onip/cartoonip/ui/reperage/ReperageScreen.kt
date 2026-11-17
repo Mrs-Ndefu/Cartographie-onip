@@ -1,5 +1,9 @@
 package com.onip.cartoonip.ui.reperage
 
+import com.onip.cartoonip.ui.common.PlaceFilterBar
+import com.onip.cartoonip.ui.common.PlaceLevel
+import com.onip.cartoonip.ui.common.PlaceValues
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -75,10 +79,12 @@ fun ReperageScreen(
     onVisitSite: (String) -> Unit = {},
     viewModel: ReperageViewModel = viewModel(),
 ) {
-    val sites by viewModel.sites.collectAsState()
+    val allSites by viewModel.sites.collectAsState()
     val zoneVisits by viewModel.zoneVisits.collectAsState()
     val agentZone by viewModel.agentZone.collectAsState()
     val otherFiches by viewModel.otherFiches.collectAsState()
+    val placeFilter by viewModel.placeFilter.collectAsState()
+    val sites = allSites.filter { placeFilter.matches(PlaceValues(it.province, it.ville, it.commune, it.quartierGroupement)) }
     val syncingIds by viewModel.syncingIds.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -92,7 +98,7 @@ fun ReperageScreen(
         }
     }
 
-    val pendingCount = sites.count { it.syncedAt == null }
+    val pendingCount = allSites.count { it.syncedAt == null }
 
     Scaffold(
         topBar = {
@@ -118,9 +124,26 @@ fun ReperageScreen(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             if (viewModel.showZoneSites) {
+                // Filtre Commune / Quartier : quartier d'un site = celui de sa fiche (s'il en a une).
+                val visitPlace = { v: ZoneSiteVisit ->
+                    PlaceValues(commune = v.option.commune.orEmpty(), quartier = v.localFiche?.quartierGroupement.orEmpty())
+                }
+                val fichePlace = { f: CapturedSite -> PlaceValues(commune = f.commune, quartier = f.quartierGroupement) }
                 ZoneSitesList(
                     zone = agentZone,
-                    visits = zoneVisits,
+                    visits = zoneVisits.filter { placeFilter.matches(visitPlace(it)) },
+                    allVisits = zoneVisits,
+                    filterActive = placeFilter.isActive,
+                    filterBar = {
+                        if (zoneVisits.isNotEmpty() || otherFiches.isNotEmpty()) {
+                            PlaceFilterBar(
+                                entries = zoneVisits.map(visitPlace) + otherFiches.map(fichePlace),
+                                filter = placeFilter,
+                                onChange = viewModel::setPlaceFilter,
+                                levels = listOf(PlaceLevel.COMMUNE, PlaceLevel.QUARTIER),
+                            )
+                        }
+                    },
                     pending = pendingCount,
                     onVisit = { visit ->
                         val fiche = visit.localFiche
@@ -130,7 +153,7 @@ fun ReperageScreen(
                             else -> onVisitSite(visit.option.id)
                         }
                     },
-                    otherFiches = otherFiches,
+                    otherFiches = otherFiches.filter { placeFilter.matches(fichePlace(it)) },
                     otherRow = { site ->
                         SiteRow(
                             site = site,
@@ -145,6 +168,11 @@ fun ReperageScreen(
             }
 
             ReperageSummaryHeader(total = sites.size, pending = pendingCount)
+            // Filtres Province / Ville / Commune / Quartier sur les fiches de l'appareil.
+            val sitePlace = { f: CapturedSite -> PlaceValues(f.province, f.ville, f.commune, f.quartierGroupement) }
+            if (allSites.isNotEmpty()) {
+                PlaceFilterBar(entries = allSites.map(sitePlace), filter = placeFilter, onChange = viewModel::setPlaceFilter)
+            }
 
             if (sites.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -156,7 +184,7 @@ fun ReperageScreen(
                             tint = MaterialTheme.colorScheme.outline,
                         )
                         Text(
-                            "Aucune fiche de repérage pour l'instant.",
+                            if (placeFilter.isActive) "Aucune fiche pour ce filtre." else "Aucune fiche de repérage pour l'instant.",
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -214,13 +242,17 @@ private val ToVisitOrange = Color(0xFFD9822B)
 private fun ZoneSitesList(
     zone: AgentZone?,
     visits: List<ZoneSiteVisit>,
+    allVisits: List<ZoneSiteVisit>,
+    filterActive: Boolean,
+    filterBar: @Composable () -> Unit,
     pending: Int,
     onVisit: (ZoneSiteVisit) -> Unit,
     otherFiches: List<CapturedSite>,
     otherRow: @Composable (CapturedSite) -> Unit,
 ) {
-    val visitedCount = visits.count { it.visited }
-    val completeCount = visits.count { it.visited && it.complete }
+    // Progression sur toute la zone, même quand un filtre réduit la liste.
+    val visitedCount = allVisits.count { it.visited }
+    val completeCount = allVisits.count { it.visited && it.complete }
     Column(Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -262,10 +294,14 @@ private fun ZoneSitesList(
             }
         }
 
+        filterBar()
+
         if (visits.isEmpty() && otherFiches.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    if (zone == null) {
+                    if (filterActive) {
+                        "Aucun site pour ce filtre."
+                    } else if (zone == null) {
                         "Vous n'êtes affecté à aucune zone : demandez à votre superviseur ou à l'administrateur de vous en attribuer une."
                     } else {
                         "Aucun site à visiter dans votre zone pour l'instant. L'administrateur les importe depuis le tableau de bord (Zones > Sites)."

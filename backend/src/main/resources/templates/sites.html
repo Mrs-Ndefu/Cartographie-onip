@@ -49,7 +49,7 @@
            th:text="${incompletes} ? '← Toutes les fiches' : 'Incomplètes (' + ${countSitesIncomplets} + ')'">Incomplètes</a>
         <a th:href="${retirees} ? @{/dashboard/sites} : @{/dashboard/sites(retirees=true)}" class="link-btn"
            th:text="${retirees} ? '← Fiches actives' : 'Fiches retirées'">Fiches retirées</a>
-        <form th:action="@{/dashboard/sites}" method="get" class="table-search-form" role="search">
+        <form id="site-filters" th:action="@{/dashboard/sites}" method="get" class="table-search-form" role="search">
           <input type="hidden" name="retirees" th:if="${retirees}" value="true">
           <input type="hidden" name="incompletes" th:if="${incompletes}" value="true">
           <svg class="table-search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -68,8 +68,48 @@
             <tr>
               <th>Nom du site</th>
               <th>Type</th>
-              <th>Ville</th>
-              <th>Commune</th>
+              <!-- Filtres de lieu enchaînés (cf. script en bas de page) : changer un niveau vide
+                   ceux du dessous. -->
+              <th>
+                <div class="th-with-filter">
+                  <span>Province</span>
+                  <select name="province" form="site-filters" class="filter-select filter-select-column js-site-filter" data-level="0">
+                    <option value="">Toutes</option>
+                    <option th:each="p : ${provinces}" th:value="${p}" th:text="${p}"
+                            th:selected="${province != null and #strings.equalsIgnoreCase(p, province)}">P</option>
+                  </select>
+                </div>
+              </th>
+              <th>
+                <div class="th-with-filter">
+                  <span>Ville</span>
+                  <select name="ville" form="site-filters" class="filter-select filter-select-column js-site-filter" data-level="1">
+                    <option value="">Toutes</option>
+                    <option th:each="v : ${villes}" th:value="${v}" th:text="${v}"
+                            th:selected="${ville != null and #strings.equalsIgnoreCase(v, ville)}">V</option>
+                  </select>
+                </div>
+              </th>
+              <th>
+                <div class="th-with-filter">
+                  <span>Commune</span>
+                  <select name="commune" form="site-filters" class="filter-select filter-select-column js-site-filter" data-level="2">
+                    <option value="">Toutes</option>
+                    <option th:each="c : ${communes}" th:value="${c}" th:text="${c}"
+                            th:selected="${commune != null and #strings.equalsIgnoreCase(c, commune)}">C</option>
+                  </select>
+                </div>
+              </th>
+              <th>
+                <div class="th-with-filter">
+                  <span>Quartier</span>
+                  <select name="quartier" form="site-filters" class="filter-select filter-select-column js-site-filter" data-level="3">
+                    <option value="">Tous</option>
+                    <option th:each="q : ${quartiers}" th:value="${q}" th:text="${q}"
+                            th:selected="${quartier != null and #strings.equalsIgnoreCase(q, quartier)}">Q</option>
+                  </select>
+                </div>
+              </th>
               <th>Avis</th>
               <th>Statut</th>
               <th>Agent</th>
@@ -81,8 +121,10 @@
             <tr th:each="s : ${sites}">
               <td th:text="${s.nomSite != null and !s.nomSite.isBlank() ? s.nomSite : '(sans nom)'}">-</td>
               <td th:text="${s.typeSite?.name() ?: '-'}">-</td>
+              <td th:text="${s.province ?: '-'}">-</td>
               <td th:text="${s.ville ?: '-'}">-</td>
               <td th:text="${s.commune ?: '-'}">-</td>
+              <td th:text="${s.quartierGroupement != null and !#strings.isEmpty(s.quartierGroupement) ? s.quartierGroupement : '-'}">-</td>
               <td>
                 <span th:if="${s.avisGlobal != null and s.avisGlobal.name() == 'FAVORABLE'}" class="status-badge status-complet">Favorable</span>
                 <span th:if="${s.avisGlobal != null and s.avisGlobal.name() == 'FAVORABLE_SOUS_RESERVE'}" class="status-badge status-incomplet">Sous réserve</span>
@@ -142,7 +184,7 @@
               </td>
             </tr>
             <tr th:if="${sites.isEmpty()}">
-              <td colspan="9" class="table-empty"
+              <td colspan="11" class="table-empty"
                   th:text="${retirees} ? 'Aucune fiche retirée.' : (${incompletes} ? 'Aucune fiche incomplète à traiter.' : 'Aucune fiche de repérage pour l\'instant.')">Aucune fiche de repérage pour l'instant.</td>
             </tr>
           </tbody>
@@ -152,13 +194,13 @@
       <nav th:if="${page.totalPages > 1}" aria-label="Pagination des fiches de repérage" class="table-card-footer">
         <ul class="pagination pagination-sm mb-1">
           <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard/sites(page=${page.number - 1}, search=${search}, retirees=${retirees ? true : null}, incompletes=${incompletes ? true : null})}">Précédent</a>
+            <a class="page-link" th:href="@{/dashboard/sites(page=${page.number - 1}, search=${search}, retirees=${retirees ? true : null}, incompletes=${incompletes ? true : null}, province=${province}, ville=${ville}, commune=${commune}, quartier=${quartier})}">Précédent</a>
           </li>
           <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
-            <a class="page-link" th:href="@{/dashboard/sites(page=${i}, search=${search}, retirees=${retirees ? true : null}, incompletes=${incompletes ? true : null})}" th:text="${i + 1}">1</a>
+            <a class="page-link" th:href="@{/dashboard/sites(page=${i}, search=${search}, retirees=${retirees ? true : null}, incompletes=${incompletes ? true : null}, province=${province}, ville=${ville}, commune=${commune}, quartier=${quartier})}" th:text="${i + 1}">1</a>
           </li>
           <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard/sites(page=${page.number + 1}, search=${search}, retirees=${retirees ? true : null}, incompletes=${incompletes ? true : null})}">Suivant</a>
+            <a class="page-link" th:href="@{/dashboard/sites(page=${page.number + 1}, search=${search}, retirees=${retirees ? true : null}, incompletes=${incompletes ? true : null}, province=${province}, ville=${ville}, commune=${commune}, quartier=${quartier})}">Suivant</a>
           </li>
         </ul>
         <p class="text-secondary small mb-0">
@@ -181,5 +223,18 @@
   </div>
 
   <script th:src="@{/js/app.js}"></script>
+  <script>
+    // Filtres de lieu : chaque choix recharge la liste ; un niveau changé vide ceux du dessous
+    // (les listes dépendent du niveau au-dessus, cf. SiteService.placeOptions).
+    document.querySelectorAll('select.js-site-filter').forEach(function (select) {
+      select.addEventListener('change', function () {
+        var level = Number(select.dataset.level);
+        document.querySelectorAll('select.js-site-filter').forEach(function (other) {
+          if (Number(other.dataset.level) > level) other.value = '';
+        });
+        select.form.submit();
+      });
+    });
+  </script>
 </body>
 </html>

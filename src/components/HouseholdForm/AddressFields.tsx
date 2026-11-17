@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Controller, useWatch } from 'react-hook-form'
 import type { Control, UseFormSetValue } from 'react-hook-form'
 import { CharacterGridInput } from './CharacterGridInput'
-import { DRC_VILLES, DRC_PROVINCES, AUTRE_VILLE, communesForVille, provinceForVille } from '../../data/drcLocations'
+import { DRC_VILLES, DRC_PROVINCES, AUTRE_VILLE, communesForVille, provinceForVille, quartiersFor } from '../../data/drcLocations'
 import type { HouseholdFormValues } from '../../utils/validation'
 
 interface AddressFieldsProps {
@@ -17,6 +17,19 @@ const IMMEUBLE_LENGTH = 15
 
 const SORTED_VILLES = [...DRC_VILLES].sort((a, b) => a.name.localeCompare(b.name))
 
+// Nom de quartier au format de la grille du formulaire papier : majuscules sans accents, lettres
+// et chiffres (le reste devient une case vide), QUARTIER_LENGTH cases au plus.
+function toGridValue(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, ' ')
+    .trim()
+    .slice(0, QUARTIER_LENGTH)
+    .trimEnd()
+}
+
 export function AddressFields({ control, setValue }: AddressFieldsProps) {
   const province = useWatch({ control, name: 'address.province' }) ?? ''
   const ville = useWatch({ control, name: 'address.ville' }) ?? ''
@@ -30,6 +43,10 @@ export function AddressFields({ control, setValue }: AddressFieldsProps) {
   const [communeIsOther, setCommuneIsOther] = useState(
     commune !== '' && !communeOptions.some((c) => c === commune),
   )
+  // Quartiers de la commune choisie (référentiel « Subdivision ADM-RDC »).
+  const quartierOptions = communeIsOther ? [] : quartiersFor(ville, commune)
+  const quartier = useWatch({ control, name: 'address.quartier' }) ?? ''
+  const selectedQuartier = quartierOptions.find((q) => toGridValue(q) === quartier) ?? ''
 
   return (
     <section className="form-section">
@@ -170,6 +187,21 @@ export function AddressFields({ control, setValue }: AddressFieldsProps) {
 
         <div className="field-row">
           <label className="field-label">Quartier</label>
+          {quartierOptions.length > 0 && (
+            <select
+              className="text-input"
+              aria-label="Choisir un quartier de la commune"
+              value={selectedQuartier}
+              onChange={(e) => setValue('address.quartier', e.target.value ? toGridValue(e.target.value) : '')}
+            >
+              <option value="">— Choisir un quartier de la commune ({quartierOptions.length}) —</option>
+              {quartierOptions.map((q) => (
+                <option key={q} value={q}>
+                  {q}
+                </option>
+              ))}
+            </select>
+          )}
           <Controller
             control={control}
             name="address.quartier"

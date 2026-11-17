@@ -84,7 +84,7 @@ public class ZoneSiteService {
     // visite = une fiche de repérage (non retirée) porte déjà ce nom de site dans cette province ;
     // visiteComplete = cette fiche a tous ses champs obligatoires (cf. Site.champsManquants).
     public record ZoneSiteOption(String id, String nomSite, String adresse, String province,
-                                 String villeTerritoire, String commune, String zoneCode,
+                                 String villeTerritoire, String commune, String quartier, String zoneCode,
                                  boolean visite, boolean visiteComplete) {
     }
 
@@ -107,6 +107,7 @@ public class ZoneSiteService {
                             zone.getProvince(),
                             zone.getVille(),
                             communeOf(s, zone),
+                            s.getQuartier(),
                             zone.getCode(),
                             complete != null,
                             Boolean.TRUE.equals(complete));
@@ -268,7 +269,8 @@ public class ZoneSiteService {
     @Transactional
     // Le formulaire propose Province -> Ville/Territoire -> Commune en listes enchaînées : la
     // ville/territoire choisie est enregistrée comme ville ET territoire du site.
-    public ZoneSite update(UUID siteId, String nom, String adresse, String province, String villeTerritoire, String commune) {
+    public ZoneSite update(UUID siteId, String nom, String adresse, String province, String villeTerritoire, String commune,
+                           String quartier) {
         if (nom == null || nom.isBlank()) {
             throw new IllegalArgumentException("Le nom du site est obligatoire");
         }
@@ -281,7 +283,8 @@ public class ZoneSiteService {
                 p == null ? DrcProvinces.resolve(null, v) : DrcProvinces.normalize(p),
                 v,
                 v,
-                upperOrNull(clean(commune)));
+                upperOrNull(clean(commune)),
+                upperOrNull(clean(quartier)));
         if (!site.isZoneManuelle()) {
             site.setZone(matchZone(site, zoneRepository.findAll()));
         }
@@ -411,7 +414,7 @@ public class ZoneSiteService {
         DataFormatter formatter = new DataFormatter();
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
-            int[] columns = {0, 1, 2, 3, 4, -1};
+            int[] columns = {0, 1, 2, 3, 4, -1, -1};
             boolean first = true;
             for (Row row : sheet) {
                 if (first) {
@@ -428,14 +431,16 @@ public class ZoneSiteService {
                 }
                 String province = text(row, columns[2], formatter);
                 String ville = upperOrNull(text(row, columns[3], formatter));
-                result.add(new ZoneSite(
+                ZoneSite site = new ZoneSite(
                         UUID.randomUUID(),
                         nom,
                         emptyToNull(text(row, columns[1], formatter)),
                         province.isEmpty() ? DrcProvinces.resolve(null, ville) : DrcProvinces.normalize(province),
                         ville,
                         upperOrNull(text(row, columns[4], formatter)),
-                        upperOrNull(text(row, columns[5], formatter))));
+                        upperOrNull(text(row, columns[5], formatter)));
+                site.setQuartier(upperOrNull(text(row, columns[6], formatter)));
+                result.add(site);
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible de lire le fichier Excel", e);
@@ -450,7 +455,7 @@ public class ZoneSiteService {
     // Repère les colonnes d'après la ligne d'en-tête ; null si la ligne n'est pas un en-tête (moins
     // de 2 intitulés reconnus). Une colonne absente de l'en-tête vaut -1 (champ laissé vide).
     private static int[] headerColumns(Row row, DataFormatter formatter) {
-        int[] columns = {-1, -1, -1, -1, -1, -1};
+        int[] columns = {-1, -1, -1, -1, -1, -1, -1};
         int found = 0;
         for (Cell cell : row) {
             String label = key(formatter.formatCellValue(cell)).toLowerCase();
@@ -463,6 +468,8 @@ public class ZoneSiteService {
                 index = 4;
             } else if (label.contains("commune")) {
                 index = 5;
+            } else if (label.contains("quartier")) {
+                index = 6;
             } else if (label.contains("ville")) {
                 index = 3;
             } else if (label.contains("nom") || label.contains("site")) {
@@ -506,14 +513,14 @@ public class ZoneSiteService {
             Font font = workbook.createFont();
             font.setBold(true);
             bold.setFont(font);
-            String[] headers = {"Nom du site", "Adresse", "Province", "Ville", "Territoire", "Commune"};
+            String[] headers = {"Nom du site", "Adresse", "Province", "Ville", "Territoire", "Commune", "Quartier"};
             Row header = sheet.createRow(0);
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(headers[i]);
                 cell.setCellStyle(bold);
             }
-            String[] example = {"École primaire Mapendo", "12, avenue de la Paix", "Kongo-Central", "Matadi", "Matadi", "Mvuzi"};
+            String[] example = {"École primaire Mapendo", "12, avenue de la Paix", "Kinshasa", "Kinshasa", "Kinshasa", "Gombe", "Commerce"};
             Row row = sheet.createRow(1);
             for (int i = 0; i < example.length; i++) {
                 row.createCell(i).setCellValue(example[i]);

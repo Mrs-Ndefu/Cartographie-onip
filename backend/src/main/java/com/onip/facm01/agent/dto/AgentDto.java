@@ -26,6 +26,8 @@ public record AgentDto(
         String zoneProvince,
         String zoneVille,
         List<String> zoneCommunes,
+        // Quartiers de la zone : la saisie mobile ne propose que ceux-là.
+        List<String> zoneQuartiers,
         UUID superviseurId,
         String superviseurName,
         // Jamais rempli par from(Agent) ci-dessous (toujours null) — seule
@@ -65,6 +67,7 @@ public record AgentDto(
                 agent.getZone() == null ? null : agent.getZone().getProvince(),
                 agent.getZone() == null ? null : agent.getZone().getVille(),
                 agent.getZone() == null ? null : agent.getZone().getCommunes(),
+                agent.getZone() == null ? null : agent.getZone().getQuartiers(),
                 agent.getSuperviseur() == null ? null : agent.getSuperviseur().getId(),
                 agent.getSuperviseur() == null ? null : agent.getSuperviseur().getFullName(),
                 generatedPassword);

@@ -72,6 +72,12 @@
             <select class="form-select form-select-sm js-geo-commune"></select>
             <input type="text" class="form-control form-control-sm js-geo-commune-other" placeholder="Commune, secteur ou chefferie" hidden>
           </label>
+          <label class="agents-field">
+            <span>Quartier</span>
+            <input type="hidden" name="quartier" class="js-geo-quartier-value" th:value="${quartierInit}">
+            <select class="form-select form-select-sm js-geo-quartier"></select>
+            <input type="text" class="form-control form-control-sm js-geo-quartier-other" placeholder="Quartier ou groupement" hidden>
+          </label>
         </div>
         <div class="zone-site-edit-actions">
           <a th:href="@{${returnTo}}" class="btn btn-sm btn-outline-secondary">Annuler</a>

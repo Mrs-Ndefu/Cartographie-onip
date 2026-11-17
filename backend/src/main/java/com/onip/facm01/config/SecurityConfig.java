@@ -118,7 +118,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/dashboard/zones", "/dashboard/zones/**")
                         .hasRole("ADMIN")
                         // Modifier un site importé (page Zones > Sites) : réservé à l'ADMIN.
-                        .requestMatchers("/dashboard/zones/sites/*/edit")
+                        .requestMatchers("/dashboard/zones/sites/*/edit", "/dashboard/zones/*/quartiers")
                         .hasRole("ADMIN")
                         .requestMatchers("/dashboard/historique")
                         .hasRole("SUPERVISEUR")

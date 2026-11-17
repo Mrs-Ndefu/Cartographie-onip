@@ -87,7 +87,9 @@ public class SupervisorHistoryService {
         String province = DrcProvinces.resolve(address.getProvince(), address.getVille());
         boolean inZone = key(province).equals(key(zone.getProvince()))
                 && key(address.getVille()).equals(key(zone.getVille()))
-                && zone.getCommunes().stream().anyMatch(c -> key(c).equals(key(address.getCommune())));
+                && zone.getCommunes().stream().anyMatch(c -> key(c).equals(key(address.getCommune())))
+                && (zone.getQuartiers().isEmpty()
+                    || zone.getQuartiers().stream().anyMatch(q -> key(q).equals(key(address.getQuartier()))));
         return inZone ? ZoneStatus.IN_ZONE : ZoneStatus.OUT_OF_ZONE;
     }
 
