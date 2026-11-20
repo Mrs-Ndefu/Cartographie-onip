@@ -174,43 +174,39 @@ document.addEventListener('click', function (e) {
   }
 })();
 
-// Actualisation automatique de la page toutes les 15 minutes (nouvelles données du terrain), en
-// gardant la position de défilement (cf. ci-dessus). Pour ne rien faire perdre, elle est reportée
-// de 15 minutes quand un formulaire a été modifié sans être envoyé, quand une fenêtre de
-// confirmation est ouverte ou quand une fiche est ouverte sur la carte. Désactivable sur une page
-// avec <body data-no-autorefresh>.
+// Bouton « Actualiser » ajouté en tête de la barre du haut de chaque page du tableau de bord (pas
+// d'actualisation automatique) : recharge la page en gardant la position de défilement (cf.
+// ci-dessus). Si un formulaire a été modifié sans être envoyé, on demande confirmation avant de
+// perdre la saisie. L'heure du dernier chargement s'affiche au survol.
 (function () {
-  var REFRESH_MS = 15 * 60 * 1000;
-  if (document.body && document.body.hasAttribute('data-no-autorefresh')) return;
+  var nav = document.querySelector('.topbar-nav');
+  if (!nav || nav.querySelector('.refresh-btn')) return;
 
   var dirty = false;
   document.addEventListener('input', function (e) {
     if (e.target && e.target.closest && e.target.closest('form')) dirty = true;
   }, true);
-  document.addEventListener('change', function (e) {
-    // Les listes de filtres rechargent déjà la page : seul un vrai formulaire compte.
-    if (e.target && e.target.closest && e.target.closest('form') && !e.target.classList.contains('filter-select')) dirty = true;
-  }, true);
   document.addEventListener('submit', function () { dirty = false; }, true);
 
-  function busy() {
-    var confirm = document.getElementById('confirm-modal');
-    var editModal = document.getElementById('edit-modal');
-    return dirty
-      || (confirm && !confirm.hidden)
-      || (editModal && !editModal.hidden)
-      || !!document.querySelector('.leaflet-popup');
-  }
+  var loadedAt = new Date();
+  var pad = function (n) { return String(n).padStart(2, '0'); };
 
-  function tick() {
-    if (busy()) {
-      setTimeout(tick, REFRESH_MS);
-    } else {
-      location.reload();
-    }
-  }
-
-  setTimeout(tick, REFRESH_MS);
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'refresh-btn';
+  btn.setAttribute('aria-label', 'Actualiser la page');
+  btn.title = 'Actualiser — données chargées à ' + pad(loadedAt.getHours()) + ':' + pad(loadedAt.getMinutes());
+  btn.innerHTML = '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">'
+    + '<path d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'
+    + '<path d="M16.8 3.2v3.6h-3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '</svg><span>Actualiser</span>';
+  btn.addEventListener('click', function () {
+    if (dirty && !window.confirm('Des modifications non enregistrées seront perdues. Actualiser quand même ?')) return;
+    btn.classList.add('is-loading');
+    btn.disabled = true;
+    location.reload();
+  });
+  nav.insertBefore(btn, nav.firstChild);
 })();
 
 // Formulaire de modification d'un ménage : le nombre de membres (chef compris, obligatoire)

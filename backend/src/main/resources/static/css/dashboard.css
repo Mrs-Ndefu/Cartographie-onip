@@ -1,3 +1,9 @@
+/* L'attribut « hidden » cache toujours l'élément, même sans Bootstrap (CDN injoignable) :
+   plusieurs blocs (fenêtres, champs « Autre ») s'appuient dessus. */
+[hidden] {
+  display: none !important;
+}
+
 :root {
   --brand: #0f5fa8;
   --brand-dark: #0b4a84;
@@ -1425,6 +1431,13 @@ h1, h2, h3 {
 
 /* ---------- Modale de confirmation stylée (remplace window.confirm) ---------- */
 
+/* Une fenêtre de confirmation marquée « hidden » reste cachée même si Bootstrap (chargé depuis
+   Internet) n'est pas disponible : sinon le display:flex ci-dessous l'afficherait au chargement
+   et bloquerait toute la page. */
+.confirm-overlay[hidden] {
+  display: none !important;
+}
+
 .confirm-overlay {
   position: fixed;
   inset: 0;
@@ -2267,4 +2280,70 @@ a.zone-sites-count:hover {
 .map-popup-zoom button:hover {
   background: #0f5fa8;
   color: #fff;
+}
+
+/* Bouton « Actualiser » de la barre du haut (ajouté par app.js). */
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 34px;
+  padding: 0 0.85rem 0 0.7rem;
+  border: 1px solid #c9d9ec;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff 0%, #eef4fb 100%);
+  color: var(--brand-dark, #0b4a85);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(16, 42, 67, 0.08);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.refresh-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.35s ease;
+}
+
+.refresh-btn:hover {
+  background: var(--brand, #0f5fa8);
+  border-color: var(--brand, #0f5fa8);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(15, 95, 168, 0.25);
+}
+
+.refresh-btn:hover svg {
+  transform: rotate(-90deg);
+}
+
+.refresh-btn:focus-visible {
+  outline: 3px solid var(--brand-light, #d9e8f7);
+  outline-offset: 2px;
+}
+
+.refresh-btn.is-loading svg {
+  animation: refresh-spin 0.8s linear infinite;
+}
+
+.refresh-btn:disabled {
+  cursor: progress;
+}
+
+@keyframes refresh-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Petit écran : l'icône seule. */
+@media (max-width: 640px) {
+  .refresh-btn span {
+    display: none;
+  }
+
+  .refresh-btn {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+  }
 }

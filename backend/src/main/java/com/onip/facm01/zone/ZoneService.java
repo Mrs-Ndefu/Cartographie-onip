@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,7 +27,7 @@ public class ZoneService {
         this.zoneSiteService = zoneSiteService;
     }
 
-    // Triées par code : A1, A2, ..., B1... (zones sans code en dernier).
+    // Triées par code : 01-0001, 01-0002, ..., 02-0001... (zones sans code en dernier).
     public List<Zone> list() {
         return zoneRepository.findAllByOrderByProvinceAscVilleAsc().stream()
                 .sorted(Comparator.comparingInt(ZoneService::sortKey))
@@ -92,28 +93,30 @@ public class ZoneService {
                 .toList();
     }
 
-    // Code d'une nouvelle zone : lettre de la province (A = Kinshasa...) suivie du premier numéro
-    // libre dans cette province (un numéro libéré par une suppression est repris) — A1, A2, B1...
-    // Null pour une province hors de la liste de référence.
+    // Code d'une nouvelle zone : numéro de la province sur 2 chiffres (01 = Kinshasa, puis l'ordre
+    // alphabétique, cf. DrcProvinces.numberOf), un tiret, puis le premier numéro libre dans cette
+    // province sur 4 chiffres (un numéro libéré par une suppression est repris) — 01-0001,
+    // 01-0002, 02-0001... Null pour une province hors de la liste de référence.
     String nextCode(String province) {
-        String letter = DrcProvinces.letterOf(province).orElse(null);
-        if (letter == null) {
+        String prefix = DrcProvinces.numberOf(province).orElse(null);
+        if (prefix == null) {
             return null;
         }
         Set<Integer> used = zoneRepository.findByProvince(province).stream()
                 .map(Zone::getCode)
-                .filter(code -> code != null && code.matches(letter + "\\d+"))
-                .map(code -> Integer.parseInt(code.substring(1)))
+                .filter(code -> code != null && code.matches(Pattern.quote(prefix) + "-\\d{4}"))
+                .map(code -> Integer.parseInt(code.substring(prefix.length() + 1)))
                 .collect(Collectors.toSet());
         int number = 1;
         while (used.contains(number)) {
             number++;
         }
-        return letter + number;
+        return String.format("%s-%04d", prefix, number);
     }
 
-    // Au démarrage : toute zone sans code, ou dont le code ne suit pas la règle actuelle (lettre de
-    // sa province + numéro), est renumérotée dans l'ordre de création. Les codes déjà corrects ne
+    // Au démarrage : toute zone sans code, ou dont le code ne suit pas la règle actuelle (numéro de
+    // sa province + tiret + numéro sur 4 chiffres ; ex. ancien format A1), est renumérotée dans
+    // l'ordre de création. Les codes déjà corrects ne
     // bougent pas. Renvoie le nombre de zones renumérotées.
     @Transactional
     public int backfillCodes() {
@@ -131,17 +134,17 @@ public class ZoneService {
     }
 
     private static boolean hasValidCode(Zone zone) {
-        String letter = DrcProvinces.letterOf(zone.getProvince()).orElse(null);
-        return letter != null && zone.getCode() != null && zone.getCode().matches(letter + "\\d+");
+        String prefix = DrcProvinces.numberOf(zone.getProvince()).orElse(null);
+        return prefix != null && zone.getCode() != null && zone.getCode().matches(Pattern.quote(prefix) + "-\\d{4}");
     }
 
-    // A1 < A2 < A10 < B1 ; zones sans code en dernier.
+    // 01-0001 < 01-0002 < 01-0010 < 02-0001 ; zones sans code en dernier.
     private static int sortKey(Zone zone) {
         String code = zone.getCode();
-        if (code == null || !code.matches("[A-Z]\\d+")) {
+        if (code == null || !code.matches("\\d{2}-\\d{4}")) {
             return Integer.MAX_VALUE;
         }
-        return (code.charAt(0) - 'A') * 10_000 + Integer.parseInt(code.substring(1));
+        return Integer.parseInt(code.substring(0, 2)) * 10_000 + Integer.parseInt(code.substring(3));
     }
 
     // Les agents affectés à la zone supprimée redeviennent "sans zone" plutôt que d'empêcher la

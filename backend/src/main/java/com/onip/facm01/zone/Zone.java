@@ -35,9 +35,9 @@ public class Zone {
     @Column(nullable = false)
     private String ville;
 
-    // Code de la zone (A1, A2, B1...), cf. ZoneService.nextCode. Null pour une province hors de
-    // la liste de référence.
-    @Column(length = 4)
+    // Code de la zone : numéro de la province + numéro dans la province (01-0001, 01-0002,
+    // 02-0001...), cf. ZoneService.nextCode. Null pour une province hors de la liste de référence.
+    @Column(length = 7)
     private String code;
 
     // Chargées d'office : une zone est toujours affichée avec ses communes, et la liste est courte.
