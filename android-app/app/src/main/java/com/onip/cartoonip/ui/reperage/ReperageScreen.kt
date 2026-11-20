@@ -1,5 +1,8 @@
 package com.onip.cartoonip.ui.reperage
 
+import com.onip.cartoonip.data.SecureSync
+import com.onip.cartoonip.ui.common.SyncPasswordDialog
+
 import com.onip.cartoonip.ui.common.PlaceFilterBar
 import com.onip.cartoonip.ui.common.PlaceLevel
 import com.onip.cartoonip.ui.common.PlaceValues
@@ -85,7 +88,8 @@ fun ReperageScreen(
     val otherFiches by viewModel.otherFiches.collectAsState()
     val placeFilter by viewModel.placeFilter.collectAsState()
     val sites = allSites.filter { placeFilter.matches(PlaceValues(it.province, it.ville, it.commune, it.quartierGroupement)) }
-    val syncingIds by viewModel.syncingIds.collectAsState()
+    // Fiches à envoyer : ouvre la fenêtre de mot de passe (cf. SyncPasswordDialog).
+    var sendTarget by remember { mutableStateOf<List<CapturedSite>?>(null) }
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -109,7 +113,7 @@ fun ReperageScreen(
                 },
                 actions = {
                     if (pendingCount > 0) {
-                        TextButton(onClick = viewModel::syncAllPending) { Text("Tout synchroniser") }
+                        TextButton(onClick = { sendTarget = allSites.filter { it.syncedAt == null } }) { Text("Tout synchroniser") }
                     }
                 },
             )
@@ -157,8 +161,8 @@ fun ReperageScreen(
                     otherRow = { site ->
                         SiteRow(
                             site = site,
-                            isSyncing = syncingIds.contains(site.id),
-                            onRetry = { viewModel.retrySync(site) },
+                            isSyncing = false,
+                            onRetry = { sendTarget = listOf(site) },
                             onEdit = { onEdit(site.id) },
                             onDelete = { deleteTarget = site },
                         )
@@ -201,14 +205,26 @@ fun ReperageScreen(
                     items(sites, key = { it.id }) { site ->
                         SiteRow(
                             site = site,
-                            isSyncing = syncingIds.contains(site.id),
-                            onRetry = { viewModel.retrySync(site) },
+                            isSyncing = false,
+                            onRetry = { sendTarget = listOf(site) },
                             onEdit = { onEdit(site.id) },
                             onDelete = { deleteTarget = site },
                         )
                     }
                 }
             }
+        }
+
+        sendTarget?.let { target ->
+            SyncPasswordDialog(
+                count = target.size,
+                onDismiss = { sendTarget = null },
+                onFinished = { message ->
+                    sendTarget = null
+                    viewModel.showMessage(message)
+                },
+                send = { password -> SecureSync.send(password, sites = target) },
+            )
         }
 
         deleteTarget?.let { target ->
@@ -509,7 +525,7 @@ private fun SyncBadge(synced: Boolean, isSyncing: Boolean, onRetry: () -> Unit) 
         isSyncing -> CircularProgressIndicator(modifier = Modifier.size(20.dp))
         synced -> Icon(Icons.Filled.CheckCircle, contentDescription = "Synchronisé", tint = MaterialTheme.colorScheme.secondary)
         else -> IconButton(onClick = onRetry, modifier = Modifier.size(28.dp)) {
-            Icon(Icons.Filled.Sync, contentDescription = "Relancer la synchronisation", tint = MaterialTheme.colorScheme.error)
+            Icon(Icons.Filled.Sync, contentDescription = "Envoyer au serveur (mot de passe demandé)", tint = MaterialTheme.colorScheme.error)
         }
     }
 }

@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onip.cartoonip.data.AppContainer
 import com.onip.cartoonip.data.LocationHelper
-import com.onip.cartoonip.data.SiteSyncRepository
 import com.onip.cartoonip.data.model.CapturedSite
 import com.onip.cartoonip.data.model.ZoneSiteOption
 import java.time.Instant
@@ -311,14 +310,9 @@ class ReperageFormViewModel : ViewModel() {
                 updatedAt = now,
                 syncedAt = null,
             )
+            // Enregistrée sur l'appareil, en attente : l'envoi au serveur se fait depuis l'accueil
+            // ou la liste, après saisie du mot de passe (cf. SecureSync).
             AppContainer.siteStore.upsert(site)
-
-            try {
-                SiteSyncRepository.sync(site)
-            } catch (e: Exception) {
-                // Échec réseau ou serveur : la fiche reste enregistrée localement, synchronisable
-                // plus tard depuis la liste — ce n'est pas un échec de la saisie elle-même.
-            }
 
             update { copy(saving = false) }
             onDone()

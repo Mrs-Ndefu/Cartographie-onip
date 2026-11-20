@@ -3,7 +3,6 @@ package com.onip.cartoonip.ui.reperage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onip.cartoonip.data.AppContainer
-import com.onip.cartoonip.data.SiteSyncRepository
 import com.onip.cartoonip.data.model.AgentZone
 import com.onip.cartoonip.data.model.CapturedSite
 import com.onip.cartoonip.data.model.ZoneSiteOption
@@ -70,28 +69,8 @@ class ReperageViewModel : ViewModel() {
         _placeFilter.value = filter
     }
 
-    private val _syncingIds = MutableStateFlow<Set<String>>(emptySet())
-    val syncingIds: StateFlow<Set<String>> = _syncingIds.asStateFlow()
-
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-
-    fun retrySync(site: CapturedSite) {
-        _syncingIds.value = _syncingIds.value + site.id
-        viewModelScope.launch {
-            try {
-                SiteSyncRepository.sync(site)
-            } catch (e: Exception) {
-                _errorMessage.value = "Échec de la synchronisation pour ${site.displayName} : vérifiez la connexion."
-            } finally {
-                _syncingIds.value = _syncingIds.value - site.id
-            }
-        }
-    }
-
-    fun syncAllPending() {
-        sites.value.filter { it.syncedAt == null }.forEach { retrySync(it) }
-    }
 
     fun delete(site: CapturedSite) {
         AppContainer.siteStore.delete(site.id)

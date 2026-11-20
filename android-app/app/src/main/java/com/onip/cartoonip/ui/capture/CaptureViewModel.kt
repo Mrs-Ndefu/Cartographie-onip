@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.onip.cartoonip.data.AppContainer
 import com.onip.cartoonip.data.LocationHelper
 import com.onip.cartoonip.data.PhotoFiles
-import com.onip.cartoonip.data.SyncRepository
 import com.onip.cartoonip.data.generateCodeMenage
 import com.onip.cartoonip.data.provinceForVille
 import com.onip.cartoonip.data.model.CapturedHousehold
@@ -347,7 +346,7 @@ class CaptureViewModel : ViewModel() {
             // re-synchronisation (champs + photo) puisque le contenu a pu changer.
             val existing = AppContainer.captureStore.get(state.householdId)
 
-            var household = CapturedHousehold(
+            val household = CapturedHousehold(
                 id = state.householdId,
                 codeMenage = state.generatedCode!!,
                 chefNom = state.chefNom.trim(),
@@ -386,14 +385,9 @@ class CaptureViewModel : ViewModel() {
                 syncedAt = null,
                 photoSyncedAt = null,
             )
+            // Enregistré sur l'appareil, en attente : l'envoi au serveur se fait depuis l'accueil
+            // ou le Journal, après saisie du mot de passe (cf. SecureSync).
             AppContainer.captureStore.upsert(household)
-
-            try {
-                household = SyncRepository.sync(household)
-            } catch (e: Exception) {
-                // Échec réseau ou serveur : le foyer reste enregistré localement, synchronisable
-                // plus tard depuis le Journal — ce n'est pas un échec de la capture elle-même.
-            }
 
             update { copy(isSaving = false, savedCode = household.codeMenage) }
             onDone(household.codeMenage)

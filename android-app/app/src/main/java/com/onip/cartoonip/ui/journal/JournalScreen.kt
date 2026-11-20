@@ -1,6 +1,8 @@
 package com.onip.cartoonip.ui.journal
 
+import com.onip.cartoonip.data.SecureSync
 import com.onip.cartoonip.ui.common.PlaceFilterBar
+import com.onip.cartoonip.ui.common.SyncPasswordDialog
 import com.onip.cartoonip.ui.common.PlaceValues
 
 import android.graphics.Bitmap
@@ -82,7 +84,8 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
     val allHouseholds by viewModel.households.collectAsState()
     val placeFilter by viewModel.placeFilter.collectAsState()
     val households = allHouseholds.filter { placeFilter.matches(it.place) }
-    val syncingIds by viewModel.syncingIds.collectAsState()
+    // Données à envoyer : ouvre la fenêtre de mot de passe (cf. SyncPasswordDialog).
+    var sendTarget by remember { mutableStateOf<List<CapturedHousehold>?>(null) }
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -95,7 +98,7 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
         }
     }
 
-    val pendingCount = households.count { !it.isFullySynced }
+    val pendingCount = allHouseholds.count { !it.isFullySynced }
 
     Scaffold(
         topBar = {
@@ -106,7 +109,7 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
                 },
                 actions = {
                     if (pendingCount > 0) {
-                        TextButton(onClick = viewModel::syncAllPending) { Text("Tout synchroniser") }
+                        TextButton(onClick = { sendTarget = allHouseholds.filterNot { it.isFullySynced } }) { Text("Tout synchroniser") }
                     }
                 },
             )
@@ -150,14 +153,26 @@ fun JournalScreen(onBack: () -> Unit, onEdit: (String) -> Unit, viewModel: Journ
                     items(households, key = { it.id }) { household ->
                         JournalRow(
                             household = household,
-                            isSyncing = syncingIds.contains(household.id),
-                            onRetry = { viewModel.retrySync(household) },
+                            isSyncing = false,
+                            onRetry = { sendTarget = listOf(household) },
                             onEdit = { onEdit(household.id) },
                             onDelete = { deleteTarget = household },
                         )
                     }
                 }
             }
+        }
+
+        sendTarget?.let { target ->
+            SyncPasswordDialog(
+                count = target.size,
+                onDismiss = { sendTarget = null },
+                onFinished = { message ->
+                    sendTarget = null
+                    viewModel.showMessage(message)
+                },
+                send = { password -> SecureSync.send(password, households = target) },
+            )
         }
 
         deleteTarget?.let { target ->
@@ -317,7 +332,7 @@ private fun SyncBadge(household: CapturedHousehold, isSyncing: Boolean, onRetry:
         isSyncing -> CircularProgressIndicator(modifier = Modifier.size(20.dp))
         household.isFullySynced -> Icon(Icons.Filled.CheckCircle, contentDescription = "Synchronisé", tint = MaterialTheme.colorScheme.secondary)
         else -> IconButton(onClick = onRetry, modifier = Modifier.size(28.dp)) {
-            Icon(Icons.Filled.Sync, contentDescription = "Relancer la synchronisation", tint = MaterialTheme.colorScheme.error)
+            Icon(Icons.Filled.Sync, contentDescription = "Envoyer au serveur (mot de passe demandé)", tint = MaterialTheme.colorScheme.error)
         }
     }
 }

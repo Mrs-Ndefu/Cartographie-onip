@@ -112,6 +112,33 @@ class SessionManager(context: Context) {
             .remove(KEY_EXPIRED_USERNAME)
             .apply()
         _session.value = loadSession()
+        refreshPurged()
+    }
+
+    // Données synchronisées puis effacées de l'appareil après 24 h (cf. SecureSync.purgeSynced),
+    // comptées par agent pour que l'accueil affiche le vrai total envoyé. Non effacées à la
+    // déconnexion (compteur propre à chaque identifiant).
+    data class PurgedCounts(val households: Int = 0, val sites: Int = 0)
+
+    private val _purged = MutableStateFlow(loadPurged())
+    val purged: StateFlow<PurgedCounts> = _purged.asStateFlow()
+
+    private fun purgedKey(kind: String) = "purged_${kind}_" + (prefs.getString(KEY_USERNAME, null) ?: "anonyme")
+
+    private fun loadPurged() = PurgedCounts(prefs.getInt(purgedKey("households"), 0), prefs.getInt(purgedKey("sites"), 0))
+
+    fun addPurged(households: Int, sites: Int) {
+        val next = PurgedCounts(_purged.value.households + households, _purged.value.sites + sites)
+        prefs.edit()
+            .putInt(purgedKey("households"), next.households)
+            .putInt(purgedKey("sites"), next.sites)
+            .apply()
+        _purged.value = next
+    }
+
+    /** Recharge les compteurs de l'agent connecté (après une connexion). */
+    fun refreshPurged() {
+        _purged.value = loadPurged()
     }
 
     fun clear() {

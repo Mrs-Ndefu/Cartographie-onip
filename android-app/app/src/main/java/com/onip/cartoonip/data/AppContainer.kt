@@ -135,6 +135,8 @@ object AppContainer {
         _agentRole.value = sessionManager.role
         _zoneSites.value = loadCachedZoneSites()
         initialized = true
+        // Données envoyées depuis plus de 24 h : effacées de l'appareil (cf. SecureSync).
+        SecureSync.purgeSynced()
     }
 
     fun apiFor(baseUrl: String): ApiServices {

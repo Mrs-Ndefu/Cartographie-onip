@@ -30,11 +30,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onip.cartoonip.data.AppContainer
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.onip.cartoonip.ui.common.PlaceFilter
+import com.onip.cartoonip.ui.common.PlaceFilterBar
+import com.onip.cartoonip.ui.common.PlaceValues
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OverviewScreen(onBack: () -> Unit) {
-    val households by AppContainer.captureStore.households.collectAsState()
+    val allHouseholds by AppContainer.captureStore.households.collectAsState()
+    // Filtre Province / Ville / Commune / Quartier : les statistiques portent sur ce lieu.
+    var placeFilter by remember { mutableStateOf(PlaceFilter()) }
+    val households = remember(allHouseholds, placeFilter) {
+        allHouseholds.filter { placeFilter.matches(PlaceValues(it.province, it.ville, it.commune, it.quartier)) }
+    }
     val stats = remember(households) { computeOverviewStats(households) }
 
     Scaffold(
@@ -51,6 +61,15 @@ fun OverviewScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(padding).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            if (allHouseholds.isNotEmpty()) {
+                item {
+                    PlaceFilterBar(
+                        entries = allHouseholds.map { PlaceValues(it.province, it.ville, it.commune, it.quartier) },
+                        filter = placeFilter,
+                        onChange = { placeFilter = it },
+                    )
+                }
+            }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                     StatTile("Aujourd'hui", stats.today, Modifier.weight(1f))
@@ -103,7 +122,8 @@ fun OverviewScreen(onBack: () -> Unit) {
 
             item {
                 Text(
-                    "${stats.total} foyer${if (stats.total != 1) "s" else ""} enregistré${if (stats.total != 1) "s" else ""} sur cet appareil.",
+                    "${stats.total} foyer${if (stats.total != 1) "s" else ""} enregistré${if (stats.total != 1) "s" else ""} sur cet appareil" +
+                        (if (placeFilter.isActive) " pour ce filtre." else "."),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
