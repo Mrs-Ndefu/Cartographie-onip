@@ -130,7 +130,9 @@ public class AddressAiCheckService {
 
     // Empreinte du texte d'adresse pertinent pour ce contrôle (quartier/rue/numéro/immeuble) :
     // sert de clé de cache pour ne pas rappeler l'IA ni re-signaler le ménage si rien n'a changé.
-    private static String signature(AddressEmbeddable address) {
+    // Publique : une adresse revue par un ADMIN (cf. HouseholdService.updateFromDashboard) est
+    // marquée comme vérifiée avec cette même empreinte.
+    public static String signature(AddressEmbeddable address) {
         String joined = String.join("|",
                 normalize(address.getQuartier()), normalize(address.getRue()),
                 normalize(address.getNumero()), normalize(address.getImmeuble()));

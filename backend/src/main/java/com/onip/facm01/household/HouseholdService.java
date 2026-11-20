@@ -2,6 +2,7 @@ package com.onip.facm01.household;
 
 import com.onip.facm01.agent.Agent;
 import com.onip.facm01.agent.AgentRole;
+import com.onip.facm01.ai.AddressAiCheckService;
 import com.onip.facm01.ai.AddressCheckRequestedEvent;
 import com.onip.facm01.household.dto.AddressDto;
 import com.onip.facm01.household.dto.GeoLocationDto;
@@ -300,10 +301,15 @@ public class HouseholdService {
         household.replaceMembers(members);
         household.setNombreMembresDeclare(form.getNombreMembres());
         household.setUpdatedAt(Instant.now());
+        // Statut choisi à la main par l'ADMIN : c'est une décision, pas une saisie terrain. La
+        // vérification automatique de l'adresse (cf. AddressAiCheckService) ne doit pas la
+        // défaire en repassant le ménage « à vérifier » juste après : l'adresse enregistrée est
+        // marquée comme revue (même empreinte que le contrôle), et le contrôle n'est pas relancé.
+        // Une nouvelle adresse envoyée plus tard depuis le terrain sera, elle, vérifiée.
+        household.setAddressCheckedSignature(AddressAiCheckService.signature(household.getAddress()));
         householdRepository.save(household);
         householdModificationRepository.save(new HouseholdModification(
                 household, author.getUsername(), author.getFullName(), author.getRole(), form.getMotif().trim()));
-        requestAddressCheckIfComplet(household);
     }
 
     @Transactional(readOnly = true)
