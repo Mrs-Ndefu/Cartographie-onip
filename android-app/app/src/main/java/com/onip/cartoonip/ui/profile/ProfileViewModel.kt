@@ -1,5 +1,7 @@
 package com.onip.cartoonip.ui.profile
 
+import android.util.Log
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -64,11 +66,20 @@ data class ProfileUiState(
     val passwordLoading: Boolean = false,
     val passwordError: String? = null,
     val passwordSuccess: String? = null,
+    // Identité de la session (enregistrée à la connexion) : affichée tout de suite, même si le
+    // serveur ne répond pas.
+    val sessionFullName: String? = null,
+    val sessionUsername: String? = null,
+    val loadError: String? = null,
 )
 
 class ProfileViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ProfileUiState())
+    private val _uiState = MutableStateFlow(
+        AppContainer.sessionManager.session.value.let { s ->
+            ProfileUiState(sessionFullName = s?.fullName, sessionUsername = s?.username)
+        },
+    )
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
@@ -79,10 +90,15 @@ class ProfileViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val agent = AppContainer.api().agent.me()
-                _uiState.value = _uiState.value.copy(isLoading = false, agent = agent)
+                _uiState.value = _uiState.value.copy(isLoading = false, agent = agent, loadError = null)
                 AppContainer.applyAgent(agent)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false)
+                Log.w("Profile", "Chargement du profil impossible", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    loadError = if (e is IOException) "Serveur injoignable : informations affichées depuis l'appareil."
+                    else "Profil non mis à jour (${e.javaClass.simpleName}).",
+                )
             }
         }
     }
@@ -168,9 +184,28 @@ class ProfileViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(photoUploading = false, agent = agent)
                 AppContainer.setAgentPhoto(agent.photoDataUrl)
             } catch (e: HttpException) {
-                _uiState.value = _uiState.value.copy(photoUploading = false, photoError = "Envoi de la photo impossible (${e.code()}).")
+                Log.w("Profile", "Envoi de la photo refusé", e)
+                _uiState.value = _uiState.value.copy(
+                    photoUploading = false,
+                    photoError = when (e.code()) {
+                        401, 403 -> "Session expirée : reconnectez-vous puis réessayez."
+                        413 -> "La photo est trop lourde."
+                        else -> "Envoi de la photo impossible (erreur ${e.code()})."
+                    },
+                )
             } catch (e: IOException) {
-                _uiState.value = _uiState.value.copy(photoUploading = false, photoError = "Envoi de la photo impossible — vérifiez la connexion.")
+                Log.w("Profile", "Envoi de la photo impossible (réseau)", e)
+                _uiState.value = _uiState.value.copy(photoUploading = false, photoError = "Envoi de la photo impossible — serveur injoignable, vérifiez la connexion.")
+            } catch (e: Exception) {
+                // Photo illisible (format non pris en charge, accès refusé au fichier, mémoire…) :
+                // message à l'agent plutôt qu'un bouton bloqué sur « Envoi… » ou un arrêt de l'app.
+                Log.w("Profile", "Photo de profil non traitée", e)
+                _uiState.value = _uiState.value.copy(
+                    photoUploading = false,
+                    photoError = "Cette photo n'a pas pu être utilisée (${e.javaClass.simpleName}). Essayez-en une autre.",
+                )
+            } catch (e: OutOfMemoryError) {
+                _uiState.value = _uiState.value.copy(photoUploading = false, photoError = "Photo trop grande pour être traitée. Essayez-en une autre.")
             }
         }
     }

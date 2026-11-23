@@ -75,15 +75,28 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit, viewModel: ProfileVi
         ) {
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    ProfileAvatar(photoDataUrl = uiState.agent?.photoDataUrl, initial = uiState.agent?.fullName?.firstOrNull())
+                    val fullName = uiState.agent?.fullName ?: uiState.sessionFullName
+                    ProfileAvatar(photoDataUrl = uiState.agent?.photoDataUrl, initial = fullName?.firstOrNull())
                     Text(
-                        uiState.agent?.fullName ?: "…",
+                        fullName ?: "…",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 10.dp),
                     )
-                    uiState.agent?.username?.let {
-                        Text("@$it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    (uiState.agent?.username ?: uiState.sessionUsername)?.let {
+                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    uiState.agent?.role?.let { role ->
+                        Text(
+                            ROLE_LABELS[role] ?: role,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                    uiState.loadError?.let {
+                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 4.dp))
                     }
                     val agentZone by AppContainer.agentZone.collectAsState()
                     ZoneBanner(agentZone, modifier = Modifier.padding(top = 10.dp))
@@ -193,3 +206,12 @@ private fun ProfileAvatar(photoDataUrl: String?, initial: Char?) {
         }
     }
 }
+
+private val ROLE_LABELS = mapOf(
+    "AGENT" to "Agent",
+    "CHEF_EQUIPE" to "Chef d'équipe",
+    "SUPERVISEUR" to "Superviseur",
+    "ADMIN" to "Administrateur",
+    "SUPER_ADMIN" to "Super administrateur",
+    "DIRECTION_GENERALE" to "Direction générale",
+)

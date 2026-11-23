@@ -17,8 +17,16 @@ private val OnipAccent = Color(0xFF178A17)
 
 private val LightColors = lightColorScheme(
     primary = OnipBlue,
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFE3EFFA),
+    onPrimaryContainer = OnipBlueDark,
     secondary = OnipAccent,
+    secondaryContainer = Color(0xFFE4F3E4),
+    onSecondaryContainer = Color(0xFF0F5E0F),
     tertiary = OnipBlueDark,
+    background = Color(0xFFF6F8FB),
+    surface = Color.White,
+    surfaceVariant = Color(0xFFEEF2F7),
 )
 
 private val DarkColors = darkColorScheme(
@@ -30,7 +38,10 @@ private val DarkColors = darkColorScheme(
 @Composable
 fun CartoOnipTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    // Couleurs « dynamiques » (Android 12+, tirées du fond d'écran) désactivées : sur certaines
+    // tablettes elles donnaient des cartes bleu foncé au texte bleu, illisibles. L'app garde
+    // partout les couleurs ONIP.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current

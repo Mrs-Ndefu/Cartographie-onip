@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -133,6 +136,7 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                 count = households.size,
                 countLabel = if (households.size > 1) "foyers sur l'appareil" else "foyer sur l'appareil",
                 icon = Icons.Filled.Add,
+                accent = OnipBlue,
                 onClick = { onNavigate(Routes.CAPTURE) },
             )
             if (canAccessReperage) {
@@ -142,6 +146,7 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                     count = sites.size,
                     countLabel = if (sites.size > 1) "fiches sur l'appareil" else "fiche sur l'appareil",
                     icon = Icons.Filled.LocationOn,
+                    accent = SyncedGreen,
                     onClick = { onNavigate(Routes.REPERAGE) },
                 )
             }
@@ -278,20 +283,32 @@ private fun HomeActionCard(
     count: Int,
     countLabel: String,
     icon: ImageVector,
+    accent: Color,
     onClick: () -> Unit,
 ) {
+    // Carte claire, liseré et pastille d'icône à la couleur de l'activité (bleu = adressage,
+    // vert = repérage) : lisible quelles que soient les couleurs du système.
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
     ) {
+        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+        Box(Modifier.width(6.dp).fillMaxHeight().background(accent))
         Row(
-            modifier = Modifier.fillMaxWidth().padding(20.dp),
+            modifier = Modifier.weight(1f).padding(18.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(icon, contentDescription = null, tint = OnipBlue, modifier = Modifier.size(40.dp))
+            Box(
+                modifier = Modifier.size(56.dp).background(accent.copy(alpha = 0.12f), RoundedCornerShape(14.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(32.dp))
+            }
             Column(modifier = Modifier.weight(1f).padding(start = 16.dp)) {
-                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = OnipBlue)
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium)
+                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = accent)
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF3B4754))
                 if (count > 0) {
                     Text(
                         "$count $countLabel",
@@ -302,5 +319,5 @@ private fun HomeActionCard(
                 }
             }
         }
-    }
+    }}
 }
