@@ -64,6 +64,8 @@
         <div class="d-flex flex-wrap align-items-center gap-2">
           <a th:if="${selectedZone != null}" th:href="@{/dashboard/zones}" class="link-btn">← Zones</a>
           <a th:if="${selectedZone != null}" th:href="@{/dashboard/zones/sites}" class="link-btn">Tous les sites</a>
+          <!-- Création d'un site à la main (ADMIN), en plus de l'import Excel. -->
+          <a th:if="${canManage and selectedZone == null}" th:href="@{/dashboard/zones/sites/new}" class="btn btn-sm btn-primary">+ Nouveau site</a>
           <form th:if="${canManage and selectedZone == null and unassignedCount > 0 and !zones.isEmpty()}"
                 th:action="@{/dashboard/zones/sites/auto-assign}" method="post">
             <button type="submit" class="btn btn-sm btn-outline-primary"
@@ -89,6 +91,22 @@
             <option value="none" th:selected="${zone == 'none'}" th:text="'Non affectés (' + ${unassignedCount} + ')'">Non affectés</option>
             <option th:each="z : ${zones}" th:value="${z.id}" th:selected="${zone == z.id.toString()}"
                     th:text="${z.label} + ' (' + ${siteCounts[z.id] ?: 0} + ')'">Zone A1</option>
+          </select>
+        </label>
+        <label class="agents-field">
+          <span>Commune</span>
+          <select name="commune" class="form-select form-select-sm js-autosubmit js-commune-filter">
+            <option value="" th:selected="${commune == ''}">Toutes</option>
+            <option th:each="c : ${communes}" th:value="${c}" th:text="${c}"
+                    th:selected="${#strings.equalsIgnoreCase(c, commune)}">COMMUNE</option>
+          </select>
+        </label>
+        <label class="agents-field">
+          <span>Quartier</span>
+          <select name="quartier" class="form-select form-select-sm js-autosubmit">
+            <option value="" th:selected="${quartier == ''}">Tous</option>
+            <option th:each="q : ${quartiers}" th:value="${q}" th:text="${q}"
+                    th:selected="${#strings.equalsIgnoreCase(q, quartier)}">QUARTIER</option>
           </select>
         </label>
         <label class="agents-field">
@@ -181,13 +199,13 @@
       <nav th:if="${page.totalPages > 1}" aria-label="Pagination des sites" class="table-card-footer">
         <ul class="pagination pagination-sm mb-1">
           <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard/zones/sites(page=${page.number - 1}, zone=${zone}, search=${search})}">Précédent</a>
+            <a class="page-link" th:href="@{/dashboard/zones/sites(page=${page.number - 1}, zone=${zone}, search=${search}, commune=${commune}, quartier=${quartier})}">Précédent</a>
           </li>
           <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
-            <a class="page-link" th:href="@{/dashboard/zones/sites(page=${i}, zone=${zone}, search=${search})}" th:text="${i + 1}">1</a>
+            <a class="page-link" th:href="@{/dashboard/zones/sites(page=${i}, zone=${zone}, search=${search}, commune=${commune}, quartier=${quartier})}" th:text="${i + 1}">1</a>
           </li>
           <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
-            <a class="page-link" th:href="@{/dashboard/zones/sites(page=${page.number + 1}, zone=${zone}, search=${search})}">Suivant</a>
+            <a class="page-link" th:href="@{/dashboard/zones/sites(page=${page.number + 1}, zone=${zone}, search=${search}, commune=${commune}, quartier=${quartier})}">Suivant</a>
           </li>
         </ul>
         <p class="text-secondary small mb-0">
@@ -213,7 +231,10 @@
   <script>
     // Changer la zone d'un site (ou le filtre) l'enregistre aussitôt, sans bouton à cliquer.
     document.querySelectorAll('select.js-autosubmit').forEach(function (select) {
-      select.addEventListener('change', function () { select.form.submit(); });
+      select.addEventListener('change', function () {
+        if (select.classList.contains('js-commune-filter') && select.form.quartier) select.form.quartier.value = '';
+        select.form.submit();
+      });
     });
   </script>
 </body>

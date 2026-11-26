@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 // Fiches de repérage de site depuis le tableau de bord. Consultation : SUPER_ADMIN/ADMIN/
@@ -31,12 +34,15 @@ public class SiteDashboardController {
     private final SiteService siteService;
     private final AgentRepository agentRepository;
     private final HouseholdRepository householdRepository;
+    private final SiteQuestionnaire siteQuestionnaire;
 
     public SiteDashboardController(
-            SiteService siteService, AgentRepository agentRepository, HouseholdRepository householdRepository) {
+            SiteService siteService, AgentRepository agentRepository, HouseholdRepository householdRepository,
+            SiteQuestionnaire siteQuestionnaire) {
         this.siteService = siteService;
         this.agentRepository = agentRepository;
         this.householdRepository = householdRepository;
+        this.siteQuestionnaire = siteQuestionnaire;
     }
 
     // retirees=true : fiches retirées ou rejetées (équivalent de "Ménages retirés").
@@ -77,6 +83,7 @@ public class SiteDashboardController {
     public String detail(@PathVariable UUID id, Authentication authentication, Model model) {
         addCurrentAgent(authentication, model);
         model.addAttribute("site", siteService.get(id));
+        model.addAttribute("questionnaire", siteService.questionnaireView(id));
         return "site-detail";
     }
 
@@ -88,6 +95,10 @@ public class SiteDashboardController {
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", SiteEditForm.from(site));
         }
+        if (!model.containsAttribute("answers")) {
+            model.addAttribute("answers", siteService.questionnaireAnswers(id));
+        }
+        model.addAttribute("sections", siteQuestionnaire.sections());
         return "site-edit";
     }
 
@@ -95,9 +106,17 @@ public class SiteDashboardController {
     public String save(
             @PathVariable UUID id,
             @ModelAttribute("form") SiteEditForm form,
+            @RequestParam MultiValueMap<String, String> params,
             RedirectAttributes redirectAttributes) {
+        // Champs du questionnaire : name="qa.<clé>" ; plusieurs cases cochées = "A|B".
+        Map<String, String> answers = new HashMap<>();
+        params.forEach((name, values) -> {
+            if (name.startsWith("qa.")) {
+                answers.put(name.substring(3), String.join("|", values.stream().filter(v -> v != null && !v.isBlank()).toList()));
+            }
+        });
         try {
-            siteService.updateFromDashboard(id, form);
+            siteService.updateFromDashboard(id, form, answers);
             SiteDto updated = siteService.get(id);
             if (updated.visiteComplete()) {
                 redirectAttributes.addFlashAttribute("success", "Fiche de repérage mise à jour — statut : Visité complet.");
@@ -109,6 +128,7 @@ public class SiteDashboardController {
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             redirectAttributes.addFlashAttribute("form", form);
+            redirectAttributes.addFlashAttribute("answers", answers);
             return "redirect:/dashboard/sites/" + id + "/edit";
         }
     }

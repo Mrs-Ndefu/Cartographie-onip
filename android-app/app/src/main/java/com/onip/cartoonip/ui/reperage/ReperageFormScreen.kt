@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onip.cartoonip.data.DRC_PROVINCES
 import com.onip.cartoonip.data.DRC_VILLES
+import com.onip.cartoonip.data.SiteQuestionnaire
 import com.onip.cartoonip.data.communesForVille
 import com.onip.cartoonip.data.model.ZoneSiteOption
 import com.onip.cartoonip.data.villesForProvince
@@ -113,7 +114,7 @@ fun ReperageFormScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            SectionCard("GPS") {
+            SectionCard("Q7. Coordonnées GPS (latitude, longitude, altitude, précision)") {
                 OutlinedButton(
                     onClick = {
                         locationPermissionLauncher.launch(
@@ -146,7 +147,7 @@ fun ReperageFormScreen(
                 }
             }
 
-            SectionCard("I. Identification administrative du site") {
+            SectionCard("Q7. Identité du site / bureau") {
                 if (viewModel.restrictToZoneSites) {
                     val zoneSites by viewModel.zoneSites.collectAsState()
                     ZoneSiteIdentification(
@@ -157,9 +158,9 @@ fun ReperageFormScreen(
                         onCommuneChange = viewModel::onCommuneChange,
                     )
                     QuartierField(uiState.ville, uiState.commune, uiState.quartierGroupement, viewModel::onQuartierGroupementChange)
-                    FormField("Adresse (Village/Avenue/Rue)", uiState.villageAvenueRue, viewModel::onVillageAvenueRueChange)
-                    FormField("Numéro téléphone", uiState.numeroTelephone, viewModel::onNumeroTelephoneChange, keyboard = numberKeyboard, capitalize = false)
-                    FormField("Série téléphone/GPS", uiState.serieTelephoneGps, viewModel::onSerieTelephoneGpsChange, capitalize = false)
+                    FormField("f. Avenue / Rue / Village", uiState.villageAvenueRue, viewModel::onVillageAvenueRueChange)
+                    FormField("j. Numéro de téléphone (personne de contact)", uiState.numeroTelephone, viewModel::onNumeroTelephoneChange, keyboard = numberKeyboard, capitalize = false)
+                    FormField("Série GPS / Smartphone", uiState.serieTelephoneGps, viewModel::onSerieTelephoneGpsChange, capitalize = false)
                     return@SectionCard
                 }
                 SiteGeoFields(
@@ -171,140 +172,21 @@ fun ReperageFormScreen(
                     onCommuneChange = viewModel::onCommuneChange,
                 )
                 QuartierField(uiState.ville, uiState.commune, uiState.quartierGroupement, viewModel::onQuartierGroupementChange)
-                FormField("Village/Avenue/Rue", uiState.villageAvenueRue, viewModel::onVillageAvenueRueChange)
-                FormField("Nom du site", uiState.nomSite, viewModel::onNomSiteChange)
-                FormField("Numéro téléphone", uiState.numeroTelephone, viewModel::onNumeroTelephoneChange, keyboard = numberKeyboard, capitalize = false)
-                FormField("Série téléphone/GPS", uiState.serieTelephoneGps, viewModel::onSerieTelephoneGpsChange, capitalize = false)
+                FormField("f. Avenue / Rue / Village", uiState.villageAvenueRue, viewModel::onVillageAvenueRueChange)
+                FormField("a. Nom officiel du bureau / site", uiState.nomSite, viewModel::onNomSiteChange)
+                FormField("j. Numéro de téléphone (personne de contact)", uiState.numeroTelephone, viewModel::onNumeroTelephoneChange, keyboard = numberKeyboard, capitalize = false)
+                FormField("Série GPS / Smartphone", uiState.serieTelephoneGps, viewModel::onSerieTelephoneGpsChange, capitalize = false)
             }
 
-            SectionCard("II. Type de site") {
-                ChoiceGroup(
-                    options = listOf("ECOLE" to "École", "EGLISE" to "Église", "ADMINISTRATIF" to "Administratif", "HOPITAL" to "Hôpital", "AUTRE" to "Autre"),
-                    selected = uiState.typeSite,
-                    onSelect = viewModel::onTypeSiteChange,
-                )
-                if (uiState.typeSite == "AUTRE") {
-                    FormField("Préciser", uiState.typeSiteAutre, viewModel::onTypeSiteAutreChange)
+            // Questionnaire terrain (Module 0 à 5 + rubriques de l'ancienne fiche) : les sections
+            // qui ne s'appliquent pas au statut du bureau / site (Q1) sont sautées.
+            viewModel.sections
+                .filterNot { SiteQuestionnaire.hiddenBy(it.hideIf, uiState.answers) }
+                .forEach { section ->
+                    SectionCard(section.title) {
+                        QuestionnaireItems(section.items, uiState.answers, viewModel::onAnswer)
+                    }
                 }
-            }
-
-            SectionCard("III. Statut juridique et propriété") {
-                Text("Propriété du site", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(bottom = 4.dp))
-                ChoiceGroup(
-                    options = listOf("ETAT_DOMAINE_PUBLIC" to "État / Domaine public", "PRIVE" to "Privé"),
-                    selected = uiState.proprieteStatut,
-                    onSelect = viewModel::onProprieteStatutChange,
-                )
-                Text("Options d'occupation", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 10.dp, bottom = 4.dp))
-                ChoiceGroup(
-                    options = listOf("ACHAT" to "Achat", "PARTENARIAT" to "Partenariat / Mise à disposition", "LOCATION" to "Location"),
-                    selected = uiState.optionOccupation,
-                    onSelect = viewModel::onOptionOccupationChange,
-                )
-                YesNoRow("Disponibilité immédiate", uiState.disponibiliteImmediate, viewModel::onDisponibiliteImmediateChange)
-                if (uiState.disponibiliteImmediate == false) {
-                    FormField("Délai estimé", uiState.delaiEstime, viewModel::onDelaiEstimeChange, capitalize = false)
-                }
-                FormField("Nom et contact du propriétaire/gestionnaire", uiState.proprietaireNomContact, viewModel::onProprietaireNomContactChange)
-            }
-
-            SectionCard("IV. Caractéristiques physiques et infrastructures") {
-                Text("Type d'infrastructure", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(bottom = 4.dp))
-                ChoiceGroup(
-                    options = listOf("BATIMENT_EXISTANT" to "Bâtiment existant", "TERRAIN_CONSTRUCTION" to "Terrain pour construction", "AUTRE" to "Autre"),
-                    selected = uiState.typeInfrastructure,
-                    onSelect = viewModel::onTypeInfrastructureChange,
-                )
-                if (uiState.typeInfrastructure == "AUTRE") {
-                    FormField("Préciser", uiState.typeInfrastructureAutre, viewModel::onTypeInfrastructureAutreChange)
-                }
-                FormField("Superficie bâtiment (m²)", uiState.superficieBatiment, viewModel::onSuperficieBatimentChange, keyboard = numberKeyboard, capitalize = false)
-                FormField("Superficie terrain (m²)", uiState.superficieTerrain, viewModel::onSuperficieTerrainChange, keyboard = numberKeyboard, capitalize = false)
-                FormField("Nombre de pièces/bureaux disponibles", uiState.nombrePieces, viewModel::onNombrePiecesChange, keyboard = numberKeyboard, capitalize = false)
-                Text("État général du bâtiment", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 10.dp, bottom = 4.dp))
-                ChoiceGroup(
-                    options = listOf(
-                        "BON" to "Bon (aucun travaux majeurs)",
-                        "MOYEN" to "Moyen (travaux de réhabilitation légers requis)",
-                        "VETUSTE" to "Vétuste / à réhabiliter entièrement",
-                    ),
-                    selected = uiState.etatBatiment,
-                    onSelect = viewModel::onEtatBatimentChange,
-                )
-                FormField("Autres observations sur l'état du bâtiment", uiState.etatBatimentObservations, viewModel::onEtatBatimentObservationsChange, singleLine = false)
-            }
-
-            SectionCard("V. Commodité et accès techniques") {
-                Text("Accès routier et transport", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(bottom = 4.dp))
-                ChoiceGroup(
-                    options = listOf(
-                        "VEHICULE_TOUTE_ANNEE" to "Accessible en véhicule toute l'année",
-                        "DIFFICILE_SAISON_PLUIES" to "Accessible difficilement en saison des pluies",
-                        "PIED_MOTO_UNIQUEMENT" to "Accessible uniquement à pied ou moto",
-                    ),
-                    selected = uiState.accesRoutier,
-                    onSelect = viewModel::onAccesRoutierChange,
-                )
-                Text("Alimentation en énergie / eau", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 10.dp, bottom = 4.dp))
-                YesNoRow("Raccordé au réseau public (SNEL)", uiState.raccordeSnel, viewModel::onRaccordeSnelChange)
-                if (uiState.raccordeSnel == true) {
-                    Text("Stabilité", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
-                    ChoiceGroup(
-                        options = listOf("BONNE" to "Bonne", "FAIBLE" to "Faible", "INEXISTANT" to "Inexistant"),
-                        selected = uiState.stabiliteSnel,
-                        onSelect = viewModel::onStabiliteSnelChange,
-                    )
-                }
-                YesNoRow("Présence d'un groupe électrogène ou solaire alternatif", uiState.groupeElectrogeneSolaire, viewModel::onGroupeElectrogeneSolaireChange)
-                YesNoRow("Non électrifié", uiState.nonElectrifie, viewModel::onNonElectrifieChange)
-                YesNoRow("Regideso (eau)", uiState.regideso, viewModel::onRegidesoChange)
-                YesNoRow("Sanitaires", uiState.sanitaires, viewModel::onSanitairesChange)
-                Text("Connectivité télécom / internet", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 10.dp, bottom = 4.dp))
-                ChoiceGroup(
-                    options = listOf("EXCELLENTE" to "Excellente", "MOYENNE" to "Moyenne", "INEXISTANTE" to "Inexistante"),
-                    selected = uiState.connectiviteInternet,
-                    onSelect = viewModel::onConnectiviteInternetChange,
-                )
-                FormField("Réseaux disponibles", uiState.reseauxDisponibles, viewModel::onReseauxDisponiblesChange, capitalize = false)
-                YesNoRow("Sécurité des lieux : clôturé et sécurisé", uiState.clotureSecurise, viewModel::onClotureSecuriseChange)
-                YesNoRow("Proximité d'un poste de police/militaire", uiState.proximitePolice, viewModel::onProximitePoliceChange)
-                if (uiState.proximitePolice == true) {
-                    FormField("Distance (mètres)", uiState.distancePoliceMetres, viewModel::onDistancePoliceMetresChange, keyboard = numberKeyboard, capitalize = false)
-                }
-            }
-
-            SectionCard("VI. Évaluation et recommandations de l'équipe de terrain") {
-                Text("Avis global de l'équipe", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(bottom = 4.dp))
-                ChoiceGroup(
-                    options = listOf(
-                        "FAVORABLE" to "Favorable (site recommandé sans réserve)",
-                        "FAVORABLE_SOUS_RESERVE" to "Favorable sous réserve de travaux d'aménagement",
-                        "DEFAVORABLE" to "Défavorable",
-                    ),
-                    selected = uiState.avisGlobal,
-                    onSelect = viewModel::onAvisGlobalChange,
-                )
-                if (uiState.avisGlobal == "FAVORABLE_SOUS_RESERVE") {
-                    FormField("Travaux d'aménagement nécessaires", uiState.travauxAmenagement, viewModel::onTravauxAmenagementChange, singleLine = false)
-                }
-                if (uiState.avisGlobal == "DEFAVORABLE") {
-                    FormField("Motif", uiState.motifDefavorable, viewModel::onMotifDefavorableChange, singleLine = false)
-                }
-                FormField("Observations particulières", uiState.observationsParticulieres, viewModel::onObservationsParticulieresChange, singleLine = false)
-                FormField("Nom et signature de l'enquêteur", uiState.nomSignatureEnqueteur, viewModel::onNomSignatureEnqueteurChange)
-                OutlinedTextField(
-                    // TextFieldValue avec sélection forcée en fin de texte : le formatage auto (ajout
-                    // des "-") réécrit la chaîne à chaque frappe, et sans forcer la sélection, Compose
-                    // replace parfois le curseur n'importe où dans le texte reformaté au lieu de le
-                    // laisser là où l'utilisateur tape (cf. CaptureScreen, même correctif).
-                    value = TextFieldValue(uiState.dateEvaluation, TextRange(uiState.dateEvaluation.length)),
-                    onValueChange = { viewModel.onDateEvaluationChange(it.text) },
-                    label = { Text("Date de l'évaluation (AAAA-MM-JJ)") },
-                    singleLine = true,
-                    keyboardOptions = numberKeyboard,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                )
-            }
 
             Button(
                 onClick = { showSaveConfirm = true },
@@ -373,7 +255,7 @@ private fun ZoneSiteIdentification(
                 value = state.nomSite,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Nom du site") },
+                label = { Text("a. Nom officiel du bureau / site") },
                 placeholder = { Text("Choisir un site de votre zone") },
                 supportingText = { Text("${options.size} site(s) dans votre zone") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = siteExpanded) },
@@ -403,18 +285,18 @@ private fun ZoneSiteIdentification(
 
     OutlinedTextField(
         value = state.province, onValueChange = {}, readOnly = true,
-        label = { Text("Province/Région") }, singleLine = true,
+        label = { Text("b. Province") }, singleLine = true,
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
     )
     OutlinedTextField(
         value = state.ville, onValueChange = {}, readOnly = true,
-        label = { Text("Ville/Territoire") }, singleLine = true,
+        label = { Text("c. Ville / Territoire") }, singleLine = true,
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
     )
     if (zoneCommunes.isEmpty()) {
         OutlinedTextField(
             value = state.commune, onValueChange = {}, readOnly = true,
-            label = { Text("Commune/Secteur/Chefferie") }, singleLine = true,
+            label = { Text("d. Commune / Secteur / Chefferie") }, singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         )
         return
@@ -428,7 +310,7 @@ private fun ZoneSiteIdentification(
             value = state.commune,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Commune/Secteur/Chefferie") },
+            label = { Text("d. Commune / Secteur / Chefferie") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = communeExpanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
         )
@@ -472,7 +354,7 @@ private fun SiteGeoFields(
             value = DRC_PROVINCES.firstOrNull { it.equals(province, ignoreCase = true) } ?: province,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Province/Région") },
+            label = { Text("b. Province") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = provinceExpanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
         )
@@ -495,7 +377,7 @@ private fun SiteGeoFields(
             value = if (villeOther) "Autre (saisie libre)" else ville,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Ville/Territoire") },
+            label = { Text("c. Ville / Territoire") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = villeExpanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
         )
@@ -517,7 +399,7 @@ private fun SiteGeoFields(
     if (villeOther) {
         OutlinedTextField(
             value = ville, onValueChange = { onVilleChange(it.uppercase()) },
-            label = { Text("Ville/Territoire") }, singleLine = true,
+            label = { Text("c. Ville / Territoire") }, singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         )
     }
@@ -530,7 +412,7 @@ private fun SiteGeoFields(
     if (communeOptions.isEmpty()) {
         OutlinedTextField(
             value = commune, onValueChange = { onCommuneChange(it.uppercase()) },
-            label = { Text("Commune/Secteur/Chefferie") }, singleLine = true,
+            label = { Text("d. Commune / Secteur / Chefferie") }, singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         )
         return
@@ -544,7 +426,7 @@ private fun SiteGeoFields(
             value = if (communeOther) "Autre (saisie libre)" else commune,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Commune/Secteur/Chefferie") },
+            label = { Text("d. Commune / Secteur / Chefferie") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = communeExpanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
         )
@@ -566,7 +448,7 @@ private fun SiteGeoFields(
     if (communeOther) {
         OutlinedTextField(
             value = commune, onValueChange = { onCommuneChange(it.uppercase()) },
-            label = { Text("Commune/Secteur/Chefferie") }, singleLine = true,
+            label = { Text("d. Commune / Secteur / Chefferie") }, singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         )
     }
@@ -592,7 +474,7 @@ private fun SectionCard(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun FormField(
+internal fun FormField(
     label: String,
     value: String,
     onChange: (String) -> Unit,
@@ -613,7 +495,7 @@ private fun FormField(
 private val radioScale = 0.75f
 
 @Composable
-private fun ChoiceGroup(options: List<Pair<String, String>>, selected: String?, onSelect: (String?) -> Unit) {
+internal fun ChoiceGroup(options: List<Pair<String, String>>, selected: String?, onSelect: (String?) -> Unit) {
     Column {
         options.forEach { (value, text) ->
             Row(
@@ -630,7 +512,7 @@ private fun ChoiceGroup(options: List<Pair<String, String>>, selected: String?, 
 }
 
 @Composable
-private fun YesNoRow(label: String, value: Boolean?, onChange: (Boolean?) -> Unit) {
+internal fun YesNoRow(label: String, value: Boolean?, onChange: (Boolean?) -> Unit) {
     Column(Modifier.padding(vertical = 6.dp)) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {

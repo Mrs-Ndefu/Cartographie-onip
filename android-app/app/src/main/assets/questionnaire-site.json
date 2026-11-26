@@ -1,0 +1,1521 @@
+{
+ "version": 1,
+ "source": "Questionnaire_Terrain_Bureaux_Etat_Civil_ONIP VF.docx",
+ "sections": [
+  {
+   "id": "m0",
+   "title": "Module 0 : Données de l'enquête",
+   "items": [
+    {
+     "id": "q0_numero",
+     "label": "N° du questionnaire",
+     "type": "text"
+    },
+    {
+     "id": "dateEvaluation",
+     "label": "Date de la visite",
+     "type": "date",
+     "bound": true
+    },
+    {
+     "id": "nomSignatureEnqueteur",
+     "label": "Nom de l'agent enquêteur",
+     "type": "text",
+     "bound": true
+    },
+    {
+     "id": "q0_superviseur",
+     "label": "Nom du superviseur",
+     "type": "text"
+    },
+    {
+     "id": "q0_telephone",
+     "label": "N° de téléphone de l'enquêteur",
+     "type": "phone"
+    }
+   ]
+  },
+  {
+   "id": "m1",
+   "title": "Module 1 : Situation administrative du bureau / site",
+   "items": [
+    {
+     "id": "typeSite",
+     "label": "Statut du bureau / site",
+     "type": "choice",
+     "num": "Q1",
+     "options": [
+      [
+       "BPEC",
+       "BPEC"
+      ],
+      [
+       "BSEC",
+       "BSEC"
+      ],
+      [
+       "BAEC",
+       "BAEC"
+      ],
+      [
+       "BP",
+       "BP"
+      ],
+      [
+       "BRMP",
+       "BRMP"
+      ],
+      [
+       "ECOLE",
+       "École"
+      ],
+      [
+       "EGLISE",
+       "Église"
+      ],
+      [
+       "HOPITAL",
+       "Hôpital"
+      ],
+      [
+       "ADMINISTRATIF",
+       "Administratif (à préciser)"
+      ],
+      [
+       "AUTRE",
+       "Autre (à préciser)"
+      ]
+     ],
+     "bound": true,
+     "precise": [
+      "ADMINISTRATIF",
+      "AUTRE"
+     ],
+     "precisionId": "typeSiteAutre"
+    },
+    {
+     "id": "optionOccupation",
+     "label": "Options d'occupation du site au profit de l'ONIP",
+     "type": "choice",
+     "num": "Q2",
+     "options": [
+      [
+       "PARTENARIAT",
+       "Partenariat / Mise à disposition"
+      ],
+      [
+       "LOCATION",
+       "Location"
+      ],
+      [
+       "DOTATION",
+       "Dotation"
+      ]
+     ],
+     "bound": true,
+     "legacyOptions": [
+      [
+       "ACHAT",
+       "Achat"
+      ]
+     ],
+     "hideIf": {
+      "typeSite": [
+       "BPEC",
+       "BSEC",
+       "BAEC",
+       "BP",
+       "BRMP"
+      ]
+     }
+    },
+    {
+     "id": "disponibiliteImmediate",
+     "label": "Disponibilité immédiate du site au profit de l'ONIP",
+     "type": "yesno",
+     "num": "Q3",
+     "bound": true,
+     "hideIf": {
+      "typeSite": [
+       "BPEC",
+       "BSEC",
+       "BAEC",
+       "BP",
+       "BRMP"
+      ]
+     }
+    },
+    {
+     "id": "delaiEstime",
+     "label": "Si non, délai estimé",
+     "type": "text",
+     "bound": true,
+     "showIf": {
+      "disponibiliteImmediate": [
+       "NON"
+      ]
+     },
+     "hideIf": {
+      "typeSite": [
+       "BPEC",
+       "BSEC",
+       "BAEC",
+       "BP",
+       "BRMP"
+      ]
+     }
+    },
+    {
+     "id": "proprietaireNomContact",
+     "label": "Nom, contact et qualité du responsable ou gestionnaire du site au profit de l'ONIP",
+     "type": "longtext",
+     "num": "Q4",
+     "bound": true,
+     "hideIf": {
+      "typeSite": [
+       "BPEC",
+       "BSEC",
+       "BAEC",
+       "BP",
+       "BRMP"
+      ]
+     }
+    },
+    {
+     "id": "proprieteStatut",
+     "label": "Statut d'occupation",
+     "type": "choice",
+     "num": "Q5",
+     "options": [
+      [
+       "ETAT_DOMAINE_PUBLIC",
+       "Domaine public"
+      ],
+      [
+       "DOMAINE_PUBLIC_PRIVE",
+       "Domaine public-privé"
+      ],
+      [
+       "PRIVE",
+       "Domaine privé"
+      ],
+      [
+       "LOCATION",
+       "Location"
+      ],
+      [
+       "ITINERANT",
+       "Bureau itinérant / sans local fixe"
+      ]
+     ],
+     "bound": true
+    },
+    {
+     "id": "q6",
+     "label": "Bureau localisé en zone",
+     "type": "choice",
+     "num": "Q6",
+     "options": [
+      [
+       "URBAINE",
+       "Urbaine"
+      ],
+      [
+       "RURALE",
+       "Rurale"
+      ]
+     ]
+    },
+    {
+     "id": "",
+     "label": "Q7. Identité du site / bureau (suite des champs d'identification)",
+     "type": "note"
+    },
+    {
+     "id": "q7_adresse",
+     "label": "g. Adresse complète et/ou point de repère",
+     "type": "longtext"
+    },
+    {
+     "id": "q7_contact_nom",
+     "label": "h. Personne de contact (nom complet)",
+     "type": "text"
+    },
+    {
+     "id": "q7_contact_fonction",
+     "label": "i. Fonction / qualité de la personne de contact",
+     "type": "text"
+    },
+    {
+     "id": "q7_email",
+     "label": "k. Adresse électronique (si disponible)",
+     "type": "email"
+    }
+   ]
+  },
+  {
+   "id": "m2_1",
+   "title": "2.1 Accessibilité et voies de transport",
+   "items": [
+    {
+     "id": "q8",
+     "label": "Type de relief",
+     "type": "choice",
+     "num": "Q8",
+     "options": [
+      [
+       "PLAT",
+       "Plat"
+      ],
+      [
+       "ACCIDENTE",
+       "Accidenté"
+      ],
+      [
+       "PENTE",
+       "En pente"
+      ],
+      [
+       "MARECAGEUX",
+       "Marécageux"
+      ],
+      [
+       "AUTRE",
+       "Autre (à justifier)"
+      ]
+     ],
+     "precise": [
+      "AUTRE"
+     ]
+    },
+    {
+     "id": "q9a",
+     "label": "Voie d'accès (à préciser)",
+     "type": "text",
+     "num": "Q9a"
+    },
+    {
+     "id": "q9b",
+     "label": "État de la voie d'accès",
+     "type": "choice",
+     "num": "Q9b",
+     "options": [
+      [
+       "BON",
+       "Bon état"
+      ],
+      [
+       "MAUVAIS",
+       "Mauvais état"
+      ],
+      [
+       "TRES_MAUVAIS",
+       "Très mauvais état"
+      ]
+     ]
+    },
+    {
+     "id": "q10",
+     "label": "Accessibilité pour les personnes à mobilité réduite",
+     "type": "choice",
+     "num": "Q10",
+     "options": [
+      [
+       "OUI",
+       "Oui"
+      ],
+      [
+       "NON",
+       "Non"
+      ],
+      [
+       "PARTIELLE",
+       "Partielle"
+      ]
+     ]
+    },
+    {
+     "id": "q11",
+     "label": "Contraintes ou particularités d'accès (éboulement, bac, saisonnalité, etc.)",
+     "type": "longtext",
+     "num": "Q11"
+    },
+    {
+     "id": "q12",
+     "label": "Distance à parcourir du site vers le chef-lieu de l'entité (km)",
+     "type": "number",
+     "num": "Q12"
+    },
+    {
+     "id": "q13",
+     "label": "Durée approximative du trajet",
+     "type": "text",
+     "num": "Q13"
+    },
+    {
+     "id": "q14",
+     "label": "Tonnage / capacité de charge autorisée sur la voie",
+     "type": "text",
+     "num": "Q14"
+    }
+   ]
+  },
+  {
+   "id": "m2_2",
+   "title": "2.2 Infrastructure et viabilité physique du bureau / site",
+   "items": [
+    {
+     "id": "q15",
+     "label": "Nature des murs du bâtiment",
+     "type": "choice",
+     "num": "Q15",
+     "options": [
+      [
+       "DURABLES",
+       "Matériaux durables"
+      ],
+      [
+       "PISE",
+       "Pisé"
+      ],
+      [
+       "PRECAIRES",
+       "Matériaux précaires"
+      ]
+     ]
+    },
+    {
+     "id": "etatBatiment",
+     "label": "État général du bâtiment",
+     "type": "choice",
+     "num": "Q16",
+     "options": [
+      [
+       "BON",
+       "Bon"
+      ],
+      [
+       "MOYEN",
+       "Moyen"
+      ],
+      [
+       "VETUSTE",
+       "Dégradé / Mauvais"
+      ],
+      [
+       "INUTILISABLE",
+       "Inutilisable"
+      ]
+     ],
+     "bound": true
+    },
+    {
+     "id": "superficieTerrainM2",
+     "label": "Superficie totale du site (m²)",
+     "type": "number",
+     "num": "Q17",
+     "bound": true
+    },
+    {
+     "id": "superficieBatimentM2",
+     "label": "Superficie du bâtiment (m²)",
+     "type": "number",
+     "num": "Q18",
+     "bound": true
+    },
+    {
+     "id": "q19",
+     "label": "Superficie utile / exploitable (m²)",
+     "type": "number",
+     "num": "Q19"
+    },
+    {
+     "id": "q20",
+     "label": "Espace disponible pour l'installation des équipements (m²)",
+     "type": "number",
+     "num": "Q20"
+    },
+    {
+     "id": "q21",
+     "label": "État de chacun des éléments suivants (photographie à l'appui si nécessaire)",
+     "type": "grid",
+     "num": "Q21",
+     "columns": [
+      [
+       "BON",
+       "Bon état"
+      ],
+      [
+       "MOYEN",
+       "État moyen"
+      ],
+      [
+       "MAUVAIS",
+       "Mauvais état"
+      ],
+      [
+       "INEXISTANT",
+       "Inexistant"
+      ]
+     ],
+     "rows": [
+      [
+       "portes",
+       "Portes"
+      ],
+      [
+       "fenetres",
+       "Fenêtres"
+      ],
+      [
+       "murs",
+       "Murs"
+      ],
+      [
+       "toiture",
+       "Toiture"
+      ],
+      [
+       "sol",
+       "Sol"
+      ]
+     ]
+    },
+    {
+     "id": "regideso",
+     "label": "Accès à une source d'eau potable",
+     "type": "yesno",
+     "num": "Q22",
+     "bound": true
+    },
+    {
+     "id": "q23",
+     "label": "Présence d'une cour ou espace d'accueil",
+     "type": "yesno",
+     "num": "Q23"
+    },
+    {
+     "id": "sanitaires",
+     "label": "Présence de toilettes",
+     "type": "yesno",
+     "num": "Q24",
+     "bound": true
+    },
+    {
+     "id": "q25",
+     "label": "Autres éléments pertinents",
+     "type": "longtext",
+     "num": "Q25"
+    },
+    {
+     "id": "q26",
+     "label": "Photographies prises",
+     "type": "choice",
+     "num": "Q26",
+     "options": [
+      [
+       "OUI",
+       "Oui, jointes à la fiche numérique"
+      ],
+      [
+       "NON",
+       "Non"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "m2_3",
+   "title": "2.3 Capacité d'accueil d'agents ONIP",
+   "items": [
+    {
+     "id": "q27",
+     "label": "Le bureau dispose-t-il d'un espace suffisant pour accueillir un ou plusieurs agents de l'ONIP et leur équipement ?",
+     "type": "choice",
+     "num": "Q27",
+     "options": [
+      [
+       "OUI_DEDIE",
+       "Oui, un espace dédié est disponible"
+      ],
+      [
+       "OUI_REAMENAGEMENT",
+       "Oui, sous réserve de réaménagement"
+      ],
+      [
+       "NON",
+       "Non"
+      ]
+     ]
+    },
+    {
+     "id": "nombrePieces",
+     "label": "Nombre de pièces / bureaux disponibles",
+     "type": "integer",
+     "num": "Q28",
+     "bound": true
+    },
+    {
+     "id": "q29",
+     "label": "Nombre d'agents ONIP pouvant être accueillis simultanément (estimation)",
+     "type": "integer",
+     "num": "Q29"
+    }
+   ]
+  },
+  {
+   "id": "m2_4",
+   "title": "2.4 Énergie",
+   "items": [
+    {
+     "id": "q30",
+     "label": "Source d'énergie électrique",
+     "type": "choice",
+     "num": "Q30",
+     "options": [
+      [
+       "SNEL",
+       "Réseau national (SNEL)"
+      ],
+      [
+       "PRIVE",
+       "Réseau privé"
+      ],
+      [
+       "GROUPE",
+       "Groupe électrogène"
+      ],
+      [
+       "SOLAIRE",
+       "Énergie solaire"
+      ],
+      [
+       "ABSENTE",
+       "Absente"
+      ]
+     ]
+    },
+    {
+     "id": "q31",
+     "label": "Continuité de l'alimentation (SNEL)",
+     "type": "choice",
+     "num": "Q31",
+     "options": [
+      [
+       "PERMANENCE",
+       "En permanence"
+      ],
+      [
+       "FREQUENTES",
+       "Coupures fréquentes"
+      ],
+      [
+       "OCCASIONNELLES",
+       "Coupures occasionnelles"
+      ]
+     ],
+     "showIf": {
+      "q30": [
+       "SNEL"
+      ]
+     }
+    },
+    {
+     "id": "q32",
+     "label": "Stabilité de l'alimentation électrique",
+     "type": "choice",
+     "num": "Q32",
+     "options": [
+      [
+       "STABLE",
+       "Stable"
+      ],
+      [
+       "INSTABLE",
+       "Instable"
+      ]
+     ],
+     "hideIf": {
+      "q30": [
+       "ABSENTE"
+      ]
+     }
+    },
+    {
+     "id": "q33",
+     "label": "Source d'énergie alternative disponible",
+     "type": "multi",
+     "num": "Q33",
+     "options": [
+      [
+       "GROUPE",
+       "Groupe électrogène"
+      ],
+      [
+       "SOLAIRE",
+       "Énergie solaire"
+      ],
+      [
+       "BATTERIE",
+       "Batterie / power bank"
+      ],
+      [
+       "AUCUNE",
+       "Aucune"
+      ]
+     ]
+    },
+    {
+     "id": "q34",
+     "label": "Fréquence des coupures (ex. : x fois / semaine)",
+     "type": "text",
+     "num": "Q34",
+     "hideIf": {
+      "q30": [
+       "ABSENTE"
+      ]
+     }
+    },
+    {
+     "id": "q35",
+     "label": "Durée moyenne des interruptions",
+     "type": "text",
+     "num": "Q35",
+     "hideIf": {
+      "q30": [
+       "ABSENTE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "m2_5",
+   "title": "2.5 Connectivité internet",
+   "items": [
+    {
+     "id": "q36",
+     "label": "Le bureau dispose-t-il d'une connexion internet ?",
+     "type": "choice",
+     "num": "Q36",
+     "options": [
+      [
+       "FIXE",
+       "Oui, connexion fixe"
+      ],
+      [
+       "MOBILE",
+       "Oui, via réseau mobile"
+      ],
+      [
+       "PROXIMITE",
+       "Non, mais réseau mobile disponible à proximité"
+      ],
+      [
+       "AUCUNE",
+       "Non, aucune couverture réseau"
+      ]
+     ]
+    },
+    {
+     "id": "q37",
+     "label": "Opérateur(s) desservant le site",
+     "type": "multi",
+     "num": "Q37",
+     "options": [
+      [
+       "VODACOM",
+       "Vodacom"
+      ],
+      [
+       "ORANGE",
+       "Orange"
+      ],
+      [
+       "AIRTEL",
+       "Airtel"
+      ],
+      [
+       "AFRICELL",
+       "Africell"
+      ],
+      [
+       "AUTRE",
+       "Autre (préciser)"
+      ]
+     ],
+     "precise": [
+      "AUTRE"
+     ]
+    },
+    {
+     "id": "connectiviteInternet",
+     "label": "Qualité générale du réseau internet / mobile sur le site",
+     "type": "choice",
+     "num": "Q38",
+     "options": [
+      [
+       "EXCELLENTE",
+       "Bonne"
+      ],
+      [
+       "MOYENNE",
+       "Moyenne"
+      ],
+      [
+       "FAIBLE",
+       "Faible"
+      ],
+      [
+       "INEXISTANTE",
+       "Inexistante"
+      ]
+     ],
+     "bound": true
+    },
+    {
+     "id": "q39",
+     "label": "Connecté à internet actuellement (usage courant du bureau)",
+     "type": "yesno",
+     "num": "Q39"
+    }
+   ]
+  },
+  {
+   "id": "m2_6",
+   "title": "2.6 Sécurité",
+   "items": [
+    {
+     "id": "proximitePolice",
+     "label": "Présence d'un poste de police à proximité",
+     "type": "yesno",
+     "num": "Q40",
+     "bound": true
+    },
+    {
+     "id": "q41",
+     "label": "Contexte sécuritaire global de la zone",
+     "type": "choice",
+     "num": "Q41",
+     "options": [
+      [
+       "STABLE",
+       "Zone stable"
+      ],
+      [
+       "POST_CONFLIT",
+       "Zone post-conflit"
+      ],
+      [
+       "CONFLIT",
+       "Zone de conflit"
+      ],
+      [
+       "CRIMINALITE",
+       "Zone à criminalité urbaine élevée"
+      ],
+      [
+       "AUTRE",
+       "Autre (à préciser)"
+      ]
+     ],
+     "precise": [
+      "AUTRE"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "m3_1",
+   "title": "Module 3 : État des lieux du bureau — 3.1 Informations générales",
+   "hideIf": {
+    "typeSite": [
+     "ECOLE",
+     "EGLISE",
+     "HOPITAL",
+     "ADMINISTRATIF",
+     "AUTRE"
+    ]
+   },
+   "items": [
+    {
+     "id": "",
+     "label": "Officier de l'état civil / population",
+     "type": "note",
+     "num": "Q42"
+    },
+    {
+     "id": "q42_nom",
+     "label": "Noms de l'officier",
+     "type": "text"
+    },
+    {
+     "id": "q42_fonction",
+     "label": "Fonction",
+     "type": "text"
+    },
+    {
+     "id": "q42_etudes",
+     "label": "Niveau d'études",
+     "type": "text"
+    },
+    {
+     "id": "q42_formation",
+     "label": "Formation spécifique en état civil / population",
+     "type": "yesno"
+    },
+    {
+     "id": "q42_formation_domaine",
+     "label": "Si oui, préciser le domaine de la formation",
+     "type": "text",
+     "showIf": {
+      "q42_formation": [
+       "OUI"
+      ]
+     }
+    },
+    {
+     "id": "q42_telephone",
+     "label": "Téléphone",
+     "type": "phone"
+    },
+    {
+     "id": "q42_email",
+     "label": "Adresse e-mail",
+     "type": "email"
+    },
+    {
+     "id": "q42_date_creation",
+     "label": "Date de création du bureau",
+     "type": "text"
+    },
+    {
+     "id": "q42_reference",
+     "label": "Référence légale de création (texte, n°, date)",
+     "type": "text"
+    },
+    {
+     "id": "q42_code",
+     "label": "Code unique d'identification",
+     "type": "text"
+    },
+    {
+     "id": "q42_agents",
+     "label": "Nombre total d'agents affectés au bureau",
+     "type": "integer"
+    },
+    {
+     "id": "q42_centres",
+     "label": "Nombre de centres secondaires rattachés",
+     "type": "integer"
+    },
+    {
+     "id": "q42_fonctionnaires",
+     "label": "Nombre de fonctionnaires",
+     "type": "integer"
+    },
+    {
+     "id": "q42_contractuels",
+     "label": "Nombre de contractuels",
+     "type": "integer"
+    },
+    {
+     "id": "q42_femmes",
+     "label": "Nombre de femmes",
+     "type": "integer"
+    },
+    {
+     "id": "q42_hommes",
+     "label": "Nombre d'hommes",
+     "type": "integer"
+    },
+    {
+     "id": "",
+     "label": "Étendue de la population et de la zone géographique couvertes par le bureau",
+     "type": "note",
+     "num": "Q43"
+    },
+    {
+     "id": "q43_population",
+     "label": "a. Estimation de la population couverte",
+     "type": "integer"
+    },
+    {
+     "id": "q43_quartiers",
+     "label": "b. Nombre de quartiers / groupements desservis",
+     "type": "integer"
+    },
+    {
+     "id": "q43_villages",
+     "label": "c. Nombre de villages / avenues desservis",
+     "type": "integer"
+    },
+    {
+     "id": "q43_distance",
+     "label": "d. Distance moyenne parcourue par les usagers",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "id": "m3_2",
+   "title": "3.2 Compétences du personnel en place",
+   "hideIf": {
+    "typeSite": [
+     "ECOLE",
+     "EGLISE",
+     "HOPITAL",
+     "ADMINISTRATIF",
+     "AUTRE"
+    ]
+   },
+   "items": [
+    {
+     "id": "q44",
+     "label": "L'officier / préposé possède-t-il des compétences dans les domaines ci-après ?",
+     "type": "grid",
+     "num": "Q44",
+     "columns": [
+      [
+       "OUI",
+       "Oui"
+      ],
+      [
+       "NON",
+       "Non"
+      ]
+     ],
+     "rows": [
+      [
+       "informatique",
+       "Informatique de base"
+      ],
+      [
+       "bdd",
+       "Utilisation de bases de données"
+      ],
+      [
+       "registres",
+       "Gestion de registres"
+      ],
+      [
+       "statistiques",
+       "Statistiques vitales"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "m3_3",
+   "title": "3.3 Aptitude à la saisie numérique",
+   "hideIf": {
+    "typeSite": [
+     "ECOLE",
+     "EGLISE",
+     "HOPITAL",
+     "ADMINISTRATIF",
+     "AUTRE"
+    ]
+   },
+   "items": [
+    {
+     "id": "q45",
+     "label": "Le personnel maîtrise-t-il l'usage d'un ordinateur ou d'une tablette / smartphone pour la saisie de données ?",
+     "type": "choice",
+     "num": "Q45",
+     "options": [
+      [
+       "AUTONOME",
+       "Oui, de manière autonome"
+      ],
+      [
+       "ACCOMPAGNEMENT",
+       "Oui, avec un accompagnement"
+      ],
+      [
+       "NON",
+       "Non"
+      ]
+     ]
+    },
+    {
+     "id": "q46",
+     "label": "Le bureau utilise-t-il un système informatique ?",
+     "type": "yesno",
+     "num": "Q46"
+    },
+    {
+     "id": "q47",
+     "label": "Logiciel utilisé (le cas échéant)",
+     "type": "text",
+     "num": "Q47",
+     "showIf": {
+      "q46": [
+       "OUI"
+      ]
+     }
+    },
+    {
+     "id": "q48",
+     "label": "Mode de sauvegarde",
+     "type": "choice",
+     "num": "Q48",
+     "options": [
+      [
+       "DISQUE",
+       "Disque externe"
+      ],
+      [
+       "SERVEUR",
+       "Serveur local"
+      ],
+      [
+       "CLOUD",
+       "Cloud"
+      ],
+      [
+       "AUCUN",
+       "Aucun"
+      ]
+     ]
+    },
+    {
+     "id": "q49",
+     "label": "Nombre d'agents du bureau capables d'utiliser un outil informatique de saisie",
+     "type": "integer",
+     "num": "Q49"
+    }
+   ]
+  },
+  {
+   "id": "m3_4",
+   "title": "3.4 Services offerts et délais de délivrance",
+   "hideIf": {
+    "typeSite": [
+     "ECOLE",
+     "EGLISE",
+     "HOPITAL",
+     "ADMINISTRATIF",
+     "AUTRE",
+     "BP",
+     "BRMP"
+    ]
+   },
+   "items": [
+    {
+     "id": "q50",
+     "label": "Le bureau assure-t-il l'enregistrement des actes ci-après ?",
+     "type": "grid",
+     "num": "Q50",
+     "columns": [
+      [
+       "OUI",
+       "Oui"
+      ],
+      [
+       "NON",
+       "Non"
+      ]
+     ],
+     "rows": [
+      [
+       "naissances",
+       "Naissances"
+      ],
+      [
+       "mariages",
+       "Mariages"
+      ],
+      [
+       "deces",
+       "Décès"
+      ],
+      [
+       "jugements",
+       "Jugements supplétifs"
+      ],
+      [
+       "adoptions",
+       "Adoptions"
+      ]
+     ]
+    },
+    {
+     "id": "",
+     "label": "Délai moyen de délivrance des actes ci-après",
+     "type": "note",
+     "num": "Q51"
+    },
+    {
+     "id": "q51_naissance",
+     "label": "Acte de naissance",
+     "type": "text"
+    },
+    {
+     "id": "q51_mariage",
+     "label": "Acte de mariage",
+     "type": "text"
+    },
+    {
+     "id": "q51_deces",
+     "label": "Acte de décès",
+     "type": "text"
+    },
+    {
+     "id": "",
+     "label": "Volume annuel d'actes enregistrés par le bureau au cours de l'année précédente",
+     "type": "note",
+     "num": "Q52"
+    },
+    {
+     "id": "q52_naissances",
+     "label": "Nombre de naissances",
+     "type": "integer"
+    },
+    {
+     "id": "q52_mariages",
+     "label": "Nombre de mariages",
+     "type": "integer"
+    },
+    {
+     "id": "q52_deces",
+     "label": "Nombre de décès",
+     "type": "integer"
+    },
+    {
+     "id": "q52_jugements",
+     "label": "Nombre de jugements supplétifs traités",
+     "type": "integer"
+    },
+    {
+     "id": "q53",
+     "label": "Taux estimé d'enregistrement des naissances",
+     "type": "choice",
+     "num": "Q53",
+     "options": [
+      [
+       "MOINS_25",
+       "< 25 %"
+      ],
+      [
+       "DE_25_A_50",
+       "25 – 50 %"
+      ],
+      [
+       "DE_50_A_75",
+       "50 – 75 %"
+      ],
+      [
+       "PLUS_75",
+       "> 75 %"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "m3_5",
+   "title": "3.5 Équipement du bureau",
+   "hideIf": {
+    "typeSite": [
+     "ECOLE",
+     "EGLISE",
+     "HOPITAL",
+     "ADMINISTRATIF",
+     "AUTRE"
+    ]
+   },
+   "items": [
+    {
+     "id": "q54",
+     "label": "Le bureau est-il équipé de :",
+     "type": "grid",
+     "num": "Q54",
+     "columns": [
+      [
+       "OUI",
+       "Oui"
+      ],
+      [
+       "NON",
+       "Non"
+      ]
+     ],
+     "rows": [
+      [
+       "bureau",
+       "Bureau de travail"
+      ],
+      [
+       "chaises",
+       "Chaises"
+      ],
+      [
+       "armoire",
+       "Armoire"
+      ],
+      [
+       "registres",
+       "Registres sécurisés"
+      ],
+      [
+       "internet",
+       "Internet"
+      ],
+      [
+       "ordinateur",
+       "Ordinateur"
+      ],
+      [
+       "imprimante",
+       "Imprimante"
+      ],
+      [
+       "scanner",
+       "Scanner"
+      ],
+      [
+       "groupe",
+       "Groupe électrogène"
+      ],
+      [
+       "solaire",
+       "Kit solaire"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "m5",
+   "title": "Module 5 : Observations et propositions",
+   "items": [
+    {
+     "id": "q55",
+     "label": "Principales difficultés rencontrées",
+     "type": "multi",
+     "num": "Q55",
+     "options": [
+      [
+       "PERSONNEL",
+       "Manque de personnel"
+      ],
+      [
+       "REGISTRES",
+       "Insuffisance de registres"
+      ],
+      [
+       "EQUIPEMENT",
+       "Faible équipement informatique"
+      ]
+     ]
+    },
+    {
+     "id": "q56",
+     "label": "Besoins prioritaires identifiés",
+     "type": "multi",
+     "num": "Q56",
+     "options": [
+      [
+       "CONSTRUCTION",
+       "Construction / Réhabilitation"
+      ],
+      [
+       "INFORMATISATION",
+       "Informatisation"
+      ],
+      [
+       "FORMATION",
+       "Formation"
+      ],
+      [
+       "EQUIPEMENT",
+       "Équipement informatique"
+      ],
+      [
+       "INTERNET",
+       "Connexion internet"
+      ],
+      [
+       "DEPLACEMENT",
+       "Moyens de déplacement"
+      ]
+     ]
+    },
+    {
+     "id": "observationsParticulieres",
+     "label": "Observations et propositions",
+     "type": "longtext",
+     "num": "Q57",
+     "bound": true
+    }
+   ]
+  },
+  {
+   "id": "autres",
+   "title": "Autres rubriques (hors questionnaire)",
+   "items": [
+    {
+     "id": "typeInfrastructure",
+     "label": "Type d'infrastructure",
+     "type": "choice",
+     "options": [
+      [
+       "BATIMENT_EXISTANT",
+       "Bâtiment existant"
+      ],
+      [
+       "TERRAIN_CONSTRUCTION",
+       "Terrain pour construction"
+      ],
+      [
+       "AUTRE",
+       "Autre"
+      ]
+     ],
+     "bound": true,
+     "precise": [
+      "AUTRE"
+     ],
+     "precisionId": "typeInfrastructureAutre"
+    },
+    {
+     "id": "etatBatimentObservations",
+     "label": "Autres observations sur l'état du bâtiment",
+     "type": "longtext",
+     "bound": true
+    },
+    {
+     "id": "accesRoutier",
+     "label": "Accès routier et transport",
+     "type": "choice",
+     "options": [
+      [
+       "VEHICULE_TOUTE_ANNEE",
+       "Accessible en véhicule toute l'année"
+      ],
+      [
+       "DIFFICILE_SAISON_PLUIES",
+       "Accessible difficilement en saison des pluies"
+      ],
+      [
+       "PIED_MOTO_UNIQUEMENT",
+       "Accessible uniquement à pied ou moto"
+      ]
+     ],
+     "bound": true
+    },
+    {
+     "id": "raccordeSnel",
+     "label": "Raccordé au réseau public (SNEL)",
+     "type": "yesno",
+     "bound": true
+    },
+    {
+     "id": "stabiliteSnel",
+     "label": "Stabilité SNEL",
+     "type": "choice",
+     "options": [
+      [
+       "BONNE",
+       "Bonne"
+      ],
+      [
+       "FAIBLE",
+       "Faible"
+      ],
+      [
+       "INEXISTANT",
+       "Inexistant"
+      ]
+     ],
+     "bound": true,
+     "showIf": {
+      "raccordeSnel": [
+       "OUI"
+      ]
+     }
+    },
+    {
+     "id": "groupeElectrogeneSolaire",
+     "label": "Présence d'un groupe électrogène ou solaire alternatif",
+     "type": "yesno",
+     "bound": true
+    },
+    {
+     "id": "nonElectrifie",
+     "label": "Non électrifié",
+     "type": "yesno",
+     "bound": true
+    },
+    {
+     "id": "reseauxDisponibles",
+     "label": "Réseaux disponibles",
+     "type": "text",
+     "bound": true
+    },
+    {
+     "id": "clotureSecurise",
+     "label": "Sécurité des lieux : clôturé et sécurisé",
+     "type": "yesno",
+     "bound": true
+    },
+    {
+     "id": "distancePoliceMetres",
+     "label": "Distance du poste de police (mètres)",
+     "type": "integer",
+     "bound": true,
+     "showIf": {
+      "proximitePolice": [
+       "OUI"
+      ]
+     }
+    },
+    {
+     "id": "avisGlobal",
+     "label": "Avis global de l'équipe",
+     "type": "choice",
+     "options": [
+      [
+       "FAVORABLE",
+       "Favorable (site recommandé sans réserve)"
+      ],
+      [
+       "FAVORABLE_SOUS_RESERVE",
+       "Favorable sous réserve de travaux d'aménagement"
+      ],
+      [
+       "DEFAVORABLE",
+       "Défavorable"
+      ]
+     ],
+     "bound": true
+    },
+    {
+     "id": "travauxAmenagement",
+     "label": "Travaux d'aménagement nécessaires",
+     "type": "longtext",
+     "bound": true,
+     "showIf": {
+      "avisGlobal": [
+       "FAVORABLE_SOUS_RESERVE"
+      ]
+     }
+    },
+    {
+     "id": "motifDefavorable",
+     "label": "Motif (avis défavorable)",
+     "type": "longtext",
+     "bound": true,
+     "showIf": {
+      "avisGlobal": [
+       "DEFAVORABLE"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

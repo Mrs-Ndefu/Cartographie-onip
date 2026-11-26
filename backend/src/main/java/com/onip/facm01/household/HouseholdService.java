@@ -182,11 +182,14 @@ public class HouseholdService {
                         h.codeMenage(),
                         h.address() == null ? null : h.address().province(),
                         h.chef() == null ? "" : String.join(" ", Stream.of(h.chef().prenom(), h.chef().nom())
-                                .filter(v -> v != null && !v.isBlank()).toList())))
+                                .filter(v -> v != null && !v.isBlank()).toList()),
+                        h.status() == HouseholdStatus.COMPLET))
                 .toList();
     }
 
-    public record MapPoint(double latitude, double longitude, String codeMenage, String province, String chef) {
+    // complet = statut COMPLET ; sinon point creux sur la carte (incomplet ou à vérifier).
+    public record MapPoint(double latitude, double longitude, String codeMenage, String province, String chef,
+                           boolean complet) {
     }
 
     @Transactional(readOnly = true)

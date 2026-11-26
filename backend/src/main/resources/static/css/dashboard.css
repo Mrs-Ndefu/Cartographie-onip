@@ -1955,7 +1955,7 @@ h1, h2, h3 {
 /* Page Sites (Zones > Ajout site). */
 .zone-sites-filters {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) minmax(200px, 2fr) auto;
+  grid-template-columns: minmax(200px, 2fr) minmax(140px, 1fr) minmax(140px, 1fr) minmax(180px, 2fr) auto;
   gap: 0.9rem 1rem;
   align-items: end;
   padding: 0 1.4rem 1rem;
@@ -2346,4 +2346,113 @@ a.zone-sites-count:hover {
     padding: 0;
     justify-content: center;
   }
+}
+
+/* Carte : étiquette « incomplet » dans la fenêtre d'un foyer. */
+.map-popup-incomplet {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #fdf3e1;
+  color: #9a6406;
+  font-size: 0.72em;
+  font-weight: 600;
+}
+
+/* Fiche repérage : questionnaire terrain (question à gauche, réponse à droite). */
+.q-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 0 1.5rem;
+  align-items: start;
+}
+
+.q-list {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 0.45rem 1rem;
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.q-list dt {
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.q-list dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.q-list dd.q-empty {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+.q-list .q-list-note {
+  grid-column: 1 / -1;
+  margin-top: 0.4rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+@media (max-width: 560px) {
+  .q-cards {
+    grid-template-columns: 1fr;
+  }
+  .q-list {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+  .q-list dd {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Modification d'une fiche repérage : champs du questionnaire terrain. */
+.q-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.q-field .form-label {
+  margin-bottom: 0.25rem;
+}
+
+.q-note {
+  margin: 0.4rem 0 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.q-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+}
+
+.q-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.q-grid {
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.q-grid td {
+  padding: 0.2rem 0;
+}
+
+.q-grid td:first-child {
+  width: 45%;
+  padding-right: 0.75rem;
 }

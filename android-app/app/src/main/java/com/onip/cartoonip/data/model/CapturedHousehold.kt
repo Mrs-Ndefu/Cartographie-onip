@@ -46,16 +46,17 @@ data class CapturedHousehold(
     val isFullySynced: Boolean
         get() = syncedAt != null && (photoPaths.isEmpty() || photoSyncedAt != null)
 
-    /** Complet seulement si absolument tous les champs (obligatoires et facultatifs) sont
-     * renseignés, y compris au moins une photo — sinon le foyer est un brouillon côté serveur
-     * (affiché "Incomplet" dans le tableau de bord). */
+    /** Complet quand chef de ménage (nom, postnom, prénom, date de naissance, sexe), adresse
+     * (province, ville, commune, quartier, rue, numéro) et GPS sont tous renseignés. Ne sont pas
+     * exigés : la photo, l'immeuble et l'étage (maisons basses sans immeuble ni étage) — ces
+     * champs restent saisissables. Sinon le foyer est un brouillon côté serveur (affiché
+     * "Incomplet" dans le tableau de bord). */
     val isComplete: Boolean
         get() = chefNom.isNotBlank() && chefPostnom.isNotBlank() && chefPrenom.isNotBlank() &&
             chefDateNaissance.isNotBlank() && chefSexe != null &&
             province.isNotBlank() && ville.isNotBlank() && commune.isNotBlank() && quartier.isNotBlank() &&
-            rue.isNotBlank() && numero.isNotBlank() && immeuble.isNotBlank() && etage.isNotBlank() &&
-            latitude != null && longitude != null &&
-            photoPaths.isNotEmpty()
+            rue.isNotBlank() && numero.isNotBlank() &&
+            latitude != null && longitude != null
 }
 
 /** Nombre max de photos de fiche capturables par foyer (galerie). */

@@ -56,8 +56,20 @@ public class ZoneSiteService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ZoneSite> search(String zoneFilter, UUID zoneId, String search, Pageable pageable) {
-        return zoneSiteRepository.search(zoneFilter, zoneId, search == null ? "" : search.trim(), pageable);
+    public Page<ZoneSite> search(String zoneFilter, UUID zoneId, String search, String commune, String quartier,
+                                 Pageable pageable) {
+        return zoneSiteRepository.search(zoneFilter, zoneId, search == null ? "" : search.trim(),
+                commune == null ? "" : commune.trim(), quartier == null ? "" : quartier.trim(), pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> distinctCommunes() {
+        return zoneSiteRepository.distinctCommunes();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> distinctQuartiers(String commune) {
+        return zoneSiteRepository.distinctQuartiers(commune == null ? "" : commune.trim());
     }
 
     @Transactional(readOnly = true)
@@ -263,12 +275,40 @@ public class ZoneSiteService {
         return get(siteId);
     }
 
+    // Création d'un site à la main (page Sites > « Nouveau site », ADMIN) : mêmes champs et même
+    // affectation automatique à la zone que l'import Excel ; refusé si un site identique existe
+    // déjà (même nom, province, ville et territoire).
+    @Transactional
+    public ZoneSite create(String nom, String adresse, String province, String villeTerritoire, String commune,
+                           String quartier) {
+        if (nom == null || nom.isBlank()) {
+            throw new IllegalArgumentException("Le nom du site est obligatoire");
+        }
+        String v = upperOrNull(clean(villeTerritoire));
+        String p = clean(province);
+        ZoneSite site = new ZoneSite(
+                UUID.randomUUID(),
+                clean(nom),
+                emptyToNull(clean(adresse)),
+                p == null ? DrcProvinces.resolve(null, v) : DrcProvinces.normalize(p),
+                v,
+                v,
+                upperOrNull(clean(commune)));
+        site.setQuartier(upperOrNull(clean(quartier)));
+        String identity = identity(site);
+        boolean exists = zoneSiteRepository.findAll().stream().anyMatch(s -> identity(s).equals(identity));
+        if (exists) {
+            throw new IllegalArgumentException("Ce site existe déjà (même nom, province et ville/territoire)");
+        }
+        site.setZone(matchZone(site, zoneRepository.findAll()));
+        return zoneSiteRepository.save(site);
+    }
+
     // Modification d'un site par l'ADMIN. Si sa zone avait été trouvée automatiquement (ou s'il
     // n'en avait pas), elle est recalculée d'après les nouvelles valeurs ; une zone choisie à la
-    // main est conservée.
+    // main est conservée. Le formulaire propose Province -> Ville/Territoire -> Commune en listes
+    // enchaînées : la ville/territoire choisie est enregistrée comme ville ET territoire du site.
     @Transactional
-    // Le formulaire propose Province -> Ville/Territoire -> Commune en listes enchaînées : la
-    // ville/territoire choisie est enregistrée comme ville ET territoire du site.
     public ZoneSite update(UUID siteId, String nom, String adresse, String province, String villeTerritoire, String commune,
                            String quartier) {
         if (nom == null || nom.isBlank()) {

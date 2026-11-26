@@ -109,106 +109,50 @@
     </div>
 
     <div class="detail-columns">
-      <div>
-        <div class="detail-card">
-          <div class="detail-card-header"><h2>I. Identification administrative</h2></div>
-          <div class="detail-card-body">
-            <div class="detail-grid">
-              <div><span class="detail-field-label">Province/Région</span><span class="detail-field-value" th:text="${site.province ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Ville/Territoire</span><span class="detail-field-value" th:text="${site.ville ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Commune/Secteur/Chefferie</span><span class="detail-field-value" th:text="${site.commune ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Quartier/Groupement</span><span class="detail-field-value" th:text="${site.quartierGroupement ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Village/Avenue/Rue</span><span class="detail-field-value" th:text="${site.villageAvenueRue ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Numéro téléphone</span><span class="detail-field-value" th:text="${site.numeroTelephone ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Série téléphone/GPS</span><span class="detail-field-value" th:text="${site.serieTelephoneGps ?: '-'}">-</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-card">
-          <div class="detail-card-header"><h2>II. Coordonnées GPS</h2></div>
-          <div class="detail-card-body">
-            <div class="detail-grid">
-              <div><span class="detail-field-label">Latitude</span><span class="detail-field-value" th:text="${site.latitude ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Longitude</span><span class="detail-field-value" th:text="${site.longitude ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Altitude (m)</span><span class="detail-field-value" th:text="${site.altitude ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Précision (m)</span><span class="detail-field-value" th:text="${site.gpsPrecision ?: '-'}">-</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-card">
-          <div class="detail-card-header"><h2>III. Type de site</h2></div>
-          <div class="detail-card-body">
-            <div class="detail-grid">
-              <div><span class="detail-field-label">Type</span><span class="detail-field-value" th:text="${site.typeSite?.name() ?: '-'}">-</span></div>
-              <div th:if="${site.typeSiteAutre != null and !site.typeSiteAutre.isBlank()}"><span class="detail-field-label">Préciser</span><span class="detail-field-value" th:text="${site.typeSiteAutre}">-</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-card">
-          <div class="detail-card-header"><h2>IV. Statut juridique et propriété</h2></div>
-          <div class="detail-card-body">
-            <div class="detail-grid">
-              <div><span class="detail-field-label">Propriété</span><span class="detail-field-value" th:text="${site.proprieteStatut?.name() ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Option d'occupation</span><span class="detail-field-value" th:text="${site.optionOccupation?.name() ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Disponibilité immédiate</span><span class="detail-field-value" th:text="${site.disponibiliteImmediate == null ? '-' : (site.disponibiliteImmediate ? 'Oui' : 'Non')}">-</span></div>
-              <div th:if="${site.delaiEstime != null and !site.delaiEstime.isBlank()}"><span class="detail-field-label">Délai estimé</span><span class="detail-field-value" th:text="${site.delaiEstime}">-</span></div>
-              <div><span class="detail-field-label">Propriétaire/gestionnaire</span><span class="detail-field-value" th:text="${site.proprietaireNomContact ?: '-'}">-</span></div>
-            </div>
+      <div class="detail-card">
+        <div class="detail-card-header"><h2>Q7. Identité du site / bureau</h2></div>
+        <div class="detail-card-body">
+          <div class="detail-grid">
+              <div><span class="detail-field-label">a. Nom officiel du bureau / site</span><span class="detail-field-value" th:text="${site.nomSite ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">b. Province</span><span class="detail-field-value" th:text="${site.province ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">c. Ville / Territoire</span><span class="detail-field-value" th:text="${site.ville ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">d. Commune / Secteur / Chefferie</span><span class="detail-field-value" th:text="${site.commune ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">e. Quartier / Groupement</span><span class="detail-field-value" th:text="${site.quartierGroupement ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">f. Avenue / Rue / Village</span><span class="detail-field-value" th:text="${site.villageAvenueRue ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">j. Numéro de téléphone</span><span class="detail-field-value" th:text="${site.numeroTelephone ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">Série GPS / Smartphone</span><span class="detail-field-value" th:text="${site.serieTelephoneGps ?: '-'}">-</span></div>
           </div>
         </div>
       </div>
 
-      <div>
-        <div class="detail-card">
-          <div class="detail-card-header"><h2>V. Infrastructure</h2></div>
-          <div class="detail-card-body">
-            <div class="detail-grid">
-              <div><span class="detail-field-label">Type d'infrastructure</span><span class="detail-field-value" th:text="${site.typeInfrastructure?.name() ?: '-'}">-</span></div>
-              <div th:if="${site.typeInfrastructureAutre != null and !site.typeInfrastructureAutre.isBlank()}"><span class="detail-field-label">Préciser</span><span class="detail-field-value" th:text="${site.typeInfrastructureAutre}">-</span></div>
-              <div><span class="detail-field-label">Superficie bâtiment (m²)</span><span class="detail-field-value" th:text="${site.superficieBatimentM2 ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Superficie terrain (m²)</span><span class="detail-field-value" th:text="${site.superficieTerrainM2 ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Nombre de pièces/bureaux</span><span class="detail-field-value" th:text="${site.nombrePieces ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">État du bâtiment</span><span class="detail-field-value" th:text="${site.etatBatiment?.name() ?: '-'}">-</span></div>
-              <div th:if="${site.etatBatimentObservations != null and !site.etatBatimentObservations.isBlank()}"><span class="detail-field-label">Observations</span><span class="detail-field-value" th:text="${site.etatBatimentObservations}">-</span></div>
-            </div>
+      <div class="detail-card">
+        <div class="detail-card-header"><h2>Q7. Coordonnées GPS</h2></div>
+        <div class="detail-card-body">
+          <div class="detail-grid">
+              <div><span class="detail-field-label">l. Latitude</span><span class="detail-field-value" th:text="${site.latitude ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">m. Longitude</span><span class="detail-field-value" th:text="${site.longitude ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">n. Altitude (m)</span><span class="detail-field-value" th:text="${site.altitude ?: '-'}">-</span></div>
+              <div><span class="detail-field-label">o. Précision GPS (m)</span><span class="detail-field-value" th:text="${site.gpsPrecision ?: '-'}">-</span></div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="detail-card">
-          <div class="detail-card-header"><h2>VI. Commodité et accès</h2></div>
-          <div class="detail-card-body">
-            <div class="detail-grid">
-              <div><span class="detail-field-label">Accès routier</span><span class="detail-field-value" th:text="${site.accesRoutier?.name() ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Raccordé SNEL</span><span class="detail-field-value" th:text="${site.raccordeSnel == null ? '-' : (site.raccordeSnel ? 'Oui' : 'Non')}">-</span></div>
-              <div th:if="${site.raccordeSnel}"><span class="detail-field-label">Stabilité SNEL</span><span class="detail-field-value" th:text="${site.stabiliteSnel?.name() ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Groupe électrogène/solaire</span><span class="detail-field-value" th:text="${site.groupeElectrogeneSolaire == null ? '-' : (site.groupeElectrogeneSolaire ? 'Oui' : 'Non')}">-</span></div>
-              <div><span class="detail-field-label">Non électrifié</span><span class="detail-field-value" th:text="${site.nonElectrifie == null ? '-' : (site.nonElectrifie ? 'Oui' : 'Non')}">-</span></div>
-              <div><span class="detail-field-label">Regideso (eau)</span><span class="detail-field-value" th:text="${site.regideso == null ? '-' : (site.regideso ? 'Oui' : 'Non')}">-</span></div>
-              <div><span class="detail-field-label">Sanitaires</span><span class="detail-field-value" th:text="${site.sanitaires == null ? '-' : (site.sanitaires ? 'Oui' : 'Non')}">-</span></div>
-              <div><span class="detail-field-label">Connectivité internet</span><span class="detail-field-value" th:text="${site.connectiviteInternet?.name() ?: '-'}">-</span></div>
-              <div th:if="${site.reseauxDisponibles != null and !site.reseauxDisponibles.isBlank()}"><span class="detail-field-label">Réseaux disponibles</span><span class="detail-field-value" th:text="${site.reseauxDisponibles}">-</span></div>
-              <div><span class="detail-field-label">Clôturé et sécurisé</span><span class="detail-field-value" th:text="${site.clotureSecurise == null ? '-' : (site.clotureSecurise ? 'Oui' : 'Non')}">-</span></div>
-              <div><span class="detail-field-label">Proximité poste de police</span><span class="detail-field-value" th:text="${site.proximitePolice == null ? '-' : (site.proximitePolice ? 'Oui' : 'Non')}">-</span></div>
-              <div th:if="${site.proximitePolice}"><span class="detail-field-label">Distance (m)</span><span class="detail-field-value" th:text="${site.distancePoliceMetres ?: '-'}">-</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-card">
-          <div class="detail-card-header"><h2>VII. Évaluation de l'équipe</h2></div>
-          <div class="detail-card-body">
-            <div class="detail-grid">
-              <div><span class="detail-field-label">Avis global</span><span class="detail-field-value" th:text="${site.avisGlobal?.name() ?: '-'}">-</span></div>
-              <div th:if="${site.travauxAmenagement != null and !site.travauxAmenagement.isBlank()}"><span class="detail-field-label">Travaux d'aménagement</span><span class="detail-field-value" th:text="${site.travauxAmenagement}">-</span></div>
-              <div th:if="${site.motifDefavorable != null and !site.motifDefavorable.isBlank()}"><span class="detail-field-label">Motif</span><span class="detail-field-value" th:text="${site.motifDefavorable}">-</span></div>
-              <div th:if="${site.observationsParticulieres != null and !site.observationsParticulieres.isBlank()}"><span class="detail-field-label">Observations particulières</span><span class="detail-field-value" th:text="${site.observationsParticulieres}">-</span></div>
-              <div><span class="detail-field-label">Enquêteur</span><span class="detail-field-value" th:text="${site.nomSignatureEnqueteur ?: '-'}">-</span></div>
-              <div><span class="detail-field-label">Date de l'évaluation</span><span class="detail-field-value" th:text="${site.dateEvaluation ?: '-'}">-</span></div>
-            </div>
-          </div>
+    <!-- Questionnaire terrain (questionnaire-site.json) : seules les questions qui s'appliquent
+         au statut du bureau / site (Q1) sont affichées, comme les sauts du questionnaire papier. -->
+    <div class="q-cards">
+      <div class="detail-card" th:each="sec : ${questionnaire}">
+        <div class="detail-card-header"><h2 th:text="${sec.title}">Section</h2></div>
+        <div class="detail-card-body">
+          <dl class="q-list">
+            <th:block th:each="f : ${sec.fields}">
+              <dt th:if="${f.note}" class="q-list-note" th:text="${f.label}">Note</dt>
+              <th:block th:unless="${f.note}">
+                <dt th:text="${f.label}">Question</dt>
+                <dd th:text="${f.value}" th:classappend="${f.value == '—'} ? 'q-empty'">Réponse</dd>
+              </th:block>
+            </th:block>
+          </dl>
         </div>
       </div>
     </div>

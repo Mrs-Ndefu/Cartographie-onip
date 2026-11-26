@@ -60,6 +60,7 @@ object SiteSyncRepository {
             nomSignatureEnqueteur = site.nomSignatureEnqueteur.ifBlank { null },
             dateEvaluation = site.dateEvaluation.ifBlank { null },
             createdAt = site.createdAt,
+            questionnaire = site.questionnaire,
             updatedAt = site.updatedAt,
         )
 

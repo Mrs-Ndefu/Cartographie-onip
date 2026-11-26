@@ -467,8 +467,9 @@
     }
 
     const adressageLayer = L.featureGroup(mapPoints.map(function (p) {
+      // Même point orange pour tous les foyers, complets ou non (le statut est indiqué au clic).
       var m = zoomableDot(L.circleMarker([p.latitude, p.longitude], dotStyle(ADRESSAGE_COLOR)),
-        '<strong>Adressage</strong><br>'
+        '<strong>Adressage</strong>' + (p.complet ? '' : ' <span class="map-popup-incomplet">incomplet</span>') + '<br>'
           + escapeMapText(p.codeMenage || '(sans code)') + '<br>' + escapeMapText(p.chef)
           + '<br><span class="map-popup-muted">' + escapeMapText(provinceOf(p)) + '</span>');
       m.province = provinceOf(p);
@@ -893,26 +894,8 @@
         }, 200);
       });
 
-      // Rafraîchissement automatique toutes les 60 s, pour que les nouveaux enregistrements
-      // remontent sans action de l'utilisateur. Un simple rechargement de page (et non une mise à
-      // jour partielle en JS) : plus simple, et toujours cohérent avec le serveur (pagination,
-      // compteurs, cloche de notification...). Reporté — jamais annulé, juste retenté à la
-      // prochaine échéance — tant qu'une recherche est en cours de saisie ou qu'une fenêtre
-      // (édition, confirmation, notifications) est ouverte, pour ne jamais couper une action en
-      // cours de l'utilisateur.
-      var AUTO_REFRESH_DELAY_MS = 60000;
-      function isUserBusy() {
-        if (document.activeElement === searchInput || searchInput.value.trim()) return true;
-        return ['edit-modal', 'confirm-modal', 'pending-notif-popover'].some(function (id) {
-          var el = document.getElementById(id);
-          return el && !el.hidden;
-        });
-      }
-      setInterval(function () {
-        if (!isUserBusy()) {
-          window.location.reload();
-        }
-      }, AUTO_REFRESH_DELAY_MS);
+      // Pas de rafraîchissement automatique de la page : les nouvelles données s'affichent avec
+      // le bouton « Actualiser » de la barre du haut (cf. app.js).
     })();
     /*]]>*/
   </script>

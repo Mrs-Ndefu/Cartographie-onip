@@ -55,4 +55,5 @@ data class SiteSyncItem(
     val dateEvaluation: String?,
     val createdAt: String,
     val updatedAt: String,
+    val questionnaire: Map<String, String>?,
 )

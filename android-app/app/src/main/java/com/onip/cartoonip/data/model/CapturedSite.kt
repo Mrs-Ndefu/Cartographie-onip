@@ -72,6 +72,10 @@ data class CapturedSite(
     val nomSignatureEnqueteur: String = "",
     val dateEvaluation: String = "",
 
+    // Réponses du questionnaire terrain sans champ dédié ci-dessus (cf. SiteQuestionnaire).
+    // Nullable : Gson laisse null pour les fiches enregistrées avant le questionnaire.
+    val questionnaire: Map<String, String>? = null,
+
     val createdAt: String,
     val updatedAt: String,
     val syncedAt: String? = null,

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Modifier le site — Adressage de Foyers</title>
+  <title th:text="${creating} ? 'Nouveau site — Adressage de Foyers' : 'Modifier le site — Adressage de Foyers'">Modifier le site — Adressage de Foyers</title>
   <link rel="icon" type="image/png" th:href="@{/img/onip-logo.png}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
 <body>
   <header class="topbar">
     <img th:src="@{/img/onip-logo.png}" alt="ONIP" class="topbar-logo">
-    <h1>Adressage de Foyers — Modifier le site</h1>
+    <h1 th:text="${creating} ? 'Adressage de Foyers — Nouveau site' : 'Adressage de Foyers — Modifier le site'">Adressage de Foyers — Modifier le site</h1>
     <nav class="topbar-nav">
       <a th:href="@{${returnTo}}" class="link-btn">← Sites</a>
       <a th:href="@{/dashboard/zones}" class="link-btn">Zones</a>
@@ -35,14 +35,15 @@
     <div class="table-card">
       <div class="table-card-header">
         <div>
-          <h2 th:text="${site.nom}">Site</h2>
-          <span class="table-card-count" th:if="${site.zoneManuelle}"
+          <h2 th:text="${creating} ? 'Nouveau site' : ${site.nom}">Site</h2>
+          <span class="table-card-count" th:if="${creating}">La zone est attribuée automatiquement d'après la province, la ville/territoire et la commune (comme à l'import) ; vous pourrez la changer ensuite dans la liste.</span>
+          <span class="table-card-count" th:if="${!creating and site.zoneManuelle}"
                 th:text="'Zone choisie à la main (' + (${site.zone != null} ? ${site.zone.name} : 'non affecté') + ') : elle est conservée après modification.'">Zone manuelle</span>
-          <span class="table-card-count" th:unless="${site.zoneManuelle}"
+          <span class="table-card-count" th:if="${!creating and !site.zoneManuelle}"
                 th:text="'Zone actuelle : ' + (${site.zone != null} ? ${site.zone.label} : 'non affecté') + '. Elle sera recalculée d\'après la province, la ville/territoire et la commune enregistrées.'">Zone automatique</span>
         </div>
       </div>
-      <form th:action="@{/dashboard/zones/sites/{id}/edit(id=${site.id})}" method="post" class="agents-create-form zone-site-edit-form">
+      <form th:action="${creating} ? @{/dashboard/zones/sites/new} : @{/dashboard/zones/sites/{id}/edit(id=${site.id})}" method="post" class="agents-create-form zone-site-edit-form">
         <input type="hidden" name="returnTo" th:value="${returnTo}">
         <label class="agents-field zone-site-edit-wide">
           <span>Nom du site *</span>
@@ -81,7 +82,7 @@
         </div>
         <div class="zone-site-edit-actions">
           <a th:href="@{${returnTo}}" class="btn btn-sm btn-outline-secondary">Annuler</a>
-          <button type="submit" class="btn btn-sm btn-primary">Enregistrer</button>
+          <button type="submit" class="btn btn-sm btn-primary" th:text="${creating} ? 'Créer le site' : 'Enregistrer'">Enregistrer</button>
         </div>
       </form>
     </div>

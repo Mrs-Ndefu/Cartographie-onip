@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onip.cartoonip.data.AppContainer
 import com.onip.cartoonip.data.LocationHelper
+import com.onip.cartoonip.data.QSection
+import com.onip.cartoonip.data.SiteQuestionnaire
 import com.onip.cartoonip.data.model.CapturedSite
 import com.onip.cartoonip.data.model.ZoneSiteOption
 import java.time.Instant
@@ -14,9 +16,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * État du formulaire de fiche de repérage de site — un champ par case de FICHE REPERAGE DES
- * SITES.docx. Rien n'est obligatoire : [save] accepte la fiche à tout stade de remplissage,
- * comme le reste de l'app terrain tolère un brouillon synchronisé puis complété plus tard.
+ * État du formulaire de fiche de repérage de site : les champs d'identification (Q7 a à f, j,
+ * série GPS) et le GPS restent des champs dédiés ; toutes les autres questions du questionnaire
+ * terrain (Module 0 à 5 + rubriques de l'ancienne fiche) sont dans [answers], indexées par leur
+ * clé (cf. SiteQuestionnaire). Rien n'est obligatoire : [save] accepte la fiche à tout stade de
+ * remplissage, comme le reste de l'app terrain tolère un brouillon synchronisé puis complété.
  */
 data class SiteFormState(
     val siteId: String = UUID.randomUUID().toString(),
@@ -29,7 +33,7 @@ data class SiteFormState(
     val altitude: Double? = null,
     val gpsPrecision: Double? = null,
 
-    // I. Identification administrative du site
+    // Q7. Identité du site / bureau
     val province: String = "",
     val ville: String = "",
     val commune: String = "",
@@ -39,47 +43,8 @@ data class SiteFormState(
     val numeroTelephone: String = "",
     val serieTelephoneGps: String = "",
 
-    // III. Type de site
-    val typeSite: String? = null,
-    val typeSiteAutre: String = "",
-
-    // IV. Statut juridique et propriété
-    val proprieteStatut: String? = null,
-    val optionOccupation: String? = null,
-    val disponibiliteImmediate: Boolean? = null,
-    val delaiEstime: String = "",
-    val proprietaireNomContact: String = "",
-
-    // V. Caractéristiques physiques et infrastructures
-    val typeInfrastructure: String? = null,
-    val typeInfrastructureAutre: String = "",
-    val superficieBatiment: String = "",
-    val superficieTerrain: String = "",
-    val nombrePieces: String = "",
-    val etatBatiment: String? = null,
-    val etatBatimentObservations: String = "",
-
-    // VI. Commodité et accès techniques
-    val accesRoutier: String? = null,
-    val raccordeSnel: Boolean? = null,
-    val stabiliteSnel: String? = null,
-    val groupeElectrogeneSolaire: Boolean? = null,
-    val nonElectrifie: Boolean? = null,
-    val regideso: Boolean? = null,
-    val sanitaires: Boolean? = null,
-    val connectiviteInternet: String? = null,
-    val reseauxDisponibles: String = "",
-    val clotureSecurise: Boolean? = null,
-    val proximitePolice: Boolean? = null,
-    val distancePoliceMetres: String = "",
-
-    // VII. Évaluation et recommandations de l'équipe de terrain
-    val avisGlobal: String? = null,
-    val travauxAmenagement: String = "",
-    val motifDefavorable: String = "",
-    val observationsParticulieres: String = "",
-    val nomSignatureEnqueteur: String = "",
-    val dateEvaluation: String = "",
+    // Questionnaire terrain : clé -> réponse ("A|B" pour un choix multiple, "OUI"/"NON").
+    val answers: Map<String, String> = emptyMap(),
 
     val saving: Boolean = false,
     val saveError: String? = null,
@@ -91,6 +56,9 @@ class ReperageFormViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(SiteFormState())
     val uiState: StateFlow<SiteFormState> = _uiState.asStateFlow()
+
+    val sections: List<QSection> = SiteQuestionnaire.sections(AppContainer.appContext)
+    private val jsonKeys: Set<String> = SiteQuestionnaire.jsonKeys(AppContainer.appContext)
 
     // Chef d'équipe : le nom du site se choisit uniquement parmi les sites de sa zone (importés
     // depuis le tableau de bord), et ce choix remplit province, ville/territoire, commune et
@@ -139,42 +107,11 @@ class ReperageFormViewModel : ViewModel() {
             nomSite = site.nomSite,
             numeroTelephone = site.numeroTelephone,
             serieTelephoneGps = site.serieTelephoneGps,
-            typeSite = site.typeSite,
-            typeSiteAutre = site.typeSiteAutre,
-            proprieteStatut = site.proprieteStatut,
-            optionOccupation = site.optionOccupation,
-            disponibiliteImmediate = site.disponibiliteImmediate,
-            delaiEstime = site.delaiEstime,
-            proprietaireNomContact = site.proprietaireNomContact,
-            typeInfrastructure = site.typeInfrastructure,
-            typeInfrastructureAutre = site.typeInfrastructureAutre,
-            superficieBatiment = site.superficieBatimentM2?.toString() ?: "",
-            superficieTerrain = site.superficieTerrainM2?.toString() ?: "",
-            nombrePieces = site.nombrePieces?.toString() ?: "",
-            etatBatiment = site.etatBatiment,
-            etatBatimentObservations = site.etatBatimentObservations,
-            accesRoutier = site.accesRoutier,
-            raccordeSnel = site.raccordeSnel,
-            stabiliteSnel = site.stabiliteSnel,
-            groupeElectrogeneSolaire = site.groupeElectrogeneSolaire,
-            nonElectrifie = site.nonElectrifie,
-            regideso = site.regideso,
-            sanitaires = site.sanitaires,
-            connectiviteInternet = site.connectiviteInternet,
-            reseauxDisponibles = site.reseauxDisponibles,
-            clotureSecurise = site.clotureSecurise,
-            proximitePolice = site.proximitePolice,
-            distancePoliceMetres = site.distancePoliceMetres?.toString() ?: "",
-            avisGlobal = site.avisGlobal,
-            travauxAmenagement = site.travauxAmenagement,
-            motifDefavorable = site.motifDefavorable,
-            observationsParticulieres = site.observationsParticulieres,
-            nomSignatureEnqueteur = site.nomSignatureEnqueteur,
-            dateEvaluation = site.dateEvaluation,
+            answers = site.questionnaire.orEmpty() + SiteQuestionnaire.boundAnswers(site),
         )
     }
 
-    // I. Changer de province/ville vide les champs qui en dépendent (listes en cascade).
+    // Changer de province/ville vide les champs qui en dépendent (listes en cascade).
     fun onProvinceChange(v: String) = update { copy(province = v.uppercase(), ville = "", commune = "", quartierGroupement = "") }
     fun onVilleChange(v: String) = update { copy(ville = v.uppercase(), commune = "", quartierGroupement = "") }
     fun onCommuneChange(v: String) = update {
@@ -186,47 +123,10 @@ class ReperageFormViewModel : ViewModel() {
     fun onNumeroTelephoneChange(v: String) = update { copy(numeroTelephone = v) }
     fun onSerieTelephoneGpsChange(v: String) = update { copy(serieTelephoneGps = v) }
 
-    // III.
-    fun onTypeSiteChange(v: String?) = update { copy(typeSite = v) }
-    fun onTypeSiteAutreChange(v: String) = update { copy(typeSiteAutre = v.uppercase()) }
-
-    // IV.
-    fun onProprieteStatutChange(v: String?) = update { copy(proprieteStatut = v) }
-    fun onOptionOccupationChange(v: String?) = update { copy(optionOccupation = v) }
-    fun onDisponibiliteImmediateChange(v: Boolean?) = update { copy(disponibiliteImmediate = v) }
-    fun onDelaiEstimeChange(v: String) = update { copy(delaiEstime = v) }
-    fun onProprietaireNomContactChange(v: String) = update { copy(proprietaireNomContact = v.uppercase()) }
-
-    // V.
-    fun onTypeInfrastructureChange(v: String?) = update { copy(typeInfrastructure = v) }
-    fun onTypeInfrastructureAutreChange(v: String) = update { copy(typeInfrastructureAutre = v.uppercase()) }
-    fun onSuperficieBatimentChange(v: String) = update { copy(superficieBatiment = v.filterDecimal()) }
-    fun onSuperficieTerrainChange(v: String) = update { copy(superficieTerrain = v.filterDecimal()) }
-    fun onNombrePiecesChange(v: String) = update { copy(nombrePieces = v.filterDigits()) }
-    fun onEtatBatimentChange(v: String?) = update { copy(etatBatiment = v) }
-    fun onEtatBatimentObservationsChange(v: String) = update { copy(etatBatimentObservations = v.uppercase()) }
-
-    // VI.
-    fun onAccesRoutierChange(v: String?) = update { copy(accesRoutier = v) }
-    fun onRaccordeSnelChange(v: Boolean?) = update { copy(raccordeSnel = v) }
-    fun onStabiliteSnelChange(v: String?) = update { copy(stabiliteSnel = v) }
-    fun onGroupeElectrogeneSolaireChange(v: Boolean?) = update { copy(groupeElectrogeneSolaire = v) }
-    fun onNonElectrifieChange(v: Boolean?) = update { copy(nonElectrifie = v) }
-    fun onRegidesoChange(v: Boolean?) = update { copy(regideso = v) }
-    fun onSanitairesChange(v: Boolean?) = update { copy(sanitaires = v) }
-    fun onConnectiviteInternetChange(v: String?) = update { copy(connectiviteInternet = v) }
-    fun onReseauxDisponiblesChange(v: String) = update { copy(reseauxDisponibles = v.uppercase()) }
-    fun onClotureSecuriseChange(v: Boolean?) = update { copy(clotureSecurise = v) }
-    fun onProximitePoliceChange(v: Boolean?) = update { copy(proximitePolice = v) }
-    fun onDistancePoliceMetresChange(v: String) = update { copy(distancePoliceMetres = v.filterDigits()) }
-
-    // VII.
-    fun onAvisGlobalChange(v: String?) = update { copy(avisGlobal = v) }
-    fun onTravauxAmenagementChange(v: String) = update { copy(travauxAmenagement = v.uppercase()) }
-    fun onMotifDefavorableChange(v: String) = update { copy(motifDefavorable = v.uppercase()) }
-    fun onObservationsParticulieresChange(v: String) = update { copy(observationsParticulieres = v.uppercase()) }
-    fun onNomSignatureEnqueteurChange(v: String) = update { copy(nomSignatureEnqueteur = v.uppercase()) }
-    fun onDateEvaluationChange(v: String) = update { copy(dateEvaluation = formatIsoDateDigits(v)) }
+    /** Réponse à une question du questionnaire ("" efface la réponse). */
+    fun onAnswer(key: String, value: String) = update {
+        copy(answers = if (value.isBlank()) answers - key else answers + (key to value))
+    }
 
     fun captureLocation() {
         update { copy(locating = true, locationError = null) }
@@ -260,7 +160,7 @@ class ReperageFormViewModel : ViewModel() {
             val now = Instant.now().toString()
             val existing = AppContainer.siteStore.get(state.siteId)
 
-            val site = CapturedSite(
+            val base = CapturedSite(
                 id = state.siteId,
                 province = state.province.trim(),
                 ville = state.ville.trim(),
@@ -274,45 +174,17 @@ class ReperageFormViewModel : ViewModel() {
                 longitude = state.longitude,
                 altitude = state.altitude,
                 gpsPrecision = state.gpsPrecision,
-                typeSite = state.typeSite,
-                typeSiteAutre = state.typeSiteAutre.trim(),
-                proprieteStatut = state.proprieteStatut,
-                optionOccupation = state.optionOccupation,
-                disponibiliteImmediate = state.disponibiliteImmediate,
-                delaiEstime = state.delaiEstime.trim(),
-                proprietaireNomContact = state.proprietaireNomContact.trim(),
-                typeInfrastructure = state.typeInfrastructure,
-                typeInfrastructureAutre = state.typeInfrastructureAutre.trim(),
-                superficieBatimentM2 = state.superficieBatiment.toDoubleOrNull(),
-                superficieTerrainM2 = state.superficieTerrain.toDoubleOrNull(),
-                nombrePieces = state.nombrePieces.toIntOrNull(),
-                etatBatiment = state.etatBatiment,
-                etatBatimentObservations = state.etatBatimentObservations.trim(),
-                accesRoutier = state.accesRoutier,
-                raccordeSnel = state.raccordeSnel,
-                stabiliteSnel = state.stabiliteSnel,
-                groupeElectrogeneSolaire = state.groupeElectrogeneSolaire,
-                nonElectrifie = state.nonElectrifie,
-                regideso = state.regideso,
-                sanitaires = state.sanitaires,
-                connectiviteInternet = state.connectiviteInternet,
-                reseauxDisponibles = state.reseauxDisponibles.trim(),
-                clotureSecurise = state.clotureSecurise,
-                proximitePolice = state.proximitePolice,
-                distancePoliceMetres = state.distancePoliceMetres.toIntOrNull(),
-                avisGlobal = state.avisGlobal,
-                travauxAmenagement = state.travauxAmenagement.trim(),
-                motifDefavorable = state.motifDefavorable.trim(),
-                observationsParticulieres = state.observationsParticulieres.trim(),
-                nomSignatureEnqueteur = state.nomSignatureEnqueteur.trim(),
-                dateEvaluation = state.dateEvaluation.trim(),
+                questionnaire = state.answers
+                    .filterKeys { it in jsonKeys }
+                    .mapValues { it.value.trim() }
+                    .filterValues { it.isNotEmpty() },
                 createdAt = existing?.createdAt ?: now,
                 updatedAt = now,
                 syncedAt = null,
             )
             // Enregistrée sur l'appareil, en attente : l'envoi au serveur se fait depuis l'accueil
             // ou la liste, après saisie du mot de passe (cf. SecureSync).
-            AppContainer.siteStore.upsert(site)
+            AppContainer.siteStore.upsert(SiteQuestionnaire.applyBound(base, state.answers))
 
             update { copy(saving = false) }
             onDone()
@@ -336,10 +208,10 @@ fun formatIsoDateDigits(raw: String): String {
     }
 }
 
-private fun String.filterDigits(): String = filter { it.isDigit() }.take(6)
-private fun String.filterDecimal(): String {
-    val cleaned = filter { it.isDigit() || it == '.' }
+internal fun String.filterDigits(): String = filter { it.isDigit() }.take(9)
+internal fun String.filterDecimal(): String {
+    val cleaned = replace(',', '.').filter { it.isDigit() || it == '.' }
     val firstDot = cleaned.indexOf('.')
-    if (firstDot == -1) return cleaned.take(8)
-    return (cleaned.substring(0, firstDot + 1) + cleaned.substring(firstDot + 1).replace(".", "")).take(9)
+    if (firstDot == -1) return cleaned.take(9)
+    return (cleaned.substring(0, firstDot + 1) + cleaned.substring(firstDot + 1).replace(".", "")).take(12)
 }

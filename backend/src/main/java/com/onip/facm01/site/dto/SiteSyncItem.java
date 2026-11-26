@@ -13,6 +13,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.UUID;
 
 // Rien d'autre que l'id/les dates n'est obligatoire : une fiche de repérage peut être synchronisée
@@ -64,5 +65,8 @@ public record SiteSyncItem(
         String nomSignatureEnqueteur,
         LocalDate dateEvaluation,
         @NotNull Instant createdAt,
-        @NotNull Instant updatedAt) {
+        @NotNull Instant updatedAt,
+        // Réponses du questionnaire terrain sans colonne dédiée (cf. SiteQuestionnaire) ; null
+        // quand l'app est d'une version antérieure au questionnaire.
+        Map<String, String> questionnaire) {
 }

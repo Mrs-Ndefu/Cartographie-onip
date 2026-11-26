@@ -94,10 +94,16 @@ public class DashboardController {
         // "complet" : un ménage incomplet reste caché tant qu'un ADMIN/SUPERVISEUR ne l'a pas
         // validé (cf. countIncomplet ci-dessous et le bandeau de notification dans dashboard.html).
         // Choisir "Tous" dans le filtre (valeur vide) redonne la vue complète.
+        // La carte, elle, montre tous les ménages (complets et incomplets, ces derniers en point
+        // creux) tant qu'aucun statut n'est choisi : un ménage incomplet a déjà son relevé GPS et
+        // doit se voir. Un statut choisi à la main s'applique à la carte comme au tableau.
+        boolean statutChoisi = statut != null;
         if (statut == null) {
             statut = "complet";
         }
         HouseholdFilter filter = filter(search, province, ville, commune, quartier, statut, zoneId, dateFrom, dateTo);
+        HouseholdFilter mapFilter = statutChoisi ? filter
+                : filter(search, province, ville, commune, quartier, "", zoneId, dateFrom, dateTo);
         Page<HouseholdDto> households = householdService.searchAdmin(
                 filter, false, PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "updatedAt")));
 
@@ -122,7 +128,7 @@ public class DashboardController {
 
         // Carte : tous les ménages filtrés (pas seulement la page), et zoom sur eux dès qu'un
         // filtre géographique (province, ville, commune ou zone) est choisi.
-        model.addAttribute("mapPoints", householdService.mapPoints(filter));
+        model.addAttribute("mapPoints", householdService.mapPoints(mapFilter));
         model.addAttribute("zoomToPoints", filter.hasPlaceFilter());
         // Sites de repérage, affichés sur la même carte (couche distincte, filtrable côté page).
         model.addAttribute("sitePoints", siteService.mapPoints(province, ville, commune));

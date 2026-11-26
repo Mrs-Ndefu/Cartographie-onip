@@ -54,35 +54,35 @@
       <div class="detail-columns">
         <div>
           <div class="detail-card">
-            <div class="detail-card-header"><h2>I. Identification administrative</h2></div>
+            <div class="detail-card-header"><h2>Q7. Identité du site / bureau</h2></div>
             <div class="detail-card-body">
               <div class="row g-3">
                 <div class="col-sm-12">
-                  <label class="form-label small fw-semibold" for="nomSite">Nom du site <span class="req">*</span></label>
+                  <label class="form-label small fw-semibold" for="nomSite">a. Nom officiel du bureau / site <span class="req">*</span></label>
                   <input type="text" class="form-control" th:field="*{nomSite}">
                 </div>
                 <!-- Province, ville, commune et quartier : listes enchaînées (cf. app.js, .js-geo). -->
                 <div class="col-12">
                   <div class="row g-3 js-geo">
                     <div class="col-sm-6">
-                      <label class="form-label small fw-semibold" for="geo-province">Province/Région <span class="req">*</span></label>
+                      <label class="form-label small fw-semibold" for="geo-province">b. Province <span class="req">*</span></label>
                       <input type="hidden" name="province" class="js-geo-province-value" th:value="*{province}">
                       <select id="geo-province" class="form-select js-geo-province"></select>
                     </div>
                     <div class="col-sm-6">
-                      <label class="form-label small fw-semibold" for="geo-ville">Ville/Territoire <span class="req">*</span></label>
+                      <label class="form-label small fw-semibold" for="geo-ville">c. Ville / Territoire <span class="req">*</span></label>
                       <input type="hidden" name="ville" class="js-geo-ville-value" th:value="*{ville}">
                       <select id="geo-ville" class="form-select js-geo-ville"></select>
                       <input type="text" class="form-control mt-1 js-geo-ville-other" placeholder="Ville ou territoire" hidden>
                     </div>
                     <div class="col-sm-6">
-                      <label class="form-label small fw-semibold" for="geo-commune">Commune/Secteur/Chefferie <span class="req">*</span></label>
+                      <label class="form-label small fw-semibold" for="geo-commune">d. Commune / Secteur / Chefferie <span class="req">*</span></label>
                       <input type="hidden" name="commune" class="js-geo-commune-value" th:value="*{commune}">
                       <select id="geo-commune" class="form-select js-geo-commune"></select>
                       <input type="text" class="form-control mt-1 js-geo-commune-other" placeholder="Commune, secteur ou chefferie" hidden>
                     </div>
                     <div class="col-sm-6">
-                      <label class="form-label small fw-semibold" for="geo-quartier">Quartier/Groupement</label>
+                      <label class="form-label small fw-semibold" for="geo-quartier">e. Quartier / Groupement</label>
                       <!-- Quartiers de la commune choisie (référentiel Subdivision ADM-RDC), cf. app.js. -->
                       <input type="hidden" name="quartierGroupement" class="js-geo-quartier-value" th:value="*{quartierGroupement}">
                       <select id="geo-quartier" class="form-select js-geo-quartier"></select>
@@ -91,279 +91,111 @@
                   </div>
                 </div>
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="villageAvenueRue">Village/Avenue/Rue</label>
+                  <label class="form-label small fw-semibold" for="villageAvenueRue">f. Avenue / Rue / Village</label>
                   <input type="text" class="form-control" th:field="*{villageAvenueRue}">
                 </div>
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="numeroTelephone">Numéro téléphone</label>
+                  <label class="form-label small fw-semibold" for="numeroTelephone">j. Numéro de téléphone</label>
                   <input type="text" class="form-control" th:field="*{numeroTelephone}">
                 </div>
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="serieTelephoneGps">Série téléphone/GPS</label>
+                  <label class="form-label small fw-semibold" for="serieTelephoneGps">Série GPS / Smartphone</label>
                   <input type="text" class="form-control" th:field="*{serieTelephoneGps}">
                 </div>
               </div>
             </div>
           </div>
 
+        </div>
+        <div>
           <div class="detail-card">
-            <div class="detail-card-header"><h2>II. Coordonnées GPS</h2></div>
+            <div class="detail-card-header"><h2>Q7. Coordonnées GPS</h2></div>
             <div class="detail-card-body">
               <div class="row g-3">
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="latitude">Latitude <span class="req">*</span></label>
+                  <label class="form-label small fw-semibold" for="latitude">l. Latitude <span class="req">*</span></label>
                   <input type="number" class="form-control" th:field="*{latitude}" step="any">
                 </div>
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="longitude">Longitude <span class="req">*</span></label>
+                  <label class="form-label small fw-semibold" for="longitude">m. Longitude <span class="req">*</span></label>
                   <input type="number" class="form-control" th:field="*{longitude}" step="any">
                 </div>
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="altitude">Altitude (m)</label>
+                  <label class="form-label small fw-semibold" for="altitude">n. Altitude (m)</label>
                   <input type="number" class="form-control" th:field="*{altitude}" step="any">
                 </div>
                 <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="gpsPrecision">Précision (m)</label>
+                  <label class="form-label small fw-semibold" for="gpsPrecision">o. Précision GPS (m)</label>
                   <input type="number" class="form-control" th:field="*{gpsPrecision}" step="any">
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="detail-card">
-            <div class="detail-card-header"><h2>III. Type de site</h2></div>
-            <div class="detail-card-body">
-              <div class="row g-3">
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="typeSite">Type <span class="req">*</span></label>
-                  <select class="form-select" th:field="*{typeSite}">
-                    <option value="">—</option>
-                    <option th:each="v : ${T(com.onip.facm01.site.TypeSite).values()}" th:value="${v}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(v.name(), '_', ' ')))}">-</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="typeSiteAutre">Préciser (si autre)</label>
-                  <input type="text" class="form-control" th:field="*{typeSiteAutre}">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="detail-card">
-            <div class="detail-card-header"><h2>IV. Statut juridique et propriété</h2></div>
-            <div class="detail-card-body">
-              <div class="row g-3">
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="proprieteStatut">Propriété <span class="req">*</span></label>
-                  <select class="form-select" th:field="*{proprieteStatut}">
-                    <option value="">—</option>
-                    <option th:each="v : ${T(com.onip.facm01.site.ProprieteStatut).values()}" th:value="${v}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(v.name(), '_', ' ')))}">-</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="optionOccupation">Option d'occupation</label>
-                  <select class="form-select" th:field="*{optionOccupation}">
-                    <option value="">—</option>
-                    <option th:each="v : ${T(com.onip.facm01.site.OptionOccupation).values()}" th:value="${v}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(v.name(), '_', ' ')))}">-</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="disponibiliteImmediate">Disponibilité immédiate</label>
-                  <select class="form-select" th:field="*{disponibiliteImmediate}">
-                    <option value="">—</option>
-                    <option value="true">Oui</option>
-                    <option value="false">Non</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="delaiEstime">Délai estimé</label>
-                  <input type="text" class="form-control" th:field="*{delaiEstime}">
-                </div>
-                <div class="col-sm-12">
-                  <label class="form-label small fw-semibold" for="proprietaireNomContact">Propriétaire/gestionnaire (nom et contact)</label>
-                  <input type="text" class="form-control" th:field="*{proprietaireNomContact}">
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-        <div>
-          <div class="detail-card">
-            <div class="detail-card-header"><h2>V. Infrastructure</h2></div>
-            <div class="detail-card-body">
-              <div class="row g-3">
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="typeInfrastructure">Type d'infrastructure <span class="req">*</span></label>
-                  <select class="form-select" th:field="*{typeInfrastructure}">
-                    <option value="">—</option>
-                    <option th:each="v : ${T(com.onip.facm01.site.TypeInfrastructure).values()}" th:value="${v}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(v.name(), '_', ' ')))}">-</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="typeInfrastructureAutre">Préciser (si autre)</label>
-                  <input type="text" class="form-control" th:field="*{typeInfrastructureAutre}">
-                </div>
-                <div class="col-sm-4">
-                  <label class="form-label small fw-semibold" for="superficieBatimentM2">Superficie bâtiment (m²)</label>
-                  <input type="number" class="form-control" th:field="*{superficieBatimentM2}" step="any">
-                </div>
-                <div class="col-sm-4">
-                  <label class="form-label small fw-semibold" for="superficieTerrainM2">Superficie terrain (m²)</label>
-                  <input type="number" class="form-control" th:field="*{superficieTerrainM2}" step="any">
-                </div>
-                <div class="col-sm-4">
-                  <label class="form-label small fw-semibold" for="nombrePieces">Nombre de pièces/bureaux</label>
-                  <input type="number" class="form-control" th:field="*{nombrePieces}" step="1">
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="etatBatiment">État du bâtiment</label>
-                  <select class="form-select" th:field="*{etatBatiment}">
-                    <option value="">—</option>
-                    <option th:each="v : ${T(com.onip.facm01.site.EtatBatiment).values()}" th:value="${v}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(v.name(), '_', ' ')))}">-</option>
-                  </select>
-                </div>
-                <div class="col-sm-12">
-                  <label class="form-label small fw-semibold" for="etatBatimentObservations">Observations sur le bâtiment</label>
-                  <textarea class="form-control" rows="2" th:field="*{etatBatimentObservations}"></textarea>
-                </div>
-              </div>
-            </div>
-          </div>
+      </div>
 
-          <div class="detail-card">
-            <div class="detail-card-header"><h2>VI. Commodité et accès</h2></div>
-            <div class="detail-card-body">
-              <div class="row g-3">
-                <div class="col-sm-12">
-                  <label class="form-label small fw-semibold" for="accesRoutier">Accès routier</label>
-                  <select class="form-select" th:field="*{accesRoutier}">
+      <!-- Questionnaire terrain, généré depuis questionnaire-site.json (même fichier que l'app
+           mobile). Les champs s'appellent qa.<clé> ; les questions sautées selon Q1 (statut du
+           bureau / site) sont masquées en direct, cf. script en bas de page. -->
+      <div class="q-cards">
+        <div class="detail-card" th:each="sec : ${sections}" th:attr="data-q-section=${sec.id}">
+          <div class="detail-card-header"><h2 th:text="${sec.title}">Section</h2></div>
+          <div class="detail-card-body q-form">
+            <div class="q-field" th:each="item : ${sec.items}" th:attr="data-q-item=${item.id}">
+              <p th:if="${item.note}" class="q-note" th:text="${item.displayLabel()}">Note</p>
+              <th:block th:unless="${item.note}">
+                <label class="form-label small fw-semibold" th:for="'qa-' + ${item.id}" th:text="${item.displayLabel()}">Question</label>
+                <th:block th:switch="${item.type}">
+                  <select th:case="'choice'" class="form-select form-select-sm" th:id="'qa-' + ${item.id}" th:name="'qa.' + ${item.id}">
                     <option value="">—</option>
-                    <option th:each="v : ${T(com.onip.facm01.site.AccesRoutier).values()}" th:value="${v}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(v.name(), '_', ' ')))}">-</option>
+                    <option th:each="o : ${item.options}" th:value="${o.value}" th:text="${o.label}"
+                            th:selected="${answers.get(item.id) == o.value}">-</option>
+                    <option th:each="o : ${item.legacyOptions}" th:if="${answers.get(item.id) == o.value}"
+                            th:value="${o.value}" th:text="${o.label}" selected>-</option>
                   </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="raccordeSnel">Raccordé SNEL</label>
-                  <select class="form-select" th:field="*{raccordeSnel}">
+                  <select th:case="'yesno'" class="form-select form-select-sm" th:id="'qa-' + ${item.id}" th:name="'qa.' + ${item.id}">
                     <option value="">—</option>
-                    <option value="true">Oui</option>
-                    <option value="false">Non</option>
+                    <option value="OUI" th:selected="${answers.get(item.id) == 'OUI'}">Oui</option>
+                    <option value="NON" th:selected="${answers.get(item.id) == 'NON'}">Non</option>
                   </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="stabiliteSnel">Stabilité SNEL</label>
-                  <select class="form-select" th:field="*{stabiliteSnel}">
-                    <option value="">—</option>
-                    <option th:each="v : ${T(com.onip.facm01.site.StabiliteSnel).values()}" th:value="${v}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(v.name(), '_', ' ')))}">-</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="groupeElectrogeneSolaire">Groupe électrogène/solaire</label>
-                  <select class="form-select" th:field="*{groupeElectrogeneSolaire}">
-                    <option value="">—</option>
-                    <option value="true">Oui</option>
-                    <option value="false">Non</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="nonElectrifie">Non électrifié</label>
-                  <select class="form-select" th:field="*{nonElectrifie}">
-                    <option value="">—</option>
-                    <option value="true">Oui</option>
-                    <option value="false">Non</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="regideso">Regideso (eau)</label>
-                  <select class="form-select" th:field="*{regideso}">
-                    <option value="">—</option>
-                    <option value="true">Oui</option>
-                    <option value="false">Non</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="sanitaires">Sanitaires</label>
-                  <select class="form-select" th:field="*{sanitaires}">
-                    <option value="">—</option>
-                    <option value="true">Oui</option>
-                    <option value="false">Non</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="connectiviteInternet">Connectivité internet</label>
-                  <select class="form-select" th:field="*{connectiviteInternet}">
-                    <option value="">—</option>
-                    <option th:each="v : ${T(com.onip.facm01.site.ConnectiviteInternet).values()}" th:value="${v}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(v.name(), '_', ' ')))}">-</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="reseauxDisponibles">Réseaux disponibles</label>
-                  <input type="text" class="form-control" th:field="*{reseauxDisponibles}">
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="clotureSecurise">Clôturé et sécurisé</label>
-                  <select class="form-select" th:field="*{clotureSecurise}">
-                    <option value="">—</option>
-                    <option value="true">Oui</option>
-                    <option value="false">Non</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="proximitePolice">Proximité poste de police</label>
-                  <select class="form-select" th:field="*{proximitePolice}">
-                    <option value="">—</option>
-                    <option value="true">Oui</option>
-                    <option value="false">Non</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="distancePoliceMetres">Distance du poste de police (m)</label>
-                  <input type="number" class="form-control" th:field="*{distancePoliceMetres}" step="1">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="detail-card">
-            <div class="detail-card-header"><h2>VII. Évaluation de l'équipe</h2></div>
-            <div class="detail-card-body">
-              <div class="row g-3">
-                <div class="col-sm-12">
-                  <label class="form-label small fw-semibold" for="avisGlobal">Avis global</label>
-                  <select class="form-select" th:field="*{avisGlobal}">
-                    <option value="">—</option>
-                    <option th:each="v : ${T(com.onip.facm01.site.AvisGlobal).values()}" th:value="${v}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(v.name(), '_', ' ')))}">-</option>
-                  </select>
-                </div>
-                <div class="col-sm-12">
-                  <label class="form-label small fw-semibold" for="travauxAmenagement">Travaux d'aménagement</label>
-                  <textarea class="form-control" rows="2" th:field="*{travauxAmenagement}"></textarea>
-                </div>
-                <div class="col-sm-12">
-                  <label class="form-label small fw-semibold" for="motifDefavorable">Motif (si défavorable)</label>
-                  <textarea class="form-control" rows="2" th:field="*{motifDefavorable}"></textarea>
-                </div>
-                <div class="col-sm-12">
-                  <label class="form-label small fw-semibold" for="observationsParticulieres">Observations particulières</label>
-                  <textarea class="form-control" rows="2" th:field="*{observationsParticulieres}"></textarea>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="nomSignatureEnqueteur">Enquêteur</label>
-                  <input type="text" class="form-control" th:field="*{nomSignatureEnqueteur}">
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small fw-semibold" for="dateEvaluation">Date de l'évaluation</label>
-                  <input type="date" class="form-control" th:field="*{dateEvaluation}">
-                </div>
-              </div>
+                  <div th:case="'multi'" class="q-checks">
+                    <!-- Champ caché : le nom est toujours envoyé, même tout décoché (= effacer). -->
+                    <input type="hidden" th:name="'qa.' + ${item.id}" value="">
+                    <label class="q-check" th:each="o : ${item.options}">
+                      <input type="checkbox" th:name="'qa.' + ${item.id}" th:value="${o.value}"
+                             th:checked="${answers.get(item.id) != null and #arrays.contains(#strings.arraySplit(answers.get(item.id), '|'), o.value)}">
+                      <span th:text="${o.label}">-</span>
+                    </label>
+                  </div>
+                  <table th:case="'grid'" class="q-grid">
+                    <tr th:each="row : ${item.rows}">
+                      <td th:text="${row.label}">Ligne</td>
+                      <td>
+                        <select class="form-select form-select-sm" th:name="'qa.' + ${item.rowKey(row.value)}">
+                          <option value="">—</option>
+                          <option th:each="c : ${item.columns}" th:value="${c.value}" th:text="${c.label}"
+                                  th:selected="${answers.get(item.rowKey(row.value)) == c.value}">-</option>
+                        </select>
+                      </td>
+                    </tr>
+                  </table>
+                  <textarea th:case="'longtext'" class="form-control form-control-sm" rows="2" th:id="'qa-' + ${item.id}"
+                            th:name="'qa.' + ${item.id}" th:text="${answers.get(item.id)}"></textarea>
+                  <input th:case="'number'" type="number" step="any" min="0" class="form-control form-control-sm"
+                         th:id="'qa-' + ${item.id}" th:name="'qa.' + ${item.id}" th:value="${answers.get(item.id)}">
+                  <input th:case="'integer'" type="number" step="1" min="0" class="form-control form-control-sm"
+                         th:id="'qa-' + ${item.id}" th:name="'qa.' + ${item.id}" th:value="${answers.get(item.id)}">
+                  <input th:case="'date'" type="date" class="form-control form-control-sm"
+                         th:id="'qa-' + ${item.id}" th:name="'qa.' + ${item.id}" th:value="${answers.get(item.id)}">
+                  <input th:case="'email'" type="email" class="form-control form-control-sm"
+                         th:id="'qa-' + ${item.id}" th:name="'qa.' + ${item.id}" th:value="${answers.get(item.id)}">
+                  <input th:case="*" type="text" class="form-control form-control-sm"
+                         th:id="'qa-' + ${item.id}" th:name="'qa.' + ${item.id}" th:value="${answers.get(item.id)}">
+                </th:block>
+                <input th:if="${item.hasPrecision()}" type="text" class="form-control form-control-sm mt-1 js-q-precision"
+                       th:name="'qa.' + ${item.precisionKey()}" th:value="${answers.get(item.precisionKey())}" placeholder="Préciser">
+              </th:block>
             </div>
           </div>
         </div>
@@ -388,5 +220,48 @@
   </div>
 
   <script th:src="@{/js/app.js}"></script>
+  <script th:inline="javascript">
+    // Sauts du questionnaire (mêmes règles que SiteQuestionnaire.visible et l'app mobile) :
+    // showIf = toutes les conditions remplies, hideIf = l'une d'elles ; réponse de référence
+    // vide = rien à sauter. Les réponses masquées restent envoyées (rien n'est perdu).
+    (function () {
+      var SECTIONS = /*[[${sections}]]*/ [];
+      var form = document.querySelector('.js-confirm-form');
+      if (!form) return;
+      function val(key) {
+        var out = [];
+        form.querySelectorAll('[name="qa.' + key + '"]').forEach(function (el) {
+          if (el.type === 'checkbox') { if (el.checked) out.push(el.value); }
+          else if (el.type !== 'hidden' && el.value) out.push(el.value);
+        });
+        return out.join('|');
+      }
+      function matches(answer, values) {
+        return !!answer && answer.split('|').some(function (p) { return values.indexOf(p) >= 0; });
+      }
+      function hiddenBy(cond) {
+        return Object.keys(cond || {}).some(function (k) { return matches(val(k), cond[k]); });
+      }
+      function shownBy(cond) {
+        return Object.keys(cond || {}).every(function (k) { return matches(val(k), cond[k]); });
+      }
+      function refresh() {
+        SECTIONS.forEach(function (sec) {
+          var card = form.querySelector('[data-q-section="' + sec.id + '"]');
+          if (card) card.hidden = hiddenBy(sec.hideIf);
+          sec.items.forEach(function (item) {
+            if (!item.id) return;
+            var field = form.querySelector('[data-q-item="' + item.id + '"]');
+            if (!field) return;
+            field.hidden = hiddenBy(item.hideIf) || !shownBy(item.showIf);
+            var precision = field.querySelector('.js-q-precision');
+            if (precision) precision.hidden = !matches(val(item.id), item.precise || []);
+          });
+        });
+      }
+      form.addEventListener('change', refresh);
+      refresh();
+    })();
+  </script>
 </body>
 </html>

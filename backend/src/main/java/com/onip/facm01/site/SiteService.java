@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,9 +24,11 @@ import java.util.stream.Stream;
 public class SiteService {
 
     private final SiteRepository siteRepository;
+    private final SiteQuestionnaire questionnaire;
 
-    public SiteService(SiteRepository siteRepository) {
+    public SiteService(SiteRepository siteRepository, SiteQuestionnaire questionnaire) {
         this.siteRepository = siteRepository;
+        this.questionnaire = questionnaire;
     }
 
     // Le repérage de site est réservé au CHEF_EQUIPE (et aux rôles admin-tier/superviseur) — un
@@ -117,6 +120,7 @@ public class SiteService {
         site.setObservationsParticulieres(item.observationsParticulieres());
         site.setNomSignatureEnqueteur(item.nomSignatureEnqueteur());
         site.setDateEvaluation(item.dateEvaluation());
+        questionnaire.applySync(site, item.questionnaire());
         site.setUpdatedAt(item.updatedAt() != null ? item.updatedAt() : now);
         site.setSyncedAt(now);
 
@@ -231,12 +235,25 @@ public class SiteService {
         siteRepository.save(site);
     }
 
+    // Identification et GPS par le formulaire classique, tout le reste par le questionnaire
+    // (answers : toutes les clés du questionnaire, une clé vide efface la réponse).
     @Transactional
-    public void updateFromDashboard(UUID id, SiteEditForm form) {
+    public void updateFromDashboard(UUID id, SiteEditForm form, Map<String, String> answers) {
         Site site = find(id);
         form.applyTo(site);
+        questionnaire.apply(site, answers);
         site.setUpdatedAt(Instant.now());
         siteRepository.save(site);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SiteQuestionnaire.SectionView> questionnaireView(UUID id) {
+        return questionnaire.view(find(id));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, String> questionnaireAnswers(UUID id) {
+        return questionnaire.answers(find(id));
     }
 
     private Site find(UUID id) {

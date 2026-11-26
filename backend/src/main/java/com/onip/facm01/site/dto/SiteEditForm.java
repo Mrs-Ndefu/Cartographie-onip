@@ -113,6 +113,8 @@ public class SiteEditForm {
         return f;
     }
 
+    // Identification et coordonnées GPS seulement : les autres rubriques sont enregistrées par
+    // SiteQuestionnaire.apply (formulaire généré depuis le questionnaire terrain).
     public void applyTo(Site site) {
         site.setProvince(blankToNull(province));
         site.setVille(blankToNull(ville));
@@ -126,38 +128,6 @@ public class SiteEditForm {
         site.setLongitude(longitude);
         site.setAltitude(altitude);
         site.setGpsPrecision(gpsPrecision);
-        site.setTypeSite(typeSite);
-        site.setTypeSiteAutre(blankToNull(typeSiteAutre));
-        site.setProprieteStatut(proprieteStatut);
-        site.setOptionOccupation(optionOccupation);
-        site.setDisponibiliteImmediate(disponibiliteImmediate);
-        site.setDelaiEstime(blankToNull(delaiEstime));
-        site.setProprietaireNomContact(blankToNull(proprietaireNomContact));
-        site.setTypeInfrastructure(typeInfrastructure);
-        site.setTypeInfrastructureAutre(blankToNull(typeInfrastructureAutre));
-        site.setSuperficieBatimentM2(superficieBatimentM2);
-        site.setSuperficieTerrainM2(superficieTerrainM2);
-        site.setNombrePieces(nombrePieces);
-        site.setEtatBatiment(etatBatiment);
-        site.setEtatBatimentObservations(blankToNull(etatBatimentObservations));
-        site.setAccesRoutier(accesRoutier);
-        site.setRaccordeSnel(raccordeSnel);
-        site.setStabiliteSnel(stabiliteSnel);
-        site.setGroupeElectrogeneSolaire(groupeElectrogeneSolaire);
-        site.setNonElectrifie(nonElectrifie);
-        site.setRegideso(regideso);
-        site.setSanitaires(sanitaires);
-        site.setConnectiviteInternet(connectiviteInternet);
-        site.setReseauxDisponibles(blankToNull(reseauxDisponibles));
-        site.setClotureSecurise(clotureSecurise);
-        site.setProximitePolice(proximitePolice);
-        site.setDistancePoliceMetres(distancePoliceMetres);
-        site.setAvisGlobal(avisGlobal);
-        site.setTravauxAmenagement(blankToNull(travauxAmenagement));
-        site.setMotifDefavorable(blankToNull(motifDefavorable));
-        site.setObservationsParticulieres(blankToNull(observationsParticulieres));
-        site.setNomSignatureEnqueteur(blankToNull(nomSignatureEnqueteur));
-        site.setDateEvaluation(dateEvaluation);
     }
 
     private static String blankToNull(String value) {

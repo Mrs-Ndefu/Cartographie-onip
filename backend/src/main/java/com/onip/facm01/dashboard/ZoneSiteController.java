@@ -50,6 +50,8 @@ public class ZoneSiteController {
     public String list(
             @RequestParam(required = false) String zone,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String commune,
+            @RequestParam(required = false) String quartier,
             @RequestParam(defaultValue = "0") int page,
             Authentication authentication,
             Model model) {
@@ -65,7 +67,8 @@ public class ZoneSiteController {
                 zone = null;
             }
         }
-        Page<ZoneSite> sites = zoneSiteService.search(zoneFilter, zoneId, search, PageRequest.of(Math.max(page, 0), PAGE_SIZE));
+        Page<ZoneSite> sites = zoneSiteService.search(zoneFilter, zoneId, search, commune, quartier,
+                PageRequest.of(Math.max(page, 0), PAGE_SIZE));
         List<Zone> zones = zoneService.list();
         model.addAttribute("sites", sites.getContent());
         model.addAttribute("visitStatus", zoneSiteService.visitStatus(sites.getContent()));
@@ -81,6 +84,10 @@ public class ZoneSiteController {
         model.addAttribute("selectedZone", selectedId == null ? null
                 : zones.stream().filter(z -> z.getId().equals(selectedId)).findFirst().orElse(null));
         model.addAttribute("search", search == null ? "" : search);
+        model.addAttribute("commune", commune == null ? "" : commune);
+        model.addAttribute("quartier", quartier == null ? "" : quartier);
+        model.addAttribute("communes", zoneSiteService.distinctCommunes());
+        model.addAttribute("quartiers", zoneSiteService.distinctQuartiers(commune));
         agentRepository.findByUsername(authentication.getName())
                 .ifPresent(agent -> model.addAttribute("currentAgent", AgentDto.from(agent)));
         return "zone-sites";
@@ -140,6 +147,41 @@ public class ZoneSiteController {
         return new RedirectView(safeReturn(returnTo), true);
     }
 
+    // Nouveau site saisi à la main (ADMIN) : même formulaire que la modification, vide.
+    @GetMapping("/new")
+    public String newForm(
+            @RequestParam(required = false) String returnTo,
+            Authentication authentication,
+            Model model) {
+        model.addAttribute("creating", true);
+        model.addAttribute("site", new ZoneSite(null, "", null, null, null, null, null));
+        model.addAttribute("returnTo", safeReturn(returnTo));
+        agentRepository.findByUsername(authentication.getName())
+                .ifPresent(agent -> model.addAttribute("currentAgent", AgentDto.from(agent)));
+        return "zone-site-edit";
+    }
+
+    @PostMapping("/new")
+    public RedirectView create(
+            @RequestParam String nom,
+            @RequestParam(required = false) String adresse,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String ville,
+            @RequestParam(required = false) String commune,
+            @RequestParam(required = false) String quartier,
+            @RequestParam(required = false) String returnTo,
+            RedirectAttributes redirectAttributes) {
+        try {
+            ZoneSite site = zoneSiteService.create(nom, adresse, province, ville, commune, quartier);
+            redirectAttributes.addFlashAttribute("success", "Site créé : " + site.getNom()
+                    + (site.getZone() == null ? " (non affecté à une zone : choisissez-la dans la liste)." : " — " + site.getZone().getName() + "."));
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return new RedirectView("/dashboard/zones/sites/new", true);
+        }
+        return new RedirectView(safeReturn(returnTo), true);
+    }
+
     @GetMapping("/{id}/edit")
     public String editForm(
             @PathVariable UUID id,
@@ -147,6 +189,7 @@ public class ZoneSiteController {
             Authentication authentication,
             Model model) {
         ZoneSite site = zoneSiteService.find(id);
+        model.addAttribute("creating", false);
         model.addAttribute("site", site);
         // Valeurs de départ des listes enchaînées : ville/territoire = la ville (à défaut le
         // territoire) ; commune = celle du site, sinon le territoire s'il diffère de la ville (cas

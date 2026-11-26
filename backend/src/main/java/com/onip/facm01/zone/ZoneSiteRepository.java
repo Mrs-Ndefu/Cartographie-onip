@@ -22,12 +22,29 @@ public interface ZoneSiteRepository extends JpaRepository<ZoneSite, UUID> {
                    OR LOWER(COALESCE(s.adresse, '')) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR LOWER(COALESCE(s.ville, '')) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR LOWER(COALESCE(s.territoire, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:commune = '' OR UPPER(COALESCE(s.commune, '')) = UPPER(:commune))
+              AND (:quartier = '' OR UPPER(COALESCE(s.quartier, '')) = UPPER(:quartier))
             ORDER BY s.province, s.territoire, s.nom
             """)
     Page<ZoneSite> search(@Param("zoneFilter") String zoneFilter,
                           @Param("zoneId") UUID zoneId,
                           @Param("search") String search,
+                          @Param("commune") String commune,
+                          @Param("quartier") String quartier,
                           Pageable pageable);
+
+    // Valeurs des filtres Commune / Quartier de la page Sites (le quartier restreint à la commune
+    // choisie, "" = toutes).
+    @Query("SELECT DISTINCT UPPER(s.commune) FROM ZoneSite s WHERE s.commune IS NOT NULL AND s.commune <> '' ORDER BY UPPER(s.commune)")
+    List<String> distinctCommunes();
+
+    @Query("""
+            SELECT DISTINCT UPPER(s.quartier) FROM ZoneSite s
+            WHERE s.quartier IS NOT NULL AND s.quartier <> ''
+              AND (:commune = '' OR UPPER(COALESCE(s.commune, '')) = UPPER(:commune))
+            ORDER BY UPPER(s.quartier)
+            """)
+    List<String> distinctQuartiers(@Param("commune") String commune);
 
     // [zoneId, nombre] pour chaque zone ayant au moins un site.
     @Query("SELECT s.zone.id, COUNT(s) FROM ZoneSite s WHERE s.zone IS NOT NULL GROUP BY s.zone.id")

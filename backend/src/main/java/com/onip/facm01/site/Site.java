@@ -145,6 +145,11 @@ public class Site {
     @Column(name = "date_evaluation")
     private LocalDate dateEvaluation;
 
+    // Réponses aux questions du questionnaire terrain (questionnaire-site.json) qui n'ont pas de
+    // colonne dédiée ci-dessus : objet JSON {clé : valeur}, cf. SiteQuestionnaire.
+    @Column(name = "questionnaire", columnDefinition = "TEXT")
+    private String questionnaire;
+
     // Gestion depuis le tableau de bord (cf. SiteValidation) : jamais envoyé par la tablette, donc
     // jamais écrasé par une synchronisation. Colonne nullable pour les fiches déjà en base (null =
     // en attente, cf. getValidation).
@@ -602,5 +607,13 @@ public class Site {
 
     public void setDateEvaluation(LocalDate dateEvaluation) {
         this.dateEvaluation = dateEvaluation;
+    }
+
+    public String getQuestionnaire() {
+        return questionnaire;
+    }
+
+    public void setQuestionnaire(String questionnaire) {
+        this.questionnaire = questionnaire;
     }
 }
